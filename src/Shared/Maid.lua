@@ -1,7 +1,7 @@
 local Maid = {}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Promise = require(ReplicatedStorage.Modules.Packages.Promise)
+local Promise = require(ReplicatedStorage.Packages.Promise)
 local TableUtil = require(ReplicatedStorage.Modules.Utils.TableUtil)
 
 export type Maid = typeof(Maid.new())

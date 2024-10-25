@@ -3,9 +3,8 @@ local TweenUtil = {}
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
-local Shared = ReplicatedStorage.Modules
-local Binder = require(Shared.Binder)
-local Promise = require(Shared.Packages.Promise)
+local Binder = require(ReplicatedStorage.Modules.Binder)
+local Promise = require(ReplicatedStorage.Packages.Promise)
 
 -------------------------------------------------------------------------------
 -- PRIVATE METHODS

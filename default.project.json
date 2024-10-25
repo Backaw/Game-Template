@@ -15,31 +15,23 @@
 
       "Modules": {
         "$className": "Folder",
-        "$path": "src/Shared",
-
-        "Packages": {
-          "$className": "Folder",
-
-          "Promise": {
-            "$path": "roblox-lua-promise/lib"
-          },
-          "Cmdr": {
-            "$path": "Cmdr/Cmdr"
-          },
-
-          "GameAnalytics": {
-            "$path": "GA-SDK-ROBLOX/gameanalytics-sdk/GameAnalytics"
-          }
-        }
+        "$path": "src/Shared"
+      },
+      "Packages": {
+        "$path": "Packages"
       }
     },
 
     "ServerScriptService": {
       "$className": "ServerScriptService",
       "$path": "src/Server",
+      "$ignoreUnknownInstances": true,
 
       "ProfileService": {
         "$path": "ProfileService/ProfileService.lua"
+      },
+      "ServerPackages": {
+        "$path": "ServerPackages"
       }
     },
 

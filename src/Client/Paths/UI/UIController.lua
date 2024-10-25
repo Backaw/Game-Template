@@ -8,7 +8,7 @@ local StringUtil = require(Paths.Shared.Utils.StringUtil)
 local TableUtil = require(Paths.Shared.Utils.TableUtil)
 local UIUtil = require(Paths.Controllers.UI.Utils.UIUtil)
 local DeferredPromise = require(Paths.Shared.DeferredPromise)
-local Promise = require(Paths.Shared.Packages.Promise)
+local Promise = require(Paths.Packages.Promise)
 
 type ScreenStateCallback = ((table?) -> ())?
 type ScreenStateCallbacks = {

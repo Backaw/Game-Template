@@ -19,7 +19,7 @@ function UnitTester.run(directory: Instance)
 		if
 			descedant:IsA("ModuleScript")
 			and StringUtil.endsWith(descedant.Name, SUFFIX)
-			and not descedant:IsDescendantOf(ReplicatedStorage.Modules.Packages)
+			and not descedant:IsDescendantOf(ReplicatedStorage.Packages)
 		then
 			local module = require(descedant)
 

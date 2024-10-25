@@ -15,7 +15,7 @@ local DataConstants = require(Paths.Shared.Data.DataConstants)
 local ProfileService = require(ServerScriptService.ProfileService)
 local TableUtil = require(Paths.Shared.Utils.TableUtil)
 local PlayersService = require(Paths.Services.PlayersService)
-local Promise = require(Paths.Shared.Packages.Promise)
+local Promise = require(Paths.Packages.Promise)
 local GameUtil = require(Paths.Shared.Game.GameUtil)
 
 local DONT_SAVE_DATA = false

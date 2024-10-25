@@ -28,6 +28,7 @@ Paths.Controllers = script
 Paths.Shared = ReplicatedStorage.Modules
 Paths.Assets = ReplicatedStorage.Assets
 Paths.UI = Players.LocalPlayer.PlayerGui
+Paths.Packages = ReplicatedStorage.Packages
 Paths.Initialized = LoadingController.Loaded
 
 task.defer(function()

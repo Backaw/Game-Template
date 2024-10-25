@@ -5,7 +5,7 @@
 local DeferredPromise = {}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Promise = require(ReplicatedStorage.Modules.Packages.Promise)
+local Promise = require(ReplicatedStorage.Packages.Promise)
 
 type Callback = (any) -> ()
 --[[

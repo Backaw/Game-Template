@@ -3,7 +3,7 @@ local PlayersService = {}
 local Players = game:GetService("Players")
 local ServerScriptService = game:GetService("ServerScriptService")
 local Paths = require(ServerScriptService.Paths)
-local Promise = require(Paths.Shared.Packages.Promise)
+local Promise = require(Paths.Packages.Promise)
 local Maid = require(Paths.Shared.Maid)
 local GameUtil = require(Paths.Shared.Game.GameUtil)
 

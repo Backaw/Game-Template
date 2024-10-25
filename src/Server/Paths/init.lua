@@ -1,10 +1,13 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
 local Workspace = game:GetService("Workspace")
 local Paths = {}
 
 Paths.Services = script
 Paths.Shared = ReplicatedStorage.Modules
+Paths.Packages = ReplicatedStorage.Packages
+Paths.ServerPackages = ServerScriptService.ServerPackages
 
 Paths.Initialized = require(Paths.Shared.DeferredPromise).new()
 Paths.Assets = ReplicatedStorage.Assets
