@@ -77,19 +77,19 @@ function ItemService.giveItem(player: Player, itemType: string, itemName: string
 end
 
 ItemService.loadPlayer = PlayersService.promisifyLoader(function(player)
-	for _, item in pairs(freeItems) do
+	for _, item in  (freeItems) do
 		ItemService.giveItem(player, item.Type, item.Name)
 	end
 
-	for _, item in pairs(questItems) do
+	for _, item in  (questItems) do
 		if QuestService.isCompleted(player, item.Source.Name) then
 			ItemService.giveItem(player, item.Type, item.Name)
 		end
 	end
 
-	for gamepass, items in pairs(gamepassItems) do
+	for gamepass, items in  (gamepassItems) do
 		if PlayerDataService.get(player, ProductUtil.getGamepassAddressFromId(gamepass)) then
-			for _, item in pairs(items) do
+			for _, item in  (items) do
 				ItemService.giveItem(player, item.Type, item.Name)
 			end
 		end
@@ -112,8 +112,8 @@ ProductService.ProductPurchased:Connect(function(player: Player, product: Produc
 end)
 
 -- FREE ITEMS
-for _, items in pairs(ItemUtil.getItems()) do
-	for _, item in pairs(items) do
+for _, items in  (ItemUtil.getItems()) do
+	for _, item in  (items) do
 		local source = item.Source
 		if source then
 			if source.Currency == CurrencyConstants.Currencies.Free then
@@ -135,8 +135,8 @@ end
 
 -- LOADNED ITEMS
 PlayerDataService.registerReconciler(function(data)
-	for _, items in pairs(data.OwnedItems) do
-		for itemName, loaned in pairs(items) do
+	for _, items in  (data.OwnedItems) do
+		for itemName, loaned in  (items) do
 			if loaned then
 				items[itemName] = nil
 			end

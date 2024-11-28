@@ -47,7 +47,7 @@ function PlayersUtil.loadPlayers(playerHandler: (player: Player, maid: Maid.Maid
 	end
 
 	maid:Add(Players.PlayerAdded:Connect(loadPlayer))
-	for _, player in pairs(Players:GetPlayers()) do
+	for _, player in  (Players:GetPlayers()) do
 		loadPlayer(player)
 	end
 

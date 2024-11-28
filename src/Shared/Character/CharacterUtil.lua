@@ -23,7 +23,7 @@ function CharacterUtil.onCharacterTouched(
 	local connections: { [BasePart]: RBXScriptConnection } = {}
 	local hiboxes: { BasePart } = if oneHitbox then { hitbox } else hitbox
 
-	for _, basePart in pairs(hiboxes) do
+	for _, basePart in  (hiboxes) do
 		basePart.CanTouch = true
 
 		local connection: RBXScriptConnection

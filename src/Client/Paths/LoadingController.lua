@@ -66,7 +66,7 @@ function LoadingController.start()
 		})
 		logoGradient.Offset = Vector2.new(0, EASE)
 
-		for i, task in ipairs(tasks) do
+		for i, task in tasks do
 			if DEBUG then
 				print(("Loading %s at %s"):format(taskIds[i], i))
 			end
@@ -127,7 +127,7 @@ do
 		while not loaded do
 			loaded = true
 
-			for _, screenGui in pairs(StarterGui:GetChildren()) do
+			for _, screenGui in StarterGui:GetChildren() do
 				if screenGui.Name == "Cmdr" then
 					continue
 				end

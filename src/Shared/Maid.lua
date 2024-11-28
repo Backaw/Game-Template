@@ -1,7 +1,7 @@
 local Maid = {}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Promise = require(ReplicatedStorage.Packages.Promise)
+local Promise = require(ReplicatedStorage.Modules.Packages.Promise)
 local TableUtil = require(ReplicatedStorage.Modules.Utils.TableUtil)
 
 export type Maid = typeof(Maid.new())
@@ -81,7 +81,7 @@ function Maid.new()
         Removes all tasks in order they were added
     ]]
 	function maid:Cleanup()
-		for _, task in pairs(tasks) do
+		for _, task in tasks do
 			Maid.cleanup(task)
 		end
 

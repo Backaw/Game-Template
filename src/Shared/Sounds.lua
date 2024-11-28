@@ -104,9 +104,9 @@ end
 function Sounds.getSoundsInCategory(categoryName: string)
 	local sounds = {}
 
-	for _, category: Folder in pairs(SoundService:GetDescendants()) do
+	for _, category: Folder in  (SoundService:GetDescendants()) do
 		if category.Name == categoryName and category:IsA("Folder") then
-			for _, child in pairs(category:GetChildren()) do
+			for _, child in  (category:GetChildren()) do
 				table.insert(sounds, child.Name)
 			end
 
@@ -120,10 +120,10 @@ end
 -------------------------------------------------------------------------------
 -- INTIIALIZATION
 -------------------------------------------------------------------------------
-for _, group in pairs(SoundService:GetChildren()) do
+for _, group in  (SoundService:GetChildren()) do
 	group = group :: SoundGroup
 	if group:IsA("SoundGroup") then
-		for _, sound in pairs(group:GetDescendants()) do
+		for _, sound in  (group:GetDescendants()) do
 			sound = sound :: Sound
 			if sound:IsA("Sound") then
 				local name = sound.Name

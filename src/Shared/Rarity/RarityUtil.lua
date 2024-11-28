@@ -13,13 +13,13 @@ function RarityUtil.draw(pool: table, luck: number?, _random: Random?)
 	local perfectSplit = 100
 	local sum = 0
 
-	for _, choice in pairs(pool) do
+	for _, choice in  (pool) do
 		local probability = getProbability(choice)
 		sum += probability + (perfectSplit - probability) * luck
 	end
 
 	local chosen = _random:NextNumber(0, sum)
-	for k, choice in pairs(pool) do
+	for k, choice in  (pool) do
 		local probability = getProbability(choice)
 		probability += (perfectSplit - probability) * luck
 

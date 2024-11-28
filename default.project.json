@@ -15,24 +15,23 @@
 
       "Modules": {
         "$className": "Folder",
-        "$path": "src/Shared"
-      },
+        "$path": "src/Shared",
+
+        "Packages": {
+          "$path": "Packages"
+        }
+      }
+    },
+
+    "ServerStorage": {
       "Packages": {
-        "$path": "Packages"
+        "$path": "ServerPackages"
       }
     },
 
     "ServerScriptService": {
       "$className": "ServerScriptService",
-      "$path": "src/Server",
-      "$ignoreUnknownInstances": true,
-
-      "ProfileService": {
-        "$path": "ProfileService/ProfileService.lua"
-      },
-      "ServerPackages": {
-        "$path": "ServerPackages"
-      }
+      "$path": "src/Server"
     },
 
     "StarterPlayer": {
@@ -42,11 +41,7 @@
       "StarterPlayerScripts": {
         "$className": "StarterPlayerScripts",
         "$ignoreUnknownInstances": true,
-        "$path": "src/Client",
-
-        "GameAnalyticsClient": {
-          "$path": "GA-SDK-ROBLOX/gameanalytics-sdk/GameAnalyticsClient.lua"
-        }
+        "$path": "src/Client"
       }
     }
   }

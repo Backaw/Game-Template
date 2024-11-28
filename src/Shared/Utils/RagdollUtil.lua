@@ -6,9 +6,9 @@ function RagdollUtil.toggle(character: Model, toggle: boolean)
 		humanoidRootPart.CanCollide = not toggle
 	end
 
-	for _, bodyPart: BasePart in pairs(character:GetChildren()) do
+	for _, bodyPart: BasePart in  (character:GetChildren()) do
 		if bodyPart:IsA("BasePart") then
-			for _, motor: Motor6D in pairs(bodyPart:GetChildren()) do
+			for _, motor: Motor6D in  (bodyPart:GetChildren()) do
 				if motor:IsA("Motor6D") then
 					motor.Enabled = not toggle
 				end

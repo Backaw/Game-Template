@@ -10,7 +10,7 @@ local ArrayUtil = require(Paths.Shared.Utils.ArrayUtil)
 
 Paths.Initialized:andThen(function()
 	local songs = {}
-	for _, song in ipairs(SoundService.Music:GetChildren()) do
+	for _, song in SoundService.Music:GetChildren() do
 		if song:IsA("Sound") then
 			table.insert(songs, Sounds.create(song.Name))
 		end
@@ -20,7 +20,7 @@ Paths.Initialized:andThen(function()
 
 	if #songs > 0 then
 		while true do
-			for _, song in ipairs(songs) do
+			for _, song in songs do
 				-- Sounds.fadeIn(song)
 				song:Play()
 				-- Sounds.fadeOut(song)

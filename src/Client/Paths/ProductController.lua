@@ -9,7 +9,7 @@ local CurrencyConstants = require(Paths.Shared.Currency.CurrencyConstants)
 local CurrencyController = require(Paths.Controllers.CurrencyController)
 local CurrencyUtil = require(Paths.Shared.Currency.CurrencyUtil)
 local Snackbar = require(Paths.Controllers.UI.Components.Snackbar)
-local Promise = require(Paths.Packages.Promise)
+local Promise = require(Paths.Shared.Packages.Promise)
 local DataController = require(Paths.Controllers.DataController)
 local Signal = require(Paths.Shared.Signal)
 -- local Confetti = require(Paths.Controllers.UI.Particles.Confetti)
@@ -45,7 +45,7 @@ end
 -- PUBLIC  METHODS
 -------------------------------------------------------------------------------
 function ProductController.cannotAfford(price: CurrencyConstants.Price)
-	Snackbar.error(("You don't have enough %s!"):format(string.lower(price.Currency)), "Error")
+	Snackbar.error(("You don't have enough %s!"):format(string.lower(price.Currency)))
 end
 
 function ProductController.hasGamePass(product: ProductConstants.Product)

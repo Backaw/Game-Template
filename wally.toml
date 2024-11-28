@@ -1,5 +1,5 @@
 [package]
-name = "amani/game-template"
+name = "larsb/slidedownahill"
 version = "0.1.0"
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
@@ -10,4 +10,5 @@ GameAnalytics = "gameanalytics/gameanalytics-sdk@2.2.4"
 Cmdr = "evaera/cmdr@1.12.0"
 
 [server-dependencies]
-profilestore = "lm-loleris/profilestore@1.0.1"
+ProfileStore = "lm-loleris/profilestore@1.0.1"
+ProfileService = "jakebball/profileservice@1.5.0"

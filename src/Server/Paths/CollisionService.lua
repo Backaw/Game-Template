@@ -26,16 +26,16 @@ local function setGroupCollideableWhitelist(group: string, whitelist: CollisionC
 end
 
 local function setCollision(group, collidableGroups: CollisionConstants.Groups?, nonCollidableGroups: CollisionConstants.Groups?)
-	for _, otherGroup in (collidableGroups or {}) do
+	for _, otherGroup in collidableGroups or {} do
 		PhysicsService:CollisionGroupSetCollidable(group, otherGroup, true)
 	end
 
-	for _, otherGroup in (nonCollidableGroups or {}) do
+	for _, otherGroup in nonCollidableGroups or {} do
 		PhysicsService:CollisionGroupSetCollidable(group, otherGroup, false)
 	end
 end
 
-for _, group in pairs(CollisionConstants.Groups) do
+for _, group in CollisionConstants.Groups do
 	if group ~= CollisionConstants.Groups.Default then
 		PhysicsService:RegisterCollisionGroup(group)
 	end

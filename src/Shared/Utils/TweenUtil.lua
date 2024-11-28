@@ -4,7 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
 local Binder = require(ReplicatedStorage.Modules.Binder)
-local Promise = require(ReplicatedStorage.Packages.Promise)
+local Promise = require(ReplicatedStorage.Modules.Packages.Promise)
 
 -------------------------------------------------------------------------------
 -- PRIVATE METHODS
@@ -60,7 +60,7 @@ end
 
 function TweenUtil.batch(tweens: { Tween })
 	local promises = {}
-	for _, tween in pairs(tweens) do
+	for _, tween in tweens do
 		table.insert(promises, promise(tween))
 	end
 

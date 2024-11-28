@@ -57,7 +57,7 @@ if DeviceUtil.isMobile() then
 		Vector2.new(math.abs(jumpButton.Position.X.Offset), math.abs(jumpButton.Position.Y.Offset)) / BASE_JUMP_BUTTON_OFFSET
 	)
 
-	for _, child: GuiObject in pairs(screen:GetChildren()) do
+	for _, child: GuiObject in  (screen:GetChildren()) do
 		if child:IsA("GuiObject") then
 			child.Position = UDim2.new(1, child.Position.X.Offset * offsetScale, 1, child.Position.Y.Offset * offsetScale)
 

@@ -3,11 +3,6 @@
 registry = "test"
 
 [[package]]
-name = "amani/game-template"
-version = "0.1.0"
-dependencies = [["Cmdr", "evaera/cmdr@1.12.0"], ["GameAnalytics", "gameanalytics/gameanalytics-sdk@2.2.4"], ["Promise", "evaera/promise@4.0.0"], ["profilestore", "lm-loleris/profilestore@1.0.1"]]
-
-[[package]]
 name = "evaera/cmdr"
 version = "1.12.0"
 dependencies = []
@@ -21,6 +16,16 @@ dependencies = []
 name = "gameanalytics/gameanalytics-sdk"
 version = "2.2.4"
 dependencies = []
+
+[[package]]
+name = "jakebball/profileservice"
+version = "1.5.0"
+dependencies = []
+
+[[package]]
+name = "larsb/slidedownahill"
+version = "0.1.0"
+dependencies = [["Cmdr", "evaera/cmdr@1.12.0"], ["GameAnalytics", "gameanalytics/gameanalytics-sdk@2.2.4"], ["Promise", "evaera/promise@4.0.0"], ["ProfileService", "jakebball/profileservice@1.5.0"], ["ProfileStore", "lm-loleris/profilestore@1.0.1"]]
 
 [[package]]
 name = "lm-loleris/profilestore"

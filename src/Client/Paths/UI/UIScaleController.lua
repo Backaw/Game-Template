@@ -141,7 +141,7 @@ function UIScaleController.init()
 	end)
 
 	local screenGuis = {}
-	for _, screenGui in pairs(StarterGui:GetChildren()) do
+	for _, screenGui in  (StarterGui:GetChildren()) do
 		if screenGui:IsA("ScreenGui") then
 			table.insert(screenGuis, Paths.UI:WaitForChild(screenGui.Name))
 		end

@@ -107,7 +107,7 @@ function UIUtil.mountZIndex(guiObject: GuiObject, ignoreGuiObject: boolean?)
 		guiObject.ZIndex += baseZIndex
 	end
 
-	for _, child in pairs(guiObject:GetChildren()) do
+	for _, child in  (guiObject:GetChildren()) do
 		if child:IsA("GuiObject") then
 			child.ZIndex += baseZIndex
 		end

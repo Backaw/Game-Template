@@ -6,7 +6,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local Workspace = game:GetService("Workspace")
 local Paths = require(ServerScriptService.Paths)
 local PlayerDataService = require(Paths.Services.Data.PlayerDataService)
-local Promise = require(Paths.Packages.Promise)
+local Promise = require(Paths.Shared.Packages.Promise)
 local DataConstants = require(Paths.Shared.Data.DataConstants)
 local TemplateUtil = require(Paths.Shared.Utils.TemplateUtil)
 local DataUtil = require(Paths.Shared.Data.DataUtil)
@@ -45,13 +45,13 @@ end
 
 local function refreshList()
 	local stores = {}
-	for leaderboardType in pairs(DataConstants.Leaderboards) do
+	for leaderboardType in DataConstants.Leaderboards do
 		stores[leaderboardType] = safeFetch(function()
 			return orderedStores[leaderboardType]:GetSortedAsync(false, 100):GetCurrentPage()
 		end)
 	end
 
-	for _, leaderboard in ipairs(leaderboards) do
+	for _, leaderboard in leaderboards do
 		local leaderboardType = leaderboard.Name
 		local info = DataConstants.Leaderboards[leaderboardType]
 
@@ -60,7 +60,7 @@ local function refreshList()
 				local list = leaderboard.Board.SurfaceGui.List
 
 				local psuedoRank = 0
-				for rank, data in pairs(store) do
+				for rank, data in store do
 					local userId = tonumber(data.key)
 					local value = info.Formatter(data.value, false)
 
@@ -112,7 +112,7 @@ end
 -- PUBLIC METHODS
 -------------------------------------------------------------------------------
 function LeaderboardService.init()
-	for _, leaderboard in ipairs(leaderboards) do
+	for _, leaderboard in leaderboards do
 		leaderboard.Title.SurfaceGui.TextLabel.Text = ("Top %s"):format(leaderboard.Name)
 
 		local display = leaderboard.Board.SurfaceGui
@@ -125,7 +125,7 @@ function LeaderboardService.init()
 	end
 
 	local fetchStorePromises = {}
-	for leaderboardType in pairs(DataConstants.Leaderboards) do
+	for leaderboardType in DataConstants.Leaderboards do
 		safeFetch(function()
 			local orderedStore = DataStoreService:GetOrderedDataStore(("%s_%s"):format(DataUtil.getDataKey(), leaderboardType))
 			orderedStores[leaderboardType] = orderedStore
@@ -136,9 +136,9 @@ function LeaderboardService.init()
 
 	Promise.all(fetchStorePromises):andThen(function()
 		while true do
-			for _, player in pairs(Players:GetPlayers()) do
+			for _, player: Player in Players:GetPlayers() do
 				PlayerService.onLoad(player, function()
-					for leaderboardType, info in pairs(DataConstants.Leaderboards) do
+					for leaderboardType, info in DataConstants.Leaderboards do
 						local value = PlayerDataService.get(player, QuestUtil.getStatAddress(info.Stat))
 
 						local success, err = pcall(function()

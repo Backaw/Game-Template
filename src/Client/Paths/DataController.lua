@@ -3,7 +3,7 @@ local DataController = {}
 local Players = game:GetService("Players")
 local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
 local Signal = require(Paths.Shared.Signal)
-local Promise = require(Paths.Packages.Promise)
+local Promise = require(Paths.Shared.Packages.Promise)
 local Remotes = require(Paths.Shared.Remotes)
 local DataUtil = require(Paths.Shared.Data.DataUtil)
 

@@ -16,7 +16,7 @@ BadgeConstants.Badges = badges
 -------------------------------------------------------------------------------
 -- LOGIC
 -------------------------------------------------------------------------------
-for name, badge in pairs(badges) do
+for name, badge in  (badges) do
 	badge.Name = name
 end
 

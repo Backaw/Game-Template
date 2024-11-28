@@ -32,8 +32,8 @@ function ItemUtil.getProductFromItem(item: table): ProductConstants.Product | ni
 		if regular then
 			return regular
 		else
-			for _, bundle in pairs(ProductConstants.Bundles) do
-				for _, reward in pairs(bundle.Rewards) do
+			for _, bundle in ProductConstants.Bundles do
+				for _, reward in bundle.Rewards do
 					if reward.ItemType == itemType and reward.ItemName == itemName then
 						return ProductConstants.Products.Bundle[bundle.Name]
 					end
@@ -79,11 +79,11 @@ function ItemUtil.getItemRarity(itemType: string, itemName: string)
 	local item = ItemUtil.getItem(itemType, itemName)
 	if item then
 		local source = item.Source
-		if source and source.Probability then
+		if source then
 			return source
 		end
 
-		for _, quest in pairs(QuestConstants.Quests) do
+		for _, quest in QuestConstants.Quests do
 			local reward = quest.Reward
 			if reward and (reward.Type == RewardConstants.Types.Item and reward.ItemType == itemType and reward.ItemName == itemName) then
 				return QUEST_ITEM_RARITY
@@ -99,9 +99,9 @@ function ItemUtil.getDisplayName(itemType: string, itemName: string)
 	return item.Alias or StringUtil.seperateSnakeCase(itemName)
 end
 
-for itemType in pairs(ItemConstants.Types) do
+for itemType in ItemConstants.Types do
 	items[itemType] = require(InstanceUtil.findFirstDescendant(script.Parent, itemType .. "Items")).Items
-	for key, item in pairs(items[itemType]) do
+	for key, item in items[itemType] do
 		item.Name = key
 		item.Type = itemType
 
@@ -113,7 +113,7 @@ for itemType in pairs(ItemConstants.Types) do
 	end
 end
 
-for _, quest in pairs(QuestConstants.Quests) do
+for _, quest in QuestConstants.Quests do
 	local reward = quest.Reward
 	if reward and reward.Type == RewardConstants.Types.Item then
 		local item = ItemUtil.getItem(reward.ItemType, reward.ItemName)

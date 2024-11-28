@@ -25,9 +25,9 @@ function DescendantLooper.new(instances: { Instance }, callback: (Instance) -> (
 		end
 	end
 
-	for _, instance in pairs(instances) do
+	for _, instance in instances do
 		task.spawn(function()
-			for _, descendant in pairs(instance:GetDescendants()) do
+			for _, descendant in (instance:GetDescendants()) do
 				forEveryDescendant(descendant)
 			end
 			maid:Add(instance.DescendantAdded:Connect(forEveryDescendant))

@@ -68,7 +68,7 @@ function ArrayUtil.create(length: number, getValue: (number?) -> ()): Array
 end
 
 function ArrayUtil.isArray(tbl: table): boolean
-	for k, v in pairs(tbl) do
+	for k, v in tbl do
 		if not tostring(k) then
 			return false
 		elseif typeof(k) == "table" and not ArrayUtil.isArray(v) then
@@ -82,7 +82,7 @@ end
 function ArrayUtil.shuffle(tbl: Array)
 	local returning = {}
 
-	for i = 1, #tbl do
+	for _ = 1, #tbl do
 		local index = math.random(1, #tbl)
 		table.insert(returning, tbl[index])
 		table.remove(tbl, index)

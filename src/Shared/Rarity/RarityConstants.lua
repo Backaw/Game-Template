@@ -23,7 +23,7 @@ local rarities: { [string]: Rarity } = {
 
 RarityConstants.Rarities = rarities
 
-for name, rarity in pairs(rarities) do
+for name, rarity in  (rarities) do
 	rarity.Name = name
 end
 

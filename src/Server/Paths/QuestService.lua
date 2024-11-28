@@ -26,7 +26,7 @@ local function checkCompletion(player: Player, stat: string)
 	local progress = PlayerDataService.get(player, ("Quests.Stats.%s"):format(stat))
 	local quests = statToQuest[stat]
 	if quests then
-		for _, quest in pairs(quests) do
+		for _, quest in  (quests) do
 			local name = quest.Name
 
 			-- CONTINUE: Quest has already been completed
@@ -86,7 +86,7 @@ function QuestService.incrementStat(player: Player, stat: string, addend: number
 end
 
 QuestService.loadPlayer = PlayersService.promisifyLoader(function(player)
-	for stat in pairs(QuestConstants.DefaultStats) do
+	for stat in  (QuestConstants.DefaultStats) do
 		checkCompletion(player, stat)
 	end
 end, "Quests")
@@ -94,7 +94,7 @@ end, "Quests")
 -------------------------------------------------------------------------------
 -- LOGIC
 -------------------------------------------------------------------------------
-for _, quest in pairs(QuestConstants.Quests) do
+for _, quest in  (QuestConstants.Quests) do
 	local stat = quest.Stat
 	statToQuest[stat] = statToQuest[stat] or {}
 	table.insert(statToQuest[stat], quest)

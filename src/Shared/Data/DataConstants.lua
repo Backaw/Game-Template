@@ -42,7 +42,7 @@ DataConstants.DefaultPlayerData = function()
 	store.EquippedItems = {}
 
 	store.OwnedItems = {}
-	for _, itemType in pairs(ItemConstants.Types) do
+	for _, itemType in  (ItemConstants.Types) do
 		store.OwnedItems[itemType] = {}
 	end
 

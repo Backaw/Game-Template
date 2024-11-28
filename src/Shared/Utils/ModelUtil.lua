@@ -6,7 +6,7 @@ local Vector3Util = require(ReplicatedStorage.Modules.Utils.Vector3Util)
 
 -- Get's a list of all parts inside a model and calls a function on them(mutator : (Instance) -> ())
 function ModelUtil.forEachDescendantOfClass(model: Model, class: string, mutator: (Instance) -> ())
-	for _, descendant in ipairs(model:GetDescendants()) do
+	for _, descendant in model:GetDescendants() do
 		if descendant:IsA(class) then
 			mutator(descendant)
 		end
@@ -25,7 +25,7 @@ function ModelUtil.getGlobalExtentsSize(model: Model | { Instance }, offset: CFr
 		local min = math.huge
 		local max = -math.huge
 
-		for _, part in pairs(if typeof(model) == "table" then model else model:GetDescendants()) do
+		for _, part in (if typeof(model) == "table" then model else model:GetDescendants()) do
 			-- CONTINUE: Descendant isn't valid
 			if not (part:IsA("BasePart") and (if descendantChecker then descendantChecker(part) else true)) then
 				continue
@@ -71,7 +71,7 @@ end
 function ModelUtil.getAssemblyMass(model: Model)
 	local assemblyMass = 0
 
-	for _, basePart in pairs(model:GetChildren()) do
+	for _, basePart in model:GetChildren() do
 		if basePart:IsA("BasePart") then
 			assemblyMass += basePart.Mass
 		end
@@ -81,7 +81,7 @@ function ModelUtil.getAssemblyMass(model: Model)
 end
 
 function ModelUtil.anchor(model: Model)
-	for _, basePart in pairs(model:GetDescendants()) do
+	for _, basePart in model:GetDescendants() do
 		if basePart:IsA("BasePart") then
 			basePart.Anchored = true
 		end

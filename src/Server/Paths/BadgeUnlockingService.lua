@@ -56,7 +56,7 @@ end
 BadgeUnlockingService.loadPlayer = PlayersService.promisifyLoader(function(player)
 	-- BadgeUnlockingService.awardBadge(player, BadgeConstants.Badges.Play)
 
-	for _, badge in pairs(BadgeConstants.Badges) do
+	for _, badge in  (BadgeConstants.Badges) do
 		local criteria = badge.AwardCriteria
 		if criteria then
 			local function checkCanAward(value: number)
