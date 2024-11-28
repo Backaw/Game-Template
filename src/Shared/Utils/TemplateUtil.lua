@@ -23,7 +23,7 @@ end
 
 function TemplateUtil.cloneChildren(source: Instance, destination: Instance?)
 	local instances = {}
-	for _, child in pairs(source:GetChildren()) do
+	for _, child in  (source:GetChildren()) do
 		local clone = child:Clone()
 		clone.Parent = destination
 

@@ -1,4 +1,5 @@
 ## Recommended VSCode extensions
+
 - [RobloxLSP](https://marketplace.visualstudio.com/items?itemName=Nightrains.robloxlsp)
 - [StyLua](https://marketplace.visualstudio.com/items?itemName=JohnnyMorganz.stylua)
 - [Selene](https://marketplace.visualstudio.com/items?itemName=Kampfkarren.selene-vscode)

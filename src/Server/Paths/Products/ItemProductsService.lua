@@ -17,14 +17,14 @@ local TableUtil = require(Paths.Shared.Utils.TableUtil)
 -- Generate items from product
 do
 	local products: ProductConstants.ProductCategories = {}
-	for itemType, items in pairs(ItemUtil.getItems()) do
+	for itemType, items in  (ItemUtil.getItems()) do
 		if not ProductConstants.Types[itemType] then
 			continue
 		end
 
 		local productsOfType: ProductConstants.ProductList = {}
 
-		for itemName, item in pairs(items) do
+		for itemName, item in  (items) do
 			local source = item.Source
 			if source and source.Currency then
 				productsOfType[itemName] = {
@@ -48,7 +48,7 @@ do
 	local lastProducts: ProductConstants.ProductCategories
 	local rotatingItems: { [string]: { ItemConstants.Item } } = {}
 
-	for itemType, items in pairs(ItemUtil.getItems()) do
+	for itemType, items in  (ItemUtil.getItems()) do
 		-- CONTINUE: No rotating items of this type
 		if not RotatingShopUtil.isItemTypeSold(itemType) then
 			continue
@@ -56,7 +56,7 @@ do
 
 		rotatingItems[itemType] = {}
 
-		for _, item in pairs(items) do
+		for _, item in  (items) do
 			local source = item.Source
 			if source and source.Name and RarityConstants.Rarities[source.Name] then
 				table.insert(rotatingItems[itemType], item)
@@ -71,7 +71,7 @@ do
 			local timeSinceStart = RotatingShopUtil.getTimeSinceStart()
 			local random = Random.new(math.floor(timeSinceStart / RotatingProductConstants.RefreshDelay))
 
-			for itemType, items in pairs(rotatingItems) do
+			for itemType, items in  (rotatingItems) do
 				items = table.clone(items)
 
 				local sellThisMany = math.min(#items, RotatingProductConstants.ItemsPerType[itemType])

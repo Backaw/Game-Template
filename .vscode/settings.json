@@ -7,6 +7,12 @@
   "robloxLsp.typeChecking.options": {
     "infer-instance-from-unknown": true
   },
+  "robloxLsp.workspace.ignoreDir": [
+    ".vscode",
+    "**/_Index/**",
+    "Packages",
+    "ServerPackages"
+  ],
   "[json]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
@@ -14,13 +20,8 @@
     "editor.defaultFormatter": "JohnnyMorganz.stylua"
   },
   "search.exclude": {
-    "Cmdr": true,
-    "GA-SDK-ROBLOX": true,
-    "Janitor": true,
-    "ProfileService": true,
-    "roact": true,
-    "roact-rodux": true,
-    "roblox-lua-promise": true,
-    "rodux": true
-  }
+    "Packages/**": true,
+    "ServerPackages/**": true
+  },
+  "stylua.targetReleaseVersion": "latest"
 }

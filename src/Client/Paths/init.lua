@@ -28,7 +28,6 @@ Paths.Controllers = script
 Paths.Shared = ReplicatedStorage.Modules
 Paths.Assets = ReplicatedStorage.Assets
 Paths.UI = Players.LocalPlayer.PlayerGui
-Paths.Packages = ReplicatedStorage.Packages
 Paths.Initialized = LoadingController.Loaded
 
 task.defer(function()
@@ -36,7 +35,7 @@ task.defer(function()
 
 	require(script.DataController)
 
-	for _, moduleScript in pairs(INITIALIZING) do
+	for _, moduleScript in INITIALIZING do
 		LoadingController.addTask(moduleScript.Name .. "_Init", function()
 			local module = require(moduleScript)
 
@@ -46,7 +45,7 @@ task.defer(function()
 		end)
 	end
 
-	for _, moduleScript in pairs(INITIALIZING) do
+	for _, moduleScript in INITIALIZING do
 		LoadingController.addTask(moduleScript.Name .. "_Start", function()
 			task.spawn(function()
 				local module = require(moduleScript)

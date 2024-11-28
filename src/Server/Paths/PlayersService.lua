@@ -3,7 +3,7 @@ local PlayersService = {}
 local Players = game:GetService("Players")
 local ServerScriptService = game:GetService("ServerScriptService")
 local Paths = require(ServerScriptService.Paths)
-local Promise = require(Paths.Packages.Promise)
+local Promise = require(Paths.Shared.Packages.Promise)
 local Maid = require(Paths.Shared.Maid)
 local GameUtil = require(Paths.Shared.Game.GameUtil)
 
@@ -41,7 +41,7 @@ end
 function PlayersService.getLoadedPlayers()
 	local loadedPlayers: { Player } = {}
 
-	for _, player in pairs(Players:GetPlayers()) do
+	for _, player in Players:GetPlayers() do
 		if PlayersService.isLoaded(player) then
 			table.insert(loadedPlayers, player)
 		end
@@ -100,7 +100,7 @@ function PlayersService.start()
 			}
 
 			local loaders = Promise.resolve()
-			for _, moduleScript in pairs(LOADERS) do
+			for _, moduleScript in LOADERS do
 				local module = require(moduleScript)
 				local loader = module.loadPlayer
 
@@ -157,7 +157,7 @@ function PlayersService.start()
 	end
 
 	Players.PlayerAdded:Connect(loadPlayer)
-	for _, player in ipairs(Players:GetPlayers()) do
+	for _, player in Players:GetPlayers() do
 		loadPlayer(player)
 	end
 

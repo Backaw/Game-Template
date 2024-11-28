@@ -13,7 +13,7 @@ local options: { [string]: Option } = {
 
 SettingsConstants.Options = options
 
-for name, option in pairs(SettingsConstants.Options) do
+for name, option in  (SettingsConstants.Options) do
 	option.Name = name
 end
 

@@ -7,7 +7,7 @@ local CurrencyUtil = require(Paths.Shared.Currency.CurrencyUtil)
 local PlayerDataService = require(Paths.Services.Data.PlayerDataService)
 local ProductService: typeof(require(Paths.Services.Products.ProductService))
 local ProductConstants = require(Paths.Shared.Products.ProductConstants)
-local GameAnalytics = require(Paths.Packages.GameAnalytics)
+local GameAnalytics = require(Paths.Shared.Packages.GameAnalytics)
 local GameAnalyticsService: typeof(require(Paths.Services.GameAnalyticsService))
 local TableUtil = require(Paths.Shared.Utils.TableUtil)
 local QuestConstants = require(Paths.Shared.Quests.QuestConstants)
@@ -92,7 +92,7 @@ function CurrencyService.init()
 	GameAnalyticsService = require(Paths.Services.GameAnalyticsService)
 	QuestService = require(Paths.Services.QuestService)
 
-	for _, currency in pairs(CurrencyConstants.IngameCurrencies) do
+	for _, currency in CurrencyConstants.IngameCurrencies do
 		-- CONTINUE: Currency isn't purchaseable
 		if not ProductConstants.Types[currency] then
 			continue

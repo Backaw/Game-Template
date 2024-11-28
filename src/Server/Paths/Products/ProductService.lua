@@ -4,7 +4,7 @@ local Players = game:GetService("Players")
 local ServerScriptService = game:GetService("ServerScriptService")
 local MarketplaceService = game:GetService("MarketplaceService")
 local Paths = require(ServerScriptService.Paths)
-local Promise = require(Paths.Packages.Promise)
+local Promise = require(Paths.Shared.Packages.Promise)
 local Signal = require(Paths.Shared.Signal)
 local Remotes = require(Paths.Shared.Remotes)
 local CurrencyConstants = require(Paths.Shared.Currency.CurrencyConstants)
@@ -14,7 +14,7 @@ local ProductUtil = require(Paths.Shared.Products.ProductUtil)
 local PlayerDataService = require(Paths.Services.Data.PlayerDataService)
 local CurrencyService = require(Paths.Services.CurrencyService)
 local PlayersService = require(Paths.Services.PlayersService)
-local GameAnalytics = require(Paths.Packages.GameAnalytics)
+local GameAnalytics = require(Paths.Shared.Packages.GameAnalytics)
 local DeferredPromise = require(Paths.Shared.DeferredPromise)
 local RewardService = require(Paths.Services.RewardService)
 local GameAnalyticsService = require(Paths.Services.GameAnalyticsService)
@@ -41,8 +41,8 @@ ProductService.ProductPurchased = Signal.new() --> (player : Player, product : P
 -------------------------------------------------------------------------------
 local function updateRobuxPrices(updating: ProductConstants.ProductCategories)
 	local promises = {}
-	for infoType, idsToProducts in pairs(ProductUtil.getRobuxProducts()) do
-		for id in pairs(idsToProducts) do
+	for infoType, idsToProducts in (ProductUtil.getRobuxProducts()) do
+		for id in idsToProducts do
 			-- Price has already been retrieved
 			if robuxPrices[id] then
 				continue
@@ -84,8 +84,8 @@ local function updateRobuxPrices(updating: ProductConstants.ProductCategories)
 
 	productsInitialized
 		:andThen(function()
-			for _, products in pairs(updating) do
-				for _, product in pairs(products) do
+			for _, products in updating do
+				for _, product in products do
 					local id = product.Price.Id
 					if id then
 						local price = robuxPrices[id]
@@ -200,8 +200,8 @@ function ProductService.updateProducts(
 )
 	ProductUtil.updateProducts(registering, unregistering)
 
-	for productType, productList in pairs(ProductConstants.Products) do
-		for name, product in pairs(productList) do
+	for productType, productList in ProductConstants.Products do
+		for name, product in productList do
 			product.Type = productType
 			product.Name = name
 		end
@@ -215,7 +215,7 @@ end
 ProductService.loadPlayer = PlayersService.promisifyLoader(function(player: Player)
 	local userId = player.UserId
 
-	for id, products in pairs(ProductUtil.getGamepassProducts()) do
+	for id, products in (ProductUtil.getGamepassProducts()) do
 		local address = ProductUtil.getGamepassAddressFromId(id)
 
 		if not PlayerDataService.get(player, address) then
@@ -242,12 +242,12 @@ end, "Gamepasses")
 -------------------------------------------------------------------------------
 do
 	-- Fill in missing produt info
-	for _, productType in pairs(ProductConstants.Types) do
+	for _, productType in ProductConstants.Types do
 		CurrencyService.ResourceType[productType] = productType
 	end
 
 	-- Create bundle products
-	for name, bundle in pairs(ProductConstants.Bundles) do
+	for name, bundle in ProductConstants.Bundles do
 		local product: ProductConstants.Product = {
 			Name = name,
 			Icon = bundle.Icon,
@@ -261,7 +261,7 @@ do
 
 		ProductService.ProductPurchased:Connect(function(player, purchasedProduct)
 			if purchasedProduct == product then
-				for _, reward in pairs(bundle.Rewards) do
+				for _, reward in bundle.Rewards do
 					RewardService.award(player, reward, "Bundle" .. name, false)
 				end
 			end

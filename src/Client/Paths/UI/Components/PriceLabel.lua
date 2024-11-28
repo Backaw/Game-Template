@@ -65,14 +65,14 @@ function PriceLabel.new()
 			setText(StringUtil.getCompactNumber(price.Amount * (count or 1)) .. if count then (" (%s)"):format(count) else "")
 			label.TextColor3 = Color3.fromRGB(139, 255, 49)
 
-			icon.Image = Images.Currencies.Coin
+			icon.Image = Images.Currencies.Coin :: typeof(icon.Image)
 			icon.Visible = true
 		elseif currency == CurrencyConstants.Currencies.DevProduct or currency == CurrencyConstants.Currencies.GamePass then
 			setText(if price.PriceInRobux then StringUtil.commafiedNumber(tostring(price.PriceInRobux)) else "nil")
 			label.TextColor3 = Color3.fromRGB(255, 255, 255)
 
 			icon.Visible = true
-			icon.Image = Images.Currencies.Robux
+			icon.Image = Images.Currencies.Robux :: typeof(icon.Image)
 		else
 			setText("Free")
 			label.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -84,7 +84,7 @@ function PriceLabel.new()
 	-------------------------------------------------------------------------------
 	-- LOGIC
 	-------------------------------------------------------------------------------
-	for _, component in pairs(components) do
+	for _, component in components do
 		priceLabel:GetMaid():Add(component)
 	end
 

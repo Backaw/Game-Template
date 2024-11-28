@@ -15,11 +15,11 @@ function UnitTester.run(directory: Instance)
 
 	local outputs: { [string]: { string } } = {}
 
-	for _, descedant in pairs(directory:GetDescendants()) do
+	for _, descedant in (directory:GetDescendants()) do
 		if
 			descedant:IsA("ModuleScript")
 			and StringUtil.endsWith(descedant.Name, SUFFIX)
-			and not descedant:IsDescendantOf(ReplicatedStorage.Packages)
+			and not descedant:IsDescendantOf(ReplicatedStorage.Modules.Packages)
 		then
 			local module = require(descedant)
 
@@ -41,10 +41,10 @@ function UnitTester.run(directory: Instance)
 		end
 	end
 
-	for source, issues in pairs(outputs) do
+	for source, issues in outputs do
 		if TableUtil.length(issues) > 0 then
 			local output = ("[%s]"):format(source)
-			for _, issue in pairs(issues) do
+			for _, issue in issues do
 				output = output .. ("\n\t%s"):format(issue)
 			end
 

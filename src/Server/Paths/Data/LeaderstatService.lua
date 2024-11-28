@@ -12,7 +12,7 @@ local QuestConstants = require(Paths.Shared.Quests.QuestConstants)
 -------------------------------------------------------------------------------
 -- PRIVATE MEMBERS
 -------------------------------------------------------------------------------
-local statToLeaderstat = TableUtil.flipKeyValuePairs(DataConstants.Leaderstats)
+local statToLeaderstat = TableUtil.flipKeyValue (DataConstants.Leaderstats)
 
 -------------------------------------------------------------------------------
 -- PUBLIC METHODS
@@ -29,7 +29,7 @@ LeaderstatService.loadPlayer = PlayersService.promisifyLoader(function(player: P
 	folder.Name = "leaderstats"
 	folder.Parent = player
 
-	for leaderstat, statToTrack in pairs(DataConstants.Leaderstats) do
+	for leaderstat, statToTrack in  (DataConstants.Leaderstats) do
 		LeaderstatService.createValue(player, leaderstat, PlayerDataService.get(player, QuestUtil.getStatAddress(statToTrack)))
 	end
 end, "leaderstats")

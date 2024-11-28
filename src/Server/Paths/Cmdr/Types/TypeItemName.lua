@@ -5,7 +5,7 @@ local TableUtil = require(ReplicatedStorage.Modules.Utils.TableUtil)
 
 return function(registry)
 	-- We have to create a uniqe productId type for each productType
-	for itemType, items in pairs(ItemUtil.getItems()) do
+	for itemType, items in  (ItemUtil.getItems()) do
 		local function stringsGetter()
 			return TableUtil.getKeys(items)
 		end

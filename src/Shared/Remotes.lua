@@ -81,7 +81,7 @@ local function getEventHandler(name: string): EventHandler
 		dontCascade = dontCascade and true or false
 
 		if not dontCascade then
-			for _, fire in ipairs(history) do
+			for _, fire in history do
 				task.spawn(callback, table.unpack(fire))
 			end
 		end
@@ -98,7 +98,7 @@ local function getEventHandler(name: string): EventHandler
 
 	handler.Remote[IS_SERVER and "OnServerEvent" or "OnClientEvent"]:Connect(function(...)
 		table.insert(history, table.pack(...))
-		for _, callback in ipairs(callbacks) do
+		for _, callback in callbacks do
 			task.spawn(callback, ...)
 		end
 	end)
@@ -109,7 +109,7 @@ end
 
 -- Bindings, pass a dictionary of remotes to create / connect to
 function Remotes.bindFunctions(callbacks: { [string]: FunctionCallback })
-	for name, callback in pairs(callbacks) do
+	for name, callback in callbacks do
 		assert(callback and typeof(callback) == "function", ("%s has no valid callback function assigned"):format(name))
 
 		task.spawn(function()
@@ -120,7 +120,7 @@ function Remotes.bindFunctions(callbacks: { [string]: FunctionCallback })
 end
 
 function Remotes.bindEvents(callbacks: { [string]: EventCallback })
-	for name, callback in pairs(callbacks) do
+	for name, callback in callbacks do
 		assert(callback and typeof(callback) == "function", ("%s has no valid callback function assigned"):format(name))
 
 		task.spawn(function()
@@ -156,17 +156,17 @@ if IS_SERVER then
 	end
 
 	function Remotes.fireClients(clients: { Player }, eventName: string, ...: any)
-		for _, player in ipairs(clients) do
+		for _, player in clients do
 			Remotes.fireClient(player, eventName, ...)
 		end
 	end
 
 	function Remotes.fireAllClients(eventName: string, ...: any)
-		Remotes.fireClients(Players:GetPlayers(), eventName, ...)
+		Remotes.fireClients(Players:GetPlayers() :: { Player }, eventName, ...)
 	end
 
 	function Remotes.fireAllOtherClients(ignoreClient: Player, eventName: string, ...: any)
-		for _, player in ipairs(Players:GetPlayers()) do
+		for _, player in Players:GetPlayers() do
 			if player ~= ignoreClient then
 				Remotes.fireClient(player, eventName, ...)
 			end

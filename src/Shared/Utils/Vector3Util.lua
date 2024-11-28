@@ -63,7 +63,7 @@ function Vector3Util.getImpactInDirection(vector: Vector3, direction: Vector3): 
 end
 
 function Vector3Util.forEveryAxis(callback: (string) -> ())
-	for axis in pairs(AXIIS) do
+	for axis in  (AXIIS) do
 		callback(axis)
 	end
 end

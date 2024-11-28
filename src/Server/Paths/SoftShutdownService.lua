@@ -41,7 +41,7 @@ if SoftShutdownService.isProxyServer() then
 	end
 
 	Players.PlayerAdded:Connect(teleportOut)
-	for _, player in pairs(Players:GetPlayers()) do
+	for _, player in (Players:GetPlayers()) do
 		teleportOut(player)
 	end
 else

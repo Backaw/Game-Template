@@ -9,8 +9,8 @@ local productToGamepass = ProductUtil.getCmdrGamepasses()
 return function(_, player: Player, productName: string)
 	local id = productToGamepass[productName]
 
-	for _, products in pairs(ProductConstants.Products) do
-		for _, product in pairs(products) do
+	for _, products in  (ProductConstants.Products) do
+		for _, product in  (products) do
 			if productName == product.Name and productToGamepass[productName] == id then
 				ProductService.giveGamepass(player, id)
 				ProductService.giveProduct(player, product)

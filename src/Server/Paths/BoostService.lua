@@ -90,12 +90,12 @@ end
 BoostService.loadPlayer = PlayersService.promisifyLoader(function(player: Player)
 	countdowns[player] = {}
 
-	for k in pairs(PlayerDataService.get(player, "Boosts")) do
+	for k in  (PlayerDataService.get(player, "Boosts")) do
 		countdown(player, k)
 	end
 
 	PlayersService.registerUnloadTask(player, function()
-		for boostName, info in pairs(countdowns[player]) do
+		for boostName, info in  (countdowns[player]) do
 			local path = "Boosts." .. boostName
 
 			task.cancel(info.Thread)

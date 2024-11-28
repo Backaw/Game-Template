@@ -71,7 +71,7 @@ function TabbedWindow.new(
 	-------------------------------------------------------------------------------
 	-- Initialization
 	-------------------------------------------------------------------------------
-	for i, name in pairs(names) do
+	for i, name in  (names) do
 		-- ERROR: Tab name already exists
 		if tabs[name] then
 			error(("Tab %s already exists"):format(name))

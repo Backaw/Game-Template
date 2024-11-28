@@ -14,7 +14,7 @@ type Condition = {
 local DEFAULT_STATE_REFRESH_TIME = 0.2
 
 local function previewState(state: string)
-	for _, player in pairs(Players:GetPlayers()) do
+	for _, player in  (Players:GetPlayers()) do
 		player.PlayerGui.HUD.TextLabel.Text = state
 	end
 end
@@ -80,7 +80,7 @@ function StateMachine.new(stateNames: { string }, conditionNames: { string }, re
 				task.spawn(function()
 					while running do
 						--check conditions
-						for _, conditionName in pairs(linkedConditions) do
+						for _, conditionName in  (linkedConditions) do
 							local condition = conditions[conditionName]
 							--print("Checking " .. condition.Name)
 							if condition:Evaluate() then
@@ -136,8 +136,8 @@ function StateMachine.new(stateNames: { string }, conditionNames: { string }, re
 	function stateMachine:Start(startState: string)
 		if debg then
 			-- Prevent any loops
-			for state, linkedConditions in pairs(stateToConditions) do
-				for _, condition in pairs(linkedConditions) do
+			for state, linkedConditions in  (stateToConditions) do
+				for _, condition in  (linkedConditions) do
 					if conditionsToTransitionState[condition] == state then
 						warn(("Cyclic relationship between state %s and condition %s"):format(state, condition))
 					end

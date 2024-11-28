@@ -39,7 +39,7 @@ do
 	function CmdrUtil.DictionaryKeys(dict)
 		local keys = {}
 
-		for key in pairs(dict) do
+		for key in dict do
 			table.insert(keys, key)
 		end
 
@@ -93,7 +93,7 @@ do
 		return function(text, returnFirst)
 			local results = {}
 
-			for i, name in pairs(names) do
+			for i, name in names do
 				local fuzzyResults = instances and instances[i] or name
 
 				-- Continue on checking for non-exact matches...
@@ -161,8 +161,8 @@ do
 		local escapedOp = op:gsub(".", "%%%1")
 		local escapedFirst = "%" .. first
 
-		return text:gsub("(" .. escapedFirst .. "+)(" .. escapedOp .. ")", function(esc, op)
-			return (esc:sub(1, #esc - 1) .. op):gsub(".", function(char)
+		return text:gsub("(" .. escapedFirst .. "+)(" .. escapedOp .. ")", function(esc, op2)
+			return (esc:sub(1, #esc - 1) .. op2):gsub(".", function(char)
 				return "\\u" .. string.format("%04x", string.byte(char), 16)
 			end)
 		end)
@@ -170,7 +170,7 @@ do
 
 	local OPERATORS = { "&&", "||", ";" }
 	function CmdrUtil.EncodeEscapedOperators(text)
-		for _, operator in ipairs(OPERATORS) do
+		for _, operator in OPERATORS do
 			text = CmdrUtil.EncodeEscapedOperator(text, operator)
 		end
 
@@ -305,7 +305,7 @@ do
 		}
 
 		if override then
-			for key, fuzzyResults in pairs(override) do
+			for key, fuzzyResults in override do
 				listableType[key] = fuzzyResults
 			end
 		end
@@ -328,7 +328,7 @@ do
 		local commands = commandString:split("&&")
 
 		local output = ""
-		for i, command in ipairs(commands) do
+		for i, command in commands do
 			local outputEncoded = output:gsub("%$", "\\x24")
 			command = command:gsub("||", output:find("%s") and ("%q"):format(outputEncoded) or outputEncoded)
 
@@ -477,7 +477,7 @@ do
 	--- Splits a string by a single delimeter chosen from the given set.
 	-- The first matching delimeter from the set becomes the split character.
 	function CmdrUtil.SplitPrioritizedDelimeter(text, delimeters)
-		for i, delimeter in ipairs(delimeters) do
+		for i, delimeter in delimeters do
 			if text:find(delimeter) or i == #delimeters then
 				return CmdrUtil.SplitStringSimple(text, delimeter)
 			end
@@ -488,7 +488,7 @@ do
 	function CmdrUtil.Map(array, callback)
 		local results = {}
 
-		for i, v in ipairs(array) do
+		for i, v in array do
 			results[i] = callback(v, i)
 		end
 
@@ -498,7 +498,7 @@ do
 	--- Maps arguments #2-n through callback and returns values as tuple
 	function CmdrUtil.Each(callback, ...)
 		local results = {}
-		for i, fuzzyResults in ipairs({ ... }) do
+		for i, fuzzyResults in { ... } do
 			results[i] = callback(fuzzyResults)
 		end
 		return unpack(results)

@@ -14,8 +14,8 @@ function ProductUtil.getRobuxProducts()
 	local robuxProducts: { [Enum.InfoType]: { [number]: { ProductConstants.Product } } } =
 		{ [Enum.InfoType.Product] = {}, [Enum.InfoType.GamePass] = {} }
 
-	for _, products in pairs(ProductConstants.Products) do
-		for _, product in pairs(products) do
+	for _, products in ProductConstants.Products do
+		for _, product in products do
 			local price = product.Price
 			local currency = price.Currency
 
@@ -59,8 +59,8 @@ end
 function ProductUtil.getCmdrGamepasses()
 	local passes: { [string]: number } = {}
 
-	for gamepass, products in pairs(ProductUtil.getRobuxProducts()[Enum.InfoType.GamePass]) do
-		for _, product in pairs(products) do
+	for gamepass, products in ProductUtil.getRobuxProducts()[Enum.InfoType.GamePass] do
+		for _, product in products do
 			passes[product.Name] = gamepass
 		end
 	end
@@ -70,7 +70,7 @@ end
 
 function ProductUtil.updateProducts(registering: ProductConstants.ProductCategories, unregistering: ProductConstants.ProductCategories)
 	if unregistering then
-		for productType, removing in pairs(unregistering) do
+		for productType, removing in unregistering do
 			local products = ProductConstants.Products[productType]
 			if not products then
 				warn(("%s is an invalid product type"):format(productType))
@@ -80,13 +80,13 @@ function ProductUtil.updateProducts(registering: ProductConstants.ProductCategor
 			end
 
 			-- Don't use TableUtil.shallowSubtract cause elements won't be same on server->client
-			for name in pairs(removing) do
-				products[name] = nil
+			for name in removing do
+				products[name] = nil :: ProductConstants.Product
 			end
 		end
 	end
 
-	for productType, newProducts in pairs(registering) do
+	for productType, newProducts in registering do
 		local existingProducts = ProductConstants.Products[productType]
 		if not existingProducts then
 			warn(("%s is an invalid product type"):format(productType))

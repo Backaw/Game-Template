@@ -40,7 +40,7 @@ local function createSnackbar(message: string, color: Color3, ignoreDelay: true?
 	end
 
 	-- Bump Others
-	for _, otherSnackbar in ipairs(container:GetChildren()) do
+	for _, otherSnackbar in container:GetChildren() do
 		-- RETURN: Not another createSnackbar
 		if not otherSnackbar:IsA("GuiObject") or not otherSnackbar.Visible then
 			continue
@@ -107,7 +107,7 @@ function Snackbar.warning(message: string, ignoreDelay: true?)
 end
 
 function Snackbar.clear()
-	for _, snackbar: TextLabel in pairs(container:GetChildren()) do
+	for _, snackbar: TextLabel in container:GetChildren() do
 		if snackbar:IsA("TextLabel") then
 			snackbar.Visible = false
 		end

@@ -38,7 +38,7 @@ do
 
 	QuestConstants.Quests = quests
 
-	for questName, constants in pairs(quests) do
+	for questName, constants in  (quests) do
 		constants.Name = questName
 
 		local template = QuestConstants.Templates[questName:gsub("%d", "")]

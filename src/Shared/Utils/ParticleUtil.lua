@@ -18,11 +18,11 @@ sharedPart.Parent = Workspace
 function ParticleUtil.getList(from: Instance, to: Instance)
 	local particles: ParticleList = {}
 
-	for _, child in pairs(from:GetChildren()) do
+	for _, child in  (from:GetChildren()) do
 		local clone = child:Clone()
 		clone.Parent = to
 
-		for _, particle in pairs(clone:GetDescendants()) do
+		for _, particle in  (clone:GetDescendants()) do
 			if particle:IsA("ParticleEmitter") then
 				particles[particle.Name] = particle
 			end
@@ -55,7 +55,7 @@ function ParticleUtil.parentToAttachment(particles: ParticleList, parent: BasePa
 end
 
 function ParticleUtil.parentTo(particles: ParticleList, parent: Instance)
-	for _, particle in pairs(particles) do
+	for _, particle in  (particles) do
 		particle.Parent = parent
 	end
 end
@@ -63,7 +63,7 @@ end
 function ParticleUtil.emit(particles: ParticleList, particleCount: number | { [string]: number }, parentPosition: Vector3?)
 	if parentPosition then
 		local parent
-		for _, particle in pairs(particles) do
+		for _, particle in  (particles) do
 			parent = particle.Parent
 			break
 		end
@@ -76,32 +76,32 @@ function ParticleUtil.emit(particles: ParticleList, particleCount: number | { [s
 	end
 
 	if typeof(particleCount) == "table" then
-		for name, count in pairs(particleCount) do
+		for name, count in  (particleCount) do
 			if name ~= "All" and not particles[name] then
 				warn(("Can't emit %s %s bc it doesn't exist in the particle bundle"):format(name, count))
 			end
 		end
 
-		for _, particle in pairs(particles) do
+		for _, particle in  (particles) do
 			particle:Emit(particleCount[particle.Name] or particleCount.All or 0)
 		end
 	else
-		for _, particle in pairs(particles) do
+		for _, particle in  (particles) do
 			particle:Emit(particleCount)
 		end
 	end
 end
 
 function ParticleUtil.toggleEnabled(particles: ParticleList, enabled: boolean)
-	for _, particle in pairs(particles) do
+	for _, particle in  (particles) do
 		particle.Enabled = enabled
 	end
 end
 
 function ParticleUtil.scale(particles: ParticleList | { ParticleEmitter }, scale: number)
-	for _, particle in pairs(particles) do
+	for _, particle in  (particles) do
 		local sizeKeypoints = {}
-		for _, keypoint in pairs(particle.Size.Keypoints) do
+		for _, keypoint in  (particle.Size.Keypoints) do
 			table.insert(
 				sizeKeypoints,
 				NumberSequenceKeypoint.new(keypoint.Time, math.abs(keypoint.Value * scale), math.abs(keypoint.Envelope * scale))
@@ -109,7 +109,7 @@ function ParticleUtil.scale(particles: ParticleList | { ParticleEmitter }, scale
 		end
 
 		local squashKeypoints = {}
-		for _, keypoint in pairs(particle.Squash.Keypoints) do
+		for _, keypoint in  (particle.Squash.Keypoints) do
 			table.insert(
 				squashKeypoints,
 				NumberSequenceKeypoint.new(keypoint.Time, math.abs(keypoint.Value * scale), math.abs(keypoint.Envelope * scale))

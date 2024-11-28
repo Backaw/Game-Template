@@ -32,7 +32,7 @@ function BasePartUtil.getGlobalExtentsSize(part: PsuedoBasePart, offset: CFrame?
 		local min = math.huge
 		local max = -math.huge
 
-		for _, corner in pairs(BasePartUtil.CORNERS) do
+		for _, corner in  (BasePartUtil.CORNERS) do
 			local position = offset:PointToObjectSpace(cframe:PointToWorldSpace(size * corner))[axis]
 			if position < min then
 				min = position
@@ -86,7 +86,7 @@ function BasePartUtil.closestPoint(part0: PsuedoBasePart, part1: PsuedoBasePart)
 
 	local part1Size: Vector3 = part1.Size
 	local part1CFrame: CFrame = part1.CFrame
-	for _, corner in pairs(BasePartUtil.CORNERS) do
+	for _, corner in  (BasePartUtil.CORNERS) do
 		local closestPointToCorner =
 			SignedDistanceUtil.getClosestPointOnBox(part0 :: BasePart, part1CFrame:PointToWorldSpace(part1Size * corner))
 

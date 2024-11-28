@@ -75,7 +75,7 @@ end
 -- LOGIC
 -------------------------------------------------------------------------------
 screen.Enabled = true
-for _, tooltip in pairs(screen:GetChildren()) do
+for _, tooltip in  (screen:GetChildren()) do
 	tooltip.AnchorPoint = Vector2.new(0, 0)
 	tooltip.Visible = false
 end

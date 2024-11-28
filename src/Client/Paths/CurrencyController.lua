@@ -43,7 +43,7 @@ end
 -------------------------------------------------------------------------------
 -- LOGIC
 -------------------------------------------------------------------------------
-for _, currency in pairs(CurrencyConstants.IngameCurrencies) do
+for _, currency in  (CurrencyConstants.IngameCurrencies) do
 	cache[currency] = DataController.get(CurrencyUtil.getAddress(currency))
 end
 

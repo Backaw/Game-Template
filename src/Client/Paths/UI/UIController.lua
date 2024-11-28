@@ -8,7 +8,7 @@ local StringUtil = require(Paths.Shared.Utils.StringUtil)
 local TableUtil = require(Paths.Shared.Utils.TableUtil)
 local UIUtil = require(Paths.Controllers.UI.Utils.UIUtil)
 local DeferredPromise = require(Paths.Shared.DeferredPromise)
-local Promise = require(Paths.Packages.Promise)
+local Promise = require(Paths.Shared.Packages.Promise)
 
 type ScreenStateCallback = ((table?) -> ())?
 type ScreenStateCallbacks = {
@@ -46,7 +46,7 @@ function UIController.registerScreenStateCallbacks(state: string, callbacks: Scr
 end
 
 function UIController.init()
-	for _, descedant in pairs(Paths.Controllers.UI:GetDescendants()) do
+	for _, descedant in (Paths.Controllers.UI:GetDescendants()) do
 		if descedant:IsA("ModuleScript") and StringUtil.endsWith(descedant.Name, "Screen") then
 			require(descedant)
 		end
@@ -82,7 +82,7 @@ uiStateMachine:RegisterGlobalCallback(function(fromState, toState, data)
 	UIController.ScreenStateTransition = DeferredPromise.new()
 
 	-- Seperate loops so that open is garuanteed to run first, helps PromptUtil background transitions not be choppy
-	for state, callbacks in pairs(screenStateCallbacks) do
+	for state, callbacks in screenStateCallbacks do
 		if state == toState then
 			if not table.find(lastUiStateStack, state) and callbacks.Boot then
 				local success, err = pcall(callbacks.Boot, data)
@@ -100,7 +100,7 @@ uiStateMachine:RegisterGlobalCallback(function(fromState, toState, data)
 		end
 	end
 
-	for state, callbacks in pairs(screenStateCallbacks) do
+	for state, callbacks in screenStateCallbacks do
 		if fromState == state then
 			if callbacks.Minimize then
 				local success, err = pcall(callbacks.Minimize)

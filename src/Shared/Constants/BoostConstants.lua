@@ -12,7 +12,7 @@ local boosts: { [string]: {
 
 BoostConstants.Boosts = boosts
 
-for name, boost in pairs(boosts) do
+for name, boost in  (boosts) do
 	boost.Name = name
 end
 

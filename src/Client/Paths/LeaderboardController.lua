@@ -10,7 +10,7 @@ local QuestUtil = require(Paths.Shared.Quests.QuestUtil)
 local player = Players.LocalPlayer
 
 --[[
-for _, leaderboard in pairs(Workspace.Lobby.Leaderboards:GetChildren()) do
+for _, leaderboard in  (Workspace.Lobby.Leaderboards:GetChildren()) do
 	local info = DataConstants.Leaderboards[leaderboard.Name]
 	local stat = info.Stat
 

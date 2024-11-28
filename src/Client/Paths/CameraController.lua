@@ -86,7 +86,7 @@ end
 -------------------------------------------------------------------------------
 RunService:BindToRenderStep("CameraShake", RENDER_PRIORITY, function(dt)
 	lastShakeOffset = CFrame.new()
-	for _, shaker in pairs(shakers) do
+	for _, shaker in  (shakers) do
 		lastShakeOffset *= shaker:Update(dt)
 	end
 	camera.CFrame *= lastShakeOffset

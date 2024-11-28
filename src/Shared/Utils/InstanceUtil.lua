@@ -32,7 +32,7 @@ function InstanceUtil.onDestroyed(instance: Instance, callback: () -> ())
 end
 
 function InstanceUtil.findFirstDescendant(instance: Instance, searchingFor: string): Instance?
-	for _, descendant in pairs(instance:GetDescendants()) do
+	for _, descendant in  (instance:GetDescendants()) do
 		if descendant.Name == searchingFor then
 			return descendant
 		end
@@ -40,7 +40,7 @@ function InstanceUtil.findFirstDescendant(instance: Instance, searchingFor: stri
 end
 
 function InstanceUtil.findFirstDescendantWhichIsA(instance: Instance, className: string): Instance?
-	for _, descendant in pairs(instance:GetDescendants()) do
+	for _, descendant in  (instance:GetDescendants()) do
 		if descendant:IsA(className) then
 			return descendant
 		end

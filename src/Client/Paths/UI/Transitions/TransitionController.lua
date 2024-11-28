@@ -63,7 +63,7 @@ end
 -------------------------------------------------------------------------------
 -- LOGIC
 -------------------------------------------------------------------------------
-for _, handler in pairs(script.Parent:GetChildren()) do
+for _, handler in  (script.Parent:GetChildren()) do
 	if handler == script then
 		continue
 	end
