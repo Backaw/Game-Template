@@ -14,6 +14,7 @@ local INITIALIZING = {
 	script.ItemController,
 	script.LeaderboardController,
 	script.InteractionController,
+	script.Character.CharacterController,
 
 	-- UI
 	script.UI.UIScaleController,

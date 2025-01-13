@@ -9,6 +9,7 @@ local UIScaleController = require(Paths.Controllers.UI.UIScaleController)
 local Images = require(Paths.Shared.Images)
 local StringUtil = require(Paths.Shared.Utils.StringUtil)
 local TextLabelUtil = require(Paths.Controllers.UI.Utils.TextLabelUtil)
+local UIUtil = require(Paths.Controllers.UI.Utils.UIUtil)
 
 export type PriceLabel = typeof(PriceLabel.new())
 
@@ -18,37 +19,50 @@ function PriceLabel.new()
 	-------------------------------------------------------------------------------
 	-- PRIVATE MEMBERS
 	-------------------------------------------------------------------------------
-	local components = TemplateUtil.cloneChildren(TemplateUtil.getFromStorage("Components", "Price"))
+	local components = TemplateUtil.cloneChildren(Paths.UI.Components.PriceLabel)
 
 	local label: TextLabel = components.TextLabel
 	local icon: ImageLabel = components.Icon
-	local uiListLayout: UIListLayout = components.UIListLayout
+	local listLayout: UIListLayout = components.UIListLayout
 
 	local textSize: number
+
+	local maid = priceLabel:GetMaid()
 
 	-------------------------------------------------------------------------------
 	-- PRIVATE METHODS
 	-------------------------------------------------------------------------------
 	local function setText(text: string)
 		label.TextSize = textSize
-		TextLabelUtil.setScaleableText(label, text)
+		task.defer(function()
+			TextLabelUtil.setScaleableText(label, text)
+		end)
 	end
 
 	-------------------------------------------------------------------------------
 	-- PUBLIC MEMBERS
 	-------------------------------------------------------------------------------
 	-- Set price before mounting
-	function priceLabel:Mount(parent: GuiObject, hideBackground: boolean?)
-		label.Parent = parent
-		icon.Parent = parent
-		uiListLayout.Parent = parent
+	function priceLabel:Mount(container: GuiObject, hideBackground: boolean?)
+		label.Parent = container
+		icon.Parent = container
+		listLayout.Parent = container
 
 		textSize = label:FindFirstAncestorWhichIsA("GuiObject").AbsoluteSize.Y / UIScaleController.getScale()
-		parent.BackgroundTransparency = if hideBackground then 1 else parent.BackgroundTransparency
+		container.BackgroundTransparency = if hideBackground then 1 else container.BackgroundTransparency
+
+		maid:RemoveIfExits("Parent")
+		maid:Add(container, "Parent")
+
+		UIUtil.mountZIndex(container, true)
 	end
 
 	function priceLabel:Align(alignment: Enum.HorizontalAlignment)
-		uiListLayout.HorizontalAlignment = alignment
+		listLayout.HorizontalAlignment = alignment
+	end
+
+	function priceLabel:GetText()
+		return label
 	end
 
 	function priceLabel:EnableOwned()
@@ -58,21 +72,23 @@ function PriceLabel.new()
 		icon.Visible = false
 	end
 
-	function priceLabel:SetPrice(price: CurrencyConstants.Price, count: number?)
+	function priceLabel:SetPrice(price: CurrencyConstants.Price)
+		if not label.Parent then
+			warn("Must mount textlabel before setting price")
+			return
+		end
+
 		local currency = price.Currency
 
-		if currency == CurrencyConstants.Currencies.Coins then
-			setText(StringUtil.getCompactNumber(price.Amount * (count or 1)) .. if count then (" (%s)"):format(count) else "")
-			label.TextColor3 = Color3.fromRGB(139, 255, 49)
+		if currency == CurrencyConstants.Currencies.Cash then
+			setText(StringUtil.getCompactNumber(price.Amount))
+			icon.Image = Images.Currencies[currency] :: typeof(icon.Image)
 
-			icon.Image = Images.Currencies.Coin :: typeof(icon.Image)
 			icon.Visible = true
 		elseif currency == CurrencyConstants.Currencies.DevProduct or currency == CurrencyConstants.Currencies.GamePass then
-			setText(if price.PriceInRobux then StringUtil.commafiedNumber(tostring(price.PriceInRobux)) else "nil")
+			setText(("%s"):format(if price.PriceInRobux then StringUtil.commafiedNumber(tostring(price.PriceInRobux)) else "nil"))
 			label.TextColor3 = Color3.fromRGB(255, 255, 255)
-
-			icon.Visible = true
-			icon.Image = Images.Currencies.Robux :: typeof(icon.Image)
+			icon.Visible = false
 		else
 			setText("Free")
 			label.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -81,11 +97,11 @@ function PriceLabel.new()
 		end
 	end
 
-	-------------------------------------------------------------------------------
-	-- LOGIC
-	-------------------------------------------------------------------------------
-	for _, component in components do
-		priceLabel:GetMaid():Add(component)
+	function priceLabel:UseTemplate(image: string, text: string)
+		setText(text)
+
+		icon.Image = image :: typeof(icon.Image)
+		icon.Visible = true
 	end
 
 	return priceLabel

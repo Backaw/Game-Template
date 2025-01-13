@@ -6,29 +6,41 @@ local Signal = require(Paths.Shared.Signal)
 local Button = require(Paths.Controllers.UI.Components.Button)
 
 export type TabbedWindow = typeof(TabbedWindow.new())
+export type Window = GuiObject | (boolean) -> ()
 
 function TabbedWindow.new(
 	names: { string },
-	constructor: (string, number) -> (Button.Button, GuiObject),
+	constructor: (string, number) -> (Button.Button, Window),
 	onTabSelectedToggled: ((Button.Button, boolean) -> ()) | nil
 )
 	local tabbedWindow = {}
 
 	-------------------------------------------------------------------------------
-	-- PRIVATE MEMBERS
+	-- PRIVATE VARIABLES
 	-------------------------------------------------------------------------------
-	local windows: { [string]: GuiObject } = {}
+	local windows: { [string]: Window } = {}
 	local tabs: { [string]: Button.Button } = {}
 
 	local activeWindow: string
 
 	-------------------------------------------------------------------------------
-	-- PUBLIC MEMBERS
+	-- PUBLIC VARIABLES
 	-------------------------------------------------------------------------------
 	tabbedWindow.ActiveChanged = Signal.new() --> (newTab : string, lastTab: string)
 
 	-------------------------------------------------------------------------------
-	-- PUBLIC METHODS
+	-- PRIVATE FUNCTIONS
+	-------------------------------------------------------------------------------
+	local function toggleWindow(window: Window, toggle: boolean)
+		if typeof(window) == "Instance" then
+			window.Visible = toggle
+		else
+			window(toggle)
+		end
+	end
+
+	-------------------------------------------------------------------------------
+	-- PUBLIC FUNCTIONS
 	-------------------------------------------------------------------------------
 	function tabbedWindow:Open(name: string)
 		-- ERROR: Tab doesn't exist
@@ -41,9 +53,8 @@ function TabbedWindow.new(
 			return
 		end
 
-		windows[activeWindow].Visible = false
-
-		windows[name].Visible = true
+		toggleWindow(windows[activeWindow], false)
+		toggleWindow(windows[name], true)
 
 		local lastActive = activeWindow
 		activeWindow = name
@@ -64,14 +75,14 @@ function TabbedWindow.new(
 		return assert(tabs[name], ("Tab %s doesn't exist"):format(name))
 	end
 
-	function tabbedWindow:GetOpened()
+	function tabbedWindow:GetActive()
 		return activeWindow
 	end
 
 	-------------------------------------------------------------------------------
 	-- Initialization
 	-------------------------------------------------------------------------------
-	for i, name in  (names) do
+	for i, name in pairs(names) do
 		-- ERROR: Tab name already exists
 		if tabs[name] then
 			error(("Tab %s already exists"):format(name))
@@ -84,10 +95,14 @@ function TabbedWindow.new(
 		windows[name] = window
 
 		tab:GetGuiObject().Name = name
-		window.Name = name
 
 		local isOpened = activeWindow == name
-		window.Visible = isOpened
+
+		if typeof(window) == "Instance" then
+			window.Name = name
+		end
+
+		toggleWindow(window, isOpened)
 
 		if onTabSelectedToggled then
 			onTabSelectedToggled(tab, name == activeWindow)

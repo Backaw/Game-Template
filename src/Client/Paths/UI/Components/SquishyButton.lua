@@ -67,6 +67,8 @@ function SquishyButton.new(guiObject: GuiButton, objectToScale: GuiObject?, pres
 		if objectToScale == guiObject then
 			initSize = guiObject.Size
 		end
+
+		return container
 	end
 
 	function squishyButton:GetContainer()

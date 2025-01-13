@@ -8,13 +8,16 @@ local Signal = require(Paths.Shared.Signal)
 local Component = require(Paths.Controllers.UI.Components.Component)
 local ClickIndicator = require(Paths.Controllers.UI.Components.ClickIndicator)
 local Sounds = require(Paths.Shared.Sounds)
-local DeviceUtil = require(Paths.Controllers.Utils.DeviceUtil)
+local InputUtil = require(Paths.Controllers.Utils.InputUtil)
 local UIUtil = require(Paths.Controllers.UI.Utils.UIUtil)
+local UIController = require(Paths.Controllers.UI.UIController)
+
+export type Button = typeof(Button.new())
 
 local CLICK_COOLDOWN = 0.05
 
-export type Button = typeof(Button.new())
 local playerGui = Players.LocalPlayer.PlayerGui
+local uiStateMachine = UIController.getStateMachine()
 
 function Button.new(guiObject: GuiButton, mute: boolean?)
 	local button = Component.new()
@@ -28,6 +31,7 @@ function Button.new(guiObject: GuiButton, mute: boolean?)
 	local clickDebounce = false
 
 	local buttonSizeAtClick: Vector2
+	local stateRestriction: string?
 
 	-------------------------------------------------------------------------------
 	-- PUBLIC VARIABLES
@@ -65,6 +69,10 @@ function Button.new(guiObject: GuiButton, mute: boolean?)
 		end
 	end
 
+	function button:RestrictToState(state: string)
+		stateRestriction = state
+	end
+
 	function button:GetGuiObject()
 		return guiObject
 	end
@@ -94,25 +102,31 @@ function Button.new(guiObject: GuiButton, mute: boolean?)
 		if not clickDebounce then
 			clickDebounce = true
 
-			if clickIndicatorEnabled then
-				ClickIndicator.play()
-			end
-
 			buttonSizeAtClick = guiObject.AbsoluteSize
 
-			button.Pressed:Fire()
+			local pressed
+			if not stateRestriction or (uiStateMachine:GetState() == stateRestriction) then
+				if clickIndicatorEnabled then
+					ClickIndicator.play()
+				end
 
-			if not mute then
-				Sounds.play("ButtonClick")
+				pressed = true
+				button.Pressed:Fire()
+
+				if not mute then
+					Sounds.play("ButtonClick")
+				end
 			end
 
 			local connection: RBXScriptConnection
 			connection = UserInputService.InputEnded:Connect(function(input)
 				local userInputType = input.UserInputType
 				if
-					userInputType == Enum.UserInputType.MouseButton1
-					or userInputType == Enum.UserInputType.Touch
-					or userInputType == Enum.UserInputType.Gamepad1
+					(
+						userInputType == Enum.UserInputType.MouseButton1
+						or userInputType == Enum.UserInputType.Touch
+						or userInputType == Enum.UserInputType.Gamepad1
+					) and pressed
 				then
 					button.Released:Fire()
 					connection:Disconnect()
@@ -139,7 +153,7 @@ function Button.new(guiObject: GuiButton, mute: boolean?)
 	end)
 
 	button.Released:Connect(function()
-		if not DeviceUtil.isGamepadInput() and not UIUtil.isMouseWithinObjectBounds(guiObject, buttonSizeAtClick) then
+		if not InputUtil.isGamepadInput() and not UIUtil.isMouseWithinObjectBounds(guiObject, buttonSizeAtClick) then
 			return
 		end
 

@@ -13,7 +13,7 @@ function CurrencyUtil.getAddress(currency: string)
 end
 
 function CurrencyUtil.isInGameCurrency(currency: string)
-	return CurrencyConstants.IngameCurrencies[currency] ~= nil
+	return table.find(CurrencyConstants.IngameCurrencies, currency) ~= nil
 end
 
 function CurrencyUtil.getMultiplierAddress(currency: string)
