@@ -5,6 +5,7 @@ local ProductConstants = require(ReplicatedStorage.Modules.Products.ProductConst
 local CurrencyConstants = require(ReplicatedStorage.Modules.Currency.CurrencyConstants)
 local TableUtil = require(ReplicatedStorage.Modules.Utils.TableUtil)
 local StringUtil = require(ReplicatedStorage.Modules.Utils.StringUtil)
+local DataUtil = require(ReplicatedStorage.Modules.Data.DataUtil)
 
 function ProductUtil.getGamepassProducts()
 	return ProductUtil.getRobuxProducts()[Enum.InfoType.GamePass]
@@ -34,12 +35,26 @@ function ProductUtil.getRobuxProducts()
 	return robuxProducts
 end
 
-function ProductUtil.getGamepassAddress(product: ProductConstants.Product)
-	return ProductUtil.getGamepassAddressFromId(product.Price.Id)
+function ProductUtil.hasGamePass(player: Player?, product: ProductConstants.Product | number)
+	local id = if typeof(product) == "number" then product else product.Price.Id
+	return DataUtil.get(player, "GamePasses." .. id) ~= nil
 end
 
-function ProductUtil.getGamepassAddressFromId(id: number)
-	return "GamePasses." .. id
+function ProductUtil.hasBundle(player: Player?, name: string)
+	local bundle = ProductConstants.Bundles[name]
+
+	local ownedVersions = DataUtil.get(player, "OwnedBundles." .. name)
+	if ownedVersions then
+		if ownedVersions[tostring(bundle.Version or 1)] then
+			return true
+		end
+	end
+	return false
+end
+
+function ProductUtil.isPremium(product: table)
+	local currency = product.Price.Currency
+	return currency == CurrencyConstants.Currencies.DevProduct or currency == CurrencyConstants.Currencies.GamePass
 end
 
 function ProductUtil.getProduct(type: string, name: string)
@@ -49,11 +64,6 @@ function ProductUtil.getProduct(type: string, name: string)
 	end
 
 	return ProductConstants.Products[type][name]
-end
-
-function ProductUtil.isPremium(product: table)
-	local currency = product.Price.Currency
-	return currency == CurrencyConstants.Currencies.DevProduct or currency == CurrencyConstants.Currencies.GamePass
 end
 
 function ProductUtil.getCmdrGamepasses()

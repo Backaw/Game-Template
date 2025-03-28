@@ -12,7 +12,7 @@ local ServerStorage = game:GetService("ServerStorage")
 local Paths = require(ServerScriptService.Paths)
 local Remotes = require(Paths.Shared.Remotes)
 local Signal = require(Paths.Shared.Signal)
-local DataUtil = require(Paths.Shared.Data.DataUtil)
+local DataFormatUtil = require(Paths.Shared.Data.DataFormatUtil)
 local DataConstants = require(Paths.Shared.Data.DataConstants)
 local ProfileService = require(ServerStorage.Packages.ProfileService)
 local TableUtil = require(Paths.Shared.Utils.TableUtil)
@@ -27,7 +27,7 @@ local DONT_SAVE_DATA = false
 -------------------------------------------------------------------------------
 local clientsReadyForData: { [Player]: true? } = {}
 local clientReadyForData = Signal.new()
-local reconcilers: { Pre: { (DataUtil.Store) -> () }, Post: { (DataUtil.Store) -> () } } = { Pre = {}, Post = {} }
+local reconcilers: { Pre: { (DataFormatUtil.Store) -> () }, Post: { (DataFormatUtil.Store) -> () } } = { Pre = {}, Post = {} }
 
 -------------------------------------------------------------------------------
 -- PUBLIC MEMBERS
@@ -38,7 +38,7 @@ PlayerDataService.Updated = Signal.new() --> (event: string, player: Player, new
 -------------------------------------------------------------------------------
 -- PRIVATE METHODS
 -------------------------------------------------------------------------------
-local function reconcile(data: DataUtil.Store, default: DataUtil.Store, recursiveCase: true?)
+local function reconcile(data: DataFormatUtil.Store, default: DataFormatUtil.Store, recursiveCase: true?)
 	if not recursiveCase then
 		for _, reconciler in pairs(reconcilers.Pre) do
 			reconciler(data)
@@ -63,14 +63,14 @@ end
 -------------------------------------------------------------------------------
 -- PUBLIC METHODS
 -------------------------------------------------------------------------------
-function PlayerDataService.registerReconciler(reconciler: (DataUtil.Store) -> (), isPreDefaultRecociliation: true?)
+function PlayerDataService.registerReconciler(reconciler: (DataFormatUtil.Store) -> (), isPreDefaultRecociliation: true?)
 	table.insert(reconcilers[if isPreDefaultRecociliation then "Pre" else "Post"], reconciler)
 end
 
-function PlayerDataService.get(player: Player, address: string): DataUtil.Data
+function PlayerDataService.get(player: Player, address: string): DataFormatUtil.Data
 	local profile = PlayerDataService.Profiles[player]
 	if profile then
-		return DataUtil.getFromAddress(profile.Data, address)
+		return DataFormatUtil.getFromAddress(profile.Data, address)
 	else
 		warn(("Attempting to get %s's data after release at: \n\t%s"):format(player.Name, address))
 	end
@@ -80,7 +80,7 @@ function PlayerDataService.set(player: Player, address: string, newValue: any, e
 	local profile = PlayerDataService.Profiles[player]
 
 	if profile then
-		DataUtil.setFromAddress(profile.Data, address, newValue)
+		DataFormatUtil.setFromAddress(profile.Data, address, newValue)
 		Remotes.fireClient(player, "DataUpdated", address, newValue, event, eventMeta)
 
 		if event then
@@ -163,7 +163,7 @@ function PlayerDataService.loadPlayer(player: Player)
 
 		task.spawn(function()
 			local defaultData = DataConstants.DefaultPlayerData()
-			profile = ProfileService.GetProfileStore(DataUtil.getDataKey(), defaultData)
+			profile = ProfileService.GetProfileStore(DataFormatUtil.getDataKey(), defaultData)
 				:LoadProfileAsync(tostring(player.UserId), "ForceLoad")
 
 			-- RETURN: Couldn't retrieve a profile

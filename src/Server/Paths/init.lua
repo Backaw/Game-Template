@@ -54,7 +54,6 @@ task.delay(0, function()
 		loadModule(Paths.Shared.Utils.ParticleUtil),
 
 		-- Services
-		loadModule(Paths.Services.SoftShutdownService),
 		loadModule(Paths.Services.UnitTestingService),
 		loadModule(Paths.Services.Products.ItemProductsService),
 		loadModule(Paths.Services.CollisionService),

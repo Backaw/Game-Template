@@ -9,7 +9,7 @@ local PlayerDataService = require(Paths.Services.Data.PlayerDataService)
 local Promise = require(Paths.Shared.Packages.Promise)
 local DataConstants = require(Paths.Shared.Data.DataConstants)
 local TemplateUtil = require(Paths.Shared.Utils.TemplateUtil)
-local DataUtil = require(Paths.Shared.Data.DataUtil)
+local DataFormatUtil = require(Paths.Shared.Data.DataFormatUtil)
 local PlayerService = require(Paths.Services.PlayersService)
 local QuestUtil = require(Paths.Shared.Quests.QuestUtil)
 
@@ -127,7 +127,7 @@ function LeaderboardService.init()
 	local fetchStorePromises = {}
 	for leaderboardType in DataConstants.Leaderboards do
 		safeFetch(function()
-			local orderedStore = DataStoreService:GetOrderedDataStore(("%s_%s"):format(DataUtil.getDataKey(), leaderboardType))
+			local orderedStore = DataStoreService:GetOrderedDataStore(("%s_%s"):format(DataFormatUtil.getDataKey(), leaderboardType))
 			orderedStores[leaderboardType] = orderedStore
 
 			return orderedStore

@@ -34,15 +34,15 @@ DataConstants.DefaultPlayerData = function()
 	store.Multipliers = {
 		Coin = 1,
 	}
-
-	store.GamePasses = {}
-	store.DevProducts = {}
 	store.Boosts = {}
 
-	store.EquippedItems = {}
+	store.OwnedBundles = {}
+	store.GamePasses = {}
+	store.DevProducts = {}
 
+	store.EquippedItems = {}
 	store.OwnedItems = {}
-	for _, itemType in  (ItemConstants.Types) do
+	for _, itemType in ItemConstants.Types do
 		store.OwnedItems[itemType] = {}
 	end
 

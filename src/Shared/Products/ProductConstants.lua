@@ -12,28 +12,48 @@ export type Product = {
 	LimitedTime: boolean?,
 }
 
-export type ProductList = { [string]: Product }
-export type ProductCategories = { [string]: ProductList }
-
-local products: { [string]: { [string]: Product } } = {
-	-- Item products are created below
-	Coin = {},
-	Multiplier = {},
-}
-
-local bundles: { [string]: {
+export type Bundle = {
 	Name: string?,
 	ExpiresAt: number?,
 	Icon: string,
-	Gamepass: number,
+	Price: CurrencyConstants.Price,
 	Rewards: { RewardConstants.Reward },
-} } =
-	{}
+	Version: number?,
+}
 
-ProductConstants.Products = products
+export type ProductList = { [string]: Product }
+export type ProductCategories = { [string]: ProductList }
+
+-------------------------------------------------------------------------------
+-- PRIVATE MEMBERS
+-------------------------------------------------------------------------------
+local products: { [string]: { [string]: Product } } = {
+	-- Item products are created below
+	Cash = {},
+	Multiplier = {},
+}
+local bundles: { [string]: Bundle } = {}
+
+-------------------------------------------------------------------------------
+-- PUBLIC MEMBERS
+-------------------------------------------------------------------------------
 ProductConstants.Types = {
-	Coin = "Coin",
+	Cash = "Cash",
+	Tool = "Tool",
+	Eye = "Eye",
 }
 ProductConstants.Bundles = bundles
+ProductConstants.Products = products
+
+-------------------------------------------------------------------------------
+-- INIT
+-------------------------------------------------------------------------------
+for _, productType in pairs(ProductConstants.Types) do
+	products[productType] = products[productType] or {}
+end
+
+for name, bundle in pairs(ProductConstants.Bundles) do
+	bundle.Name = name
+end
 
 return ProductConstants

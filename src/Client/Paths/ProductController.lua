@@ -53,7 +53,7 @@ function ProductController.hasGamePass(product: ProductConstants.Product)
 		error(("Product %s %s is not associated with a GamePass"):format(product.Type, product.Name))
 	end
 
-	return DataController.get(ProductUtil.getGamepassAddress(product)) ~= nil
+	return ProductUtil.hasGamePass(nil, product)
 end
 
 function ProductController.promptPurchase(product: ProductConstants.Product, source: string?, getServerVerification: boolean?)
