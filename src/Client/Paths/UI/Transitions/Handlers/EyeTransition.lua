@@ -4,14 +4,20 @@ local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
 
-local screen: ScreenGui = Paths.UI.Transitions
-local frame: ImageLabel = screen.Eye
-
 local TWEEN_INFO = TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
 local CLOSE_SIZE = UDim2.fromScale(2, 2)
 
+-------------------------------------------------------------------------------
+-- PRIVATE VARIABLES
+-------------------------------------------------------------------------------
+local screen: ScreenGui = Paths.UI.Transitions
+local frame: ImageLabel = screen.Eye
+
 local tween
 
+-------------------------------------------------------------------------------
+-- PUBLIC FUNCTIONS
+-------------------------------------------------------------------------------
 function EyeTransition.open()
 	if tween then
 		tween:Cancel()
@@ -42,8 +48,5 @@ function EyeTransition.close()
 	tween:Play()
 	tween.Completed:Wait()
 end
-
-screen.Enabled = true
-frame.Visible = false
 
 return EyeTransition

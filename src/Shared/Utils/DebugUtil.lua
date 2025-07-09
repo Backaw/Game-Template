@@ -1,18 +1,25 @@
 local DebugUtil = {}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
 local MathUtil = require(ReplicatedStorage.Modules.Utils.MathUtil)
+local GameUtil = require(ReplicatedStorage.Modules.Game.GameUtil)
 
-function DebugUtil.previewCFrame(cframe: CFrame, size: Vector3?, color: Color3?, instance: string?)
-	local preview = Instance.new(instance or "WedgePart")
+function DebugUtil.isDebugging(toggle: boolean)
+	return if GameUtil.isLive() then false else toggle
+end
+
+function DebugUtil.previewCFrame(cframe: CFrame, size: Vector3?, color: Color3?, shape: Enum.PartType?)
+	local preview = Instance.new("Part")
 	preview.Size = size or Vector3.new(1, 1, 1)
 	preview.CFrame = cframe
 	preview.Color = color or Color3.fromRGB(0, 0, 0)
 	preview.Anchored = true
 	preview.CanTouch = false
 	preview.CanQuery = false
+	preview.Shape = shape or Enum.PartType.Wedge
 	preview.CanCollide = false
-	preview.Parent = workspace
+	preview.Parent = Workspace
 
 	return preview
 end
@@ -36,6 +43,12 @@ function DebugUtil.truncateVector3(vector: Vector3, precision: number)
 		MathUtil.precision(vector.Y, precision),
 		MathUtil.precision(vector.Z, precision)
 	)
+end
+
+function DebugUtil.printVector3(vector: Vector3, precision: number?)
+	local p = precision or 3
+	local formatStr = string.format("(%%.%df, %%.%df, %%.%df)", p, p, p)
+	return formatStr:format(vector.X, vector.Y, vector.Z)
 end
 
 return DebugUtil

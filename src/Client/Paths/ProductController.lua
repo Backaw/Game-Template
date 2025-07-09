@@ -10,12 +10,12 @@ local CurrencyController = require(Paths.Controllers.CurrencyController)
 local CurrencyUtil = require(Paths.Shared.Currency.CurrencyUtil)
 local Snackbar = require(Paths.Controllers.UI.Components.Snackbar)
 local Promise = require(Paths.Shared.Packages.Promise)
-local DataController = require(Paths.Controllers.DataController)
 local Signal = require(Paths.Shared.Signal)
 -- local Confetti = require(Paths.Controllers.UI.Particles.Confetti)
 local Sounds = require(Paths.Shared.Sounds)
+local DebugUtil = require(Paths.Shared.Utils.DebugUtil)
 
-local DEBUGGING = false
+local DEBUG = DebugUtil.isDebugging(false)
 
 -------------------------------------------------------------------------------
 -- PRIVATE MEMBERS
@@ -35,7 +35,7 @@ ProductController.ProductsUpdated = Signal.new()
 local function onProductPurchased(product: ProductConstants.Product)
 	if product.Price.Currency == CurrencyConstants.Currencies.GamePass then
 		-- Confetti.play(40, Confetti.Colors.Party, 2)
-		Sounds.play("Unlock")
+		Sounds.play("PremiumReward")
 	end
 
 	ProductController.ProductPurchased:Fire(product)
@@ -53,7 +53,17 @@ function ProductController.hasGamePass(product: ProductConstants.Product)
 		error(("Product %s %s is not associated with a GamePass"):format(product.Type, product.Name))
 	end
 
-	return ProductUtil.hasGamePass(nil, product)
+	return ProductUtil.hasGamePass(product)
+end
+
+function ProductController.getCanAfford(product: ProductConstants.Product)
+	local price = product.Price
+
+	if CurrencyUtil.isInGameCurrency(price.Currency) then
+		if CurrencyController.get(price.Currency) >= price.Amount then
+			return true
+		end
+	end
 end
 
 function ProductController.promptPurchase(product: ProductConstants.Product, source: string?, getServerVerification: boolean?)
@@ -89,7 +99,7 @@ function ProductController.promptPurchase(product: ProductConstants.Product, sou
 		success = Remotes.invokeServer("PromptProductPurchase", product.Type, product.Name, 1, source)
 
 		if not success then
-			if DEBUGGING then
+			if DEBUG then
 				warn(("Product purchase failed for %s product %s"):format(product.Type, product.Name))
 			end
 

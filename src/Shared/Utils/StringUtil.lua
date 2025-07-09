@@ -25,6 +25,16 @@ function StringUtil.toCamelCase(str: string)
 	return str:sub(1, 1):lower() .. str:sub(2)
 end
 
+function StringUtil.toPascalCase(str: string)
+	str = str:gsub("(%l)(%u)", "%1 %2")
+	str = str:gsub("[^%w]+", " ")
+	local result = ""
+	for word in str:gmatch("%w+") do
+		result = result .. word:sub(1, 1):upper() .. word:sub(2):lower()
+	end
+	return result
+end
+
 function StringUtil.toSnakeCase(str: string)
 	local result = ""
 	str = str:gsub("_", " "):gsub("%p", "")
@@ -43,6 +53,14 @@ function StringUtil.seperateSnakeCase(str: string)
 	end
 
 	return result
+end
+
+function StringUtil.splitOnCaps(string: string)
+	local parts = {}
+	for word in string.gmatch(string, "%u[^%u]*") do
+		table.insert(parts, word)
+	end
+	return table.concat(parts)
 end
 
 function StringUtil.levenshteinDistance(str1: string, str2: string)

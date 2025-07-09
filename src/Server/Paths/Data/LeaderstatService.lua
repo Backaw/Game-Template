@@ -5,14 +5,6 @@ local Paths = require(ServerScriptService.Paths)
 local PlayerDataService = require(Paths.Services.Data.PlayerDataService)
 local PlayersService = require(Paths.Services.PlayersService)
 local DataConstants = require(Paths.Shared.Data.DataConstants)
-local QuestUtil = require(Paths.Shared.Quests.QuestUtil)
-local TableUtil = require(Paths.Shared.Utils.TableUtil)
-local QuestConstants = require(Paths.Shared.Quests.QuestConstants)
-
--------------------------------------------------------------------------------
--- PRIVATE MEMBERS
--------------------------------------------------------------------------------
-local statToLeaderstat = TableUtil.flipKeyValue (DataConstants.Leaderstats)
 
 -------------------------------------------------------------------------------
 -- PUBLIC METHODS
@@ -29,19 +21,19 @@ LeaderstatService.loadPlayer = PlayersService.promisifyLoader(function(player: P
 	folder.Name = "leaderstats"
 	folder.Parent = player
 
-	for leaderstat, statToTrack in  (DataConstants.Leaderstats) do
-		LeaderstatService.createValue(player, leaderstat, PlayerDataService.get(player, QuestUtil.getStatAddress(statToTrack)))
+	for leaderstat, configs in DataConstants.Leaderstats do
+		LeaderstatService.createValue(player, leaderstat, PlayerDataService.get(player, configs.Address))
 	end
 end, "leaderstats")
 
 -------------------------------------------------------------------------------
 -- LOGIC
 -------------------------------------------------------------------------------
-PlayerDataService.Updated:Connect(function(event, player, value, metadata)
-	if event == "QuestStatChanged" then
-		local leaderstat = statToLeaderstat[metadata.Stat]
-		if leaderstat then
+PlayerDataService.Updated:Connect(function(event, player, value)
+	for leaderstat, configs in pairs(DataConstants.Leaderstats) do
+		if event == configs.Event then
 			player.leaderstats[leaderstat].Value = value
+			break
 		end
 	end
 end)

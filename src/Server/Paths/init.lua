@@ -1,15 +1,21 @@
+local Paths = {}
+
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 local Workspace = game:GetService("Workspace")
-local Paths = {}
+local DebugUtil = require(ReplicatedStorage.Modules.Utils.DebugUtil)
+local PathsUtil = require(ReplicatedStorage.Modules.Utils.PathsUtil)
 
+local DEBUG = DebugUtil.isDebugging(false)
+
+-------------------------------------------------------------------------------
+-- PUBLIC VARIABLES
+-------------------------------------------------------------------------------
 Paths.Services = script
 Paths.Shared = ReplicatedStorage.Modules
 
 Paths.Initialized = require(Paths.Shared.DeferredPromise).new()
 Paths.Assets = ReplicatedStorage.Assets
-
-local DEBUG = false
 
 -------------------------------------------------------------------------------
 -- PRIVATE FUNCTIONS
@@ -29,15 +35,7 @@ local function moveToStorage(moving: Folder, destination: Instance)
 end
 
 local function loadModule(moduleScript)
-	local since = os.clock()
-
-	local returning = require(moduleScript)
-
-	if DEBUG then
-		print(("Loaded %s (%s)"):format(moduleScript.Name, os.clock() - since))
-	end
-
-	return returning
+	return PathsUtil.timeRequire(moduleScript)
 end
 
 -------------------------------------------------------------------------------
@@ -51,8 +49,6 @@ task.delay(0, function()
 	local ping = os.clock()
 
 	local initializing = {
-		loadModule(Paths.Shared.Utils.ParticleUtil),
-
 		-- Services
 		loadModule(Paths.Services.UnitTestingService),
 		loadModule(Paths.Services.Products.ItemProductsService),
@@ -91,6 +87,10 @@ task.delay(0, function()
 
 	print("Welcome to NEW GAME")
 	print(string.format("✅ Server loaded in %.6f seconds", os.clock() - ping))
+
+	if DEBUG then
+		PathsUtil.printLoadTimes()
+	end
 end)
 
 return Paths

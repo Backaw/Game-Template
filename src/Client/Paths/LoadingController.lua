@@ -1,12 +1,13 @@
 local LoadingController = {}
 
-local Players = game:GetService("Players")
-local StarterGui = game:GetService("StarterGui")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StarterGui = game:GetService("StarterGui")
 local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
 local DeferredPromise = require(ReplicatedStorage.Modules.DeferredPromise)
 local MathUtil = require(ReplicatedStorage.Modules.Utils.MathUtil)
 local TweenUtil = require(ReplicatedStorage.Modules.Utils.TweenUtil)
+local DebugUtil = require(ReplicatedStorage.Modules.Utils.DebugUtil)
 
 local EASE = 0.1
 local FULL = 1 + EASE
@@ -14,7 +15,7 @@ local FULL_LOAD_LENGTH = 1
 
 local LOGO_ROTATION_BOUNDS = 2
 
-local DEBUG = false
+local DEBUG = DebugUtil.isDebugging(false)
 
 -------------------------------------------------------------------------------
 -- PRIVATE MEMBERS
@@ -91,13 +92,18 @@ function LoadingController.start()
 					TweenUtil.batch({
 						TweenService:Create(
 							container,
-							TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
-							{ BackgroundTransparency = 1, ImageTransparency = 1 }
+							TweenInfo.new(1, Enum.EasingStyle.Linear, Enum.EasingDirection.Out),
+							{ BackgroundTransparency = 1, BackgroundColor3 = Color3.new(0, 0, 0) }
 						),
-						TweenService:Create(
-							container.TextLabel,
+						--[[ TweenService:Create(
+							container.Overlay,
 							TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
-							{ TextTransparency = 1 }
+							{ BackgroundTransparency = 1 }
+						), *]]
+						TweenService:Create(
+							container.StudioLogo.Logo,
+							TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
+							{ ImageTransparency = 1 }
 						),
 						TweenService:Create(
 							logo.UIScale,
@@ -119,7 +125,6 @@ end
 -------------------------------------------------------------------------------
 -- LOGIC
 -------------------------------------------------------------------------------
-
 -- Let all UI load
 do
 	LoadingController.addTask("Waiting for GUI", function()

@@ -35,7 +35,7 @@ end
 
 -- Cancels any existing tweens binded to an instance, creates a new one, plays it and then binds it to said instance
 function TweenUtil.bind(instance: Instance, bindKey: string, tween: Tween, onCompleted: (Enum.PlaybackState) -> ()?)
-	Binder.invokeBindedMethod(instance, bindKey, "Cancel")
+	TweenUtil.cancelBinding(instance, bindKey)
 
 	Binder.bind(instance, bindKey, tween)
 	Binder.unbindOnBindedEvent(instance, bindKey, "Completed")
@@ -50,6 +50,10 @@ function TweenUtil.bind(instance: Instance, bindKey: string, tween: Tween, onCom
 	tween:Play()
 
 	return tween
+end
+
+function TweenUtil.cancelBinding(instance: Instance, bindKey: string)
+	Binder.invokeBindedMethod(instance, bindKey, "Cancel")
 end
 
 -- Returns a promise that resolves when a tween is completed

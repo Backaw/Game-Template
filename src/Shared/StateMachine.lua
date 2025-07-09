@@ -146,7 +146,7 @@ function StateMachine.new(states: { string }, initialState: string)
 	--[[
 		state itself is also popped
 	]]
-	function stateMachine:PopUntil(state: string, exceptions: { string }?)
+	function stateMachine:PopUpToInclusive(state: string, exceptions: { string }?)
 		-- ERROR: State isn't in the stack
 		if not stateMachine:HasState(state) then
 			error(("Can't pop to (%s) because it isn't in the stack"):format(state))
@@ -169,7 +169,7 @@ function StateMachine.new(states: { string }, initialState: string)
 	--[[
 		state itself is not popped
 	]]
-	function stateMachine:PopUpto(state: string, exceptions: { string }?)
+	function stateMachine:PopUpToExclusive(state: string, exceptions: { string }?)
 		-- ERROR: State isn't in the stack
 		if not stateMachine:HasState(state) then
 			error(("Can't pop to (%s) because it isn't in the stack"):format(state))
@@ -218,7 +218,7 @@ function StateMachine.new(states: { string }, initialState: string)
 	end
 
 	function stateMachine:Clear()
-		stateMachine:PopUntil(initialState)
+		stateMachine:PopUpToInclusive(initialState)
 	end
 
 	function stateMachine:Destroy()

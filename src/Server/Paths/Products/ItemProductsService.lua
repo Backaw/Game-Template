@@ -17,14 +17,14 @@ local TableUtil = require(Paths.Shared.Utils.TableUtil)
 -- Generate items from product
 do
 	local products: ProductConstants.ProductCategories = {}
-	for itemType, items in  (ItemUtil.getItems()) do
+	for itemType, items in (ItemUtil.getItems()) do
 		if not ProductConstants.Types[itemType] then
 			continue
 		end
 
 		local productsOfType: ProductConstants.ProductList = {}
 
-		for itemName, item in  (items) do
+		for itemName, item in items do
 			local source = item.Source
 			if source and source.Currency then
 				productsOfType[itemName] = {

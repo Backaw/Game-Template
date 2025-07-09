@@ -1,13 +1,21 @@
-local Players = game:GetService("Players")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
+local StarterGui = game:GetService("StarterGui")
 
 return function()
 	local issues = {}
 
-	for _, screenGui in  (Paths.UI:GetChildren()) do
+	for _, screenGui: ScreenGui in StarterGui:GetChildren() do
 		if screenGui:IsA("ScreenGui") then
+			local name = screenGui.Name
+			if name == "Cmdr" then
+				continue
+			end
+
 			if screenGui.ResetOnSpawn then
-				table.insert(issues, ("%s screen has reset on spawn enabled"):format(screenGui.Name))
+				table.insert(issues, ("%s screen has ResetOnSpawn enabled"):format(name))
+			end
+
+			if not screenGui.IgnoreGuiInset then
+				table.insert(issues, ("%s screen has IgnoreGuiInset disabled"):format(name))
 			end
 		end
 	end

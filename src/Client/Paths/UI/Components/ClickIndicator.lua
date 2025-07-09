@@ -1,13 +1,12 @@
 local ClickIndicator = {}
 
 local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
 local UDim2Util = require(Paths.Shared.Utils.UDim2Util)
 local TweenUtil = require(Paths.Shared.Utils.TweenUtil)
-local DeviceUtil = require(Paths.Controllers.Utils.DeviceUtil)
+local InputUtil = require(Paths.Controllers.Utils.InputUtil)
 
 local screen: ScreenGui = Players.LocalPlayer.PlayerGui.Mouse
 local clickIndicator: Frame = screen.ClickIndicator
@@ -22,7 +21,7 @@ local START_SIZE = UDim2Util.scalarMultiply(FINAL_SIZE, 0.4)
 -- PUBLIC METHODS
 -------------------------------------------------------------------------------
 function ClickIndicator.play()
-	if DeviceUtil.isMobile() or UserInputService.GamepadEnabled then
+	if InputUtil.isMobile() or UserInputService.GamepadEnabled then
 		return
 	end
 

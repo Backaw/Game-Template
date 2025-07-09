@@ -1,4 +1,6 @@
-local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Signal = require(ReplicatedStorage.Modules.Signal)
+
 local StateMachine = {}
 
 type State = {
@@ -11,15 +13,11 @@ type Condition = {
 	Evaluate: (Condition) -> boolean,
 }
 
+export type Handler = (() -> ()) | nil
+
 local DEFAULT_STATE_REFRESH_TIME = 0.2
 
-local function previewState(state: string)
-	for _, player in  (Players:GetPlayers()) do
-		player.PlayerGui.HUD.TextLabel.Text = state
-	end
-end
-
-function StateMachine.new(stateNames: { string }, conditionNames: { string }, refreshTime: number?, debg: boolean?)
+function StateMachine.new(stateNames: { string }, conditionNames: { string }, refreshTime: number?, doDebug: boolean?)
 	local stateMachine = {}
 
 	-------------------------------------------------------------------------------
@@ -34,6 +32,11 @@ function StateMachine.new(stateNames: { string }, conditionNames: { string }, re
 	local activeState: State?
 
 	refreshTime = refreshTime or DEFAULT_STATE_REFRESH_TIME
+
+	-------------------------------------------------------------------------------
+	-- PUBLIC VARIABLES
+	-------------------------------------------------------------------------------
+	stateMachine.Changed = Signal.new() --> (newState : string?, lastState : string?)
 
 	-------------------------------------------------------------------------------
 	-- PRIVATE FUNCTIONS
@@ -56,8 +59,9 @@ function StateMachine.new(stateNames: { string }, conditionNames: { string }, re
 	function stateMachine:BindState(
 		name: string,
 		linkedConditions: { string },
-		initHandler: (() -> ()) | nil,
-		actionHandler: (() -> ()) | nil
+		initHandler: Handler,
+		actionHandler: Handler,
+		closeHandler: Handler
 	)
 		verifyStateValidity(name)
 
@@ -80,11 +84,11 @@ function StateMachine.new(stateNames: { string }, conditionNames: { string }, re
 				task.spawn(function()
 					while running do
 						--check conditions
-						for _, conditionName in  (linkedConditions) do
+						for _, conditionName in pairs(linkedConditions) do
 							local condition = conditions[conditionName]
 							--print("Checking " .. condition.Name)
 							if condition:Evaluate() then
-								if debg then
+								if doDebug then
 									warn(("%s is true. Switching state to %s "):format(conditionName, condition.TransitionState))
 								end
 
@@ -103,6 +107,9 @@ function StateMachine.new(stateNames: { string }, conditionNames: { string }, re
 				end)
 			end,
 			Stop = function()
+				if closeHandler then
+					closeHandler()
+				end
 				running = false
 			end,
 		}
@@ -121,23 +128,25 @@ function StateMachine.new(stateNames: { string }, conditionNames: { string }, re
 	end
 
 	function stateMachine:SwitchState(name: string)
+		local lastStateName
 		if activeState then
+			lastStateName = activeState.Name
 			activeState:Stop()
 		end
 
-		previewState(name)
+		verifyStateValidity(name)
 
-		activeState = if name then states[name] else nil
-		if activeState then
-			activeState:Run()
-		end
+		activeState = states[name]
+		-- Ordering matters here
+		stateMachine.Changed:Fire(name, lastStateName)
+		activeState:Run()
 	end
 
 	function stateMachine:Start(startState: string)
-		if debg then
+		if doDebug then
 			-- Prevent any loops
-			for state, linkedConditions in  (stateToConditions) do
-				for _, condition in  (linkedConditions) do
+			for state, linkedConditions in pairs(stateToConditions) do
+				for _, condition in pairs(linkedConditions) do
 					if conditionsToTransitionState[condition] == state then
 						warn(("Cyclic relationship between state %s and condition %s"):format(state, condition))
 					end

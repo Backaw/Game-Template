@@ -91,4 +91,31 @@ function ArrayUtil.shuffle(tbl: Array)
 	return returning
 end
 
+function ArrayUtil.transpose(matrix: { { any } }): { { any } }
+	local result = {}
+
+	for rowIndex, row in matrix do
+		for colIndex, value in row do
+			result[colIndex] = result[colIndex] or {}
+			result[colIndex][rowIndex] = value
+		end
+	end
+
+	return result
+end
+
+function ArrayUtil.merge(...)
+	local returning = {}
+
+	for _, t in pairs((table.pack(...))) do
+		if typeof(t) == "table" then
+			for _, v in pairs(t) do
+				table.insert(returning, v)
+			end
+		end
+	end
+
+	return returning
+end
+
 return ArrayUtil

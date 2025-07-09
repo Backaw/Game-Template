@@ -31,8 +31,9 @@ function CurrencyController.transact(currency: string, transacting: number, serv
 
 	local nextValue = cache[currency] + math.floor(transacting)
 	if nextValue >= 0 then
-		CurrencyController.Changed:Fire(currency, nextValue, cache[currency])
+		local previousValue = cache[currency]
 		cache[currency] = nextValue
+		CurrencyController.Changed:Fire(currency, nextValue, previousValue)
 
 		return true
 	end
@@ -43,7 +44,7 @@ end
 -------------------------------------------------------------------------------
 -- LOGIC
 -------------------------------------------------------------------------------
-for _, currency in  (CurrencyConstants.IngameCurrencies) do
+for _, currency in CurrencyConstants.IngameCurrencies do
 	cache[currency] = DataController.get(CurrencyUtil.getAddress(currency))
 end
 

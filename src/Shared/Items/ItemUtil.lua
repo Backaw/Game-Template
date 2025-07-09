@@ -6,10 +6,8 @@ local ProductConstants = require(ReplicatedStorage.Modules.Products.ProductConst
 local InstanceUtil = require(ReplicatedStorage.Modules.Utils.InstanceUtil)
 local StringUtil = require(ReplicatedStorage.Modules.Utils.StringUtil)
 local RarityConstants = require(ReplicatedStorage.Modules.Rarity.RarityConstants)
-local QuestConstants = require(ReplicatedStorage.Modules.Quests.QuestConstants)
-local RewardConstants = require(ReplicatedStorage.Modules.Rewards.RewardConstants)
+local DataUtil = require(ReplicatedStorage.Modules.Data.DataUtil)
 
-local QUEST_ITEM_RARITY = RarityConstants.Rarities.Epic
 local TESTING = false
 
 local items: { [string]: { [string]: ItemConstants.Item } } = {}
@@ -53,8 +51,21 @@ function ItemUtil.getItems()
 	return items
 end
 
+function ItemUtil.hasItem(itemType: string, itemName: string, player: Player?)
+	return DataUtil.get(player, ("OwnedItems.%s.%s"):format(itemType, itemName)) ~= nil
+end
+
 function ItemUtil.getItem(itemType: string, itemName: string)
 	return items[itemType][itemName]
+end
+
+function ItemUtil.getOwnedItemsOfType(itemType: string, player: Player?)
+	-- ERROR: Invalid item type
+	if not ItemConstants.Types[itemType] then
+		error(("%s is an invalid item type"):format(itemType))
+	end
+
+	return DataUtil.get(player, "OwnedItems." .. itemType)
 end
 
 function ItemUtil.getCmdrTypeName(itemType: string)
@@ -83,13 +94,6 @@ function ItemUtil.getItemRarity(itemType: string, itemName: string)
 			return source
 		end
 
-		for _, quest in QuestConstants.Quests do
-			local reward = quest.Reward
-			if reward and (reward.Type == RewardConstants.Types.Item and reward.ItemType == itemType and reward.ItemName == itemName) then
-				return QUEST_ITEM_RARITY
-			end
-		end
-
 		return if not source then RarityConstants.Rarities.Epic else RarityConstants.Rarities.Common
 	end
 end
@@ -110,14 +114,6 @@ for itemType in ItemConstants.Types do
 				Currency = "Free",
 			}
 		end
-	end
-end
-
-for _, quest in QuestConstants.Quests do
-	local reward = quest.Reward
-	if reward and reward.Type == RewardConstants.Types.Item then
-		local item = ItemUtil.getItem(reward.ItemType, reward.ItemName)
-		item.Source = quest
 	end
 end
 

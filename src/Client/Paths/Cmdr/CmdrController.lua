@@ -11,24 +11,26 @@ local ACTIVATION_KEYS = { Enum.KeyCode.Semicolon }
 
 local toggleButton = Paths.UI.TopBar.Cmdr
 
-if Permissions.canRunCommands(Players.LocalPlayer) then
-	Cmdr:SetEnabled(true)
-	Cmdr:SetActivationKeys(ACTIVATION_KEYS)
-	Cmdr:SetHideOnLostFocus(false)
+function CmdrController.init()
+	if Permissions.canRunCommands(Players.LocalPlayer) then
+		Cmdr:SetEnabled(true)
+		Cmdr:SetActivationKeys(ACTIVATION_KEYS)
+		Cmdr:SetHideOnLostFocus(false)
 
-	toggleButton.Visible = true
-	Button.new(toggleButton).Pressed:Connect(function()
-		Cmdr:Toggle()
-	end)
-else
-	Cmdr:SetEnabled(false)
-	toggleButton.Visible = false
-end
-
-Cmdr.Registry:RegisterHook("BeforeRun", function(context)
-	if not Permissions.canRunCommands(context.Executor) then
-		return "You do not have permission to run this command"
+		toggleButton.Visible = true
+		Button.new(toggleButton).Pressed:Connect(function()
+			Cmdr:Toggle()
+		end)
+	else
+		Cmdr:SetEnabled(false)
+		toggleButton.Visible = false
 	end
-end)
+
+	Cmdr.Registry:RegisterHook("BeforeRun", function(context)
+		if not Permissions.canRunCommands(context.Executor) then
+			return "You do not have permission to run this command"
+		end
+	end)
+end
 
 return CmdrController

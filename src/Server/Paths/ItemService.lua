@@ -87,8 +87,8 @@ ItemService.loadPlayer = PlayersService.promisifyLoader(function(player)
 		end
 	end
 
-	for gamepassId, items in gamepassItems do
-		if ProductUtil.hasGamePass(player, gamepassId) then
+	for gamepass, items in gamepassItems do
+		if ProductUtil.hasGamePass(gamepass, player) then
 			for _, item in items do
 				ItemService.giveItem(player, item.Type, item.Name)
 			end

@@ -1,8 +1,11 @@
 local ModelUtil = {}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
 local BasePartUtil = require(ReplicatedStorage.Modules.Utils.BasePartUtil)
 local Vector3Util = require(ReplicatedStorage.Modules.Utils.Vector3Util)
+local MathUtil = require(ReplicatedStorage.Modules.Utils.MathUtil)
 
 -- Get's a list of all parts inside a model and calls a function on them(mutator : (Instance) -> ())
 function ModelUtil.forEachDescendantOfClass(model: Model, class: string, mutator: (Instance) -> ())
@@ -11,6 +14,59 @@ function ModelUtil.forEachDescendantOfClass(model: Model, class: string, mutator
 			mutator(descendant)
 		end
 	end
+end
+
+function ModelUtil.createHitbox(model: Model)
+	local cf, size = model:GetBoundingBox()
+
+	local hitbox = Instance.new("Part")
+	hitbox.Transparency = 1
+	hitbox.Size = size
+	hitbox.CanCollide = false
+	hitbox.Massless = true
+	hitbox.Anchored = true
+	hitbox.CFrame = cf
+	hitbox.Name = "Hitbox"
+
+	return hitbox
+end
+
+function ModelUtil.sizeToPart(model: Model, part: BasePart)
+	local modelCFrame = model:GetBoundingBox()
+	local scale = part.Size / model:GetExtentsSize()
+	local offsets: { [BasePart]: CFrame } = {}
+
+	for _, v in model:GetDescendants() do
+		if v:IsA("BasePart") then
+			offsets[v] = modelCFrame:ToObjectSpace(v.CFrame)
+			v.Size *= scale
+		end
+	end
+
+	for desc, offset in offsets do
+		desc.CFrame = modelCFrame:ToWorldSpace(offset)
+	end
+end
+
+-- Animation for setting a model's scale to zero
+function ModelUtil.scaleToZero(model: Model, duration: number)
+	local connection
+	local scale = model:GetScale()
+	local start = os.clock()
+
+	connection = RunService.RenderStepped:Connect(function()
+		local progress = math.min(1, (os.clock() - start) / duration)
+		if not Workspace:IsAncestorOf(model) or progress >= 1 then
+			return connection:Disconnect()
+		end
+
+		model:ScaleTo(MathUtil.lerpNumber(scale, 0, progress))
+
+		if progress >= 1 then
+			model:ScaleTo(MathUtil.lerpNumber(scale, 0, 1))
+			connection:Disconnect()
+		end
+	end)
 end
 
 -- No rotation
@@ -71,9 +127,9 @@ end
 function ModelUtil.getAssemblyMass(model: Model)
 	local assemblyMass = 0
 
-	for _, basePart in model:GetChildren() do
-		if basePart:IsA("BasePart") then
-			assemblyMass += basePart.Mass
+	for _, basePart: BasePart in model:GetDescendants() do
+		if basePart:IsA("BasePart") and not basePart.Massless then
+			assemblyMass += basePart:GetMass()
 		end
 	end
 

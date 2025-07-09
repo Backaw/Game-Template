@@ -10,7 +10,7 @@ function Maid.cleanup(cleaning)
 	if type(cleaning) == "function" then
 		cleaning()
 	elseif type(cleaning) == "thread" then
-		task.cancel(cleaning)
+		coroutine.close(cleaning)
 	elseif typeof(cleaning) == "RBXScriptConnection" then
 		cleaning:Disconnect()
 	elseif cleaning.Destroy then
@@ -96,6 +96,10 @@ function Maid.new()
 
 		tasks = {}
 		maid = {}
+	end
+
+	function maid:Reset()
+		tasks = {}
 	end
 
 	return maid

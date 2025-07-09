@@ -5,7 +5,6 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local MarketplaceService = game:GetService("MarketplaceService")
 local Paths = require(ServerScriptService.Paths)
 local Promise = require(Paths.Shared.Packages.Promise)
-local RewardService = require(Paths.Services.RewardService)
 local Signal = require(Paths.Shared.Signal)
 local Remotes = require(Paths.Shared.Remotes)
 local CurrencyConstants = require(Paths.Shared.Currency.CurrencyConstants)
@@ -17,6 +16,7 @@ local CurrencyService = require(Paths.Services.CurrencyService)
 local PlayersService = require(Paths.Services.PlayersService)
 local GameAnalytics = require(Paths.Shared.Packages.GameAnalytics)
 local DeferredPromise = require(Paths.Shared.DeferredPromise)
+local RewardService = require(Paths.Services.RewardService)
 local GameAnalyticsService = require(Paths.Services.GameAnalyticsService)
 
 local MAX_PRICE_LOAD_ATTEMPTS = 5
@@ -134,7 +134,6 @@ function ProductService.purchaseProduct(player: Player, productType: string, pro
 	end
 
 	local price = product.Price
-
 	if price.Currency == CurrencyConstants.Currencies.Free then
 		success = true
 	elseif CurrencyUtil.isInGameCurrency(price.Currency) then
@@ -157,7 +156,7 @@ function ProductService.purchaseProduct(player: Player, productType: string, pro
 				})
 			end
 		elseif price.Currency == CurrencyConstants.Currencies.GamePass then
-			if ProductUtil.hasGamePass(player, product) then
+			if ProductUtil.hasGamePass(product, player) then
 				success = true
 			else
 				id = price.Id
@@ -175,13 +174,7 @@ function ProductService.purchaseProduct(player: Player, productType: string, pro
 
 		if source and id then
 			GameAnalyticsService.addEvent("DesignEvent", player.UserId, {
-				eventId = ("%s:%s:%s:%s:%s"):format(
-					"PremiumProductPrompted",
-					product.Type,
-					product.Name,
-					tostring(source),
-					tostring(success)
-				),
+				eventId = ("%s:%s:%s:%s"):format("PremiumProductPrompted", tostring(id), tostring(source), tostring(success)),
 			})
 		end
 	end
@@ -203,8 +196,8 @@ function ProductService.updateProducts(
 )
 	ProductUtil.updateProducts(registering, unregistering)
 
-	for productType, productList in pairs(ProductConstants.Products) do
-		for name, product in pairs(productList) do
+	for productType, productList in ProductConstants.Products do
+		for name, product in productList do
 			product.Type = productType
 			product.Name = name
 		end
@@ -219,9 +212,7 @@ ProductService.loadPlayer = PlayersService.promisifyLoader(function(player: Play
 	local userId = player.UserId
 
 	for id, products in pairs(ProductUtil.getGamepassProducts()) do
-		local address = ProductUtil.getGamepassAddressFromId(id)
-
-		if not PlayerDataService.get(player, address) then
+		if not ProductUtil.hasGamePass(id, player) then
 			Promise.retry(function()
 				return Promise.new(function(resolve)
 					local owned = MarketplaceService:UserOwnsGamePassAsync(userId, id)
@@ -239,50 +230,40 @@ ProductService.loadPlayer = PlayersService.promisifyLoader(function(player: Play
 			-- :await()
 		end
 	end
-end, "Gamepasses")
+end, "Products")
 
 -------------------------------------------------------------------------------
--- LOGIC
+-- EVENT HANDLING
 -------------------------------------------------------------------------------
--- Fill in missing produt info
-for _, productType in ProductConstants.Types do
-	CurrencyService.ResourceType[productType] = productType
-end
+do
+	-- Fill in missing produt info
+	for _, productType in ProductConstants.Types do
+		CurrencyService.ResourceType[productType] = productType
+	end
 
--- Create bundle products
-for name, bundle in ProductConstants.Bundles do
-	name = bundle.Name or name
+	-- Create bundle products
+	for name, bundle in ProductConstants.Bundles do
+		local product: ProductConstants.Product = {
+			Name = name,
+			Icon = bundle.Icon,
+			Price = bundle.Price,
+		}
 
-	local product: ProductConstants.Product = {
-		Name = name,
-		Icon = bundle.Icon,
-		Price = bundle.Price,
-		Type = ProductConstants.Types.Bundle,
-	}
+		ProductConstants.Products.Bundle[name] = product
 
-	ProductConstants.Products.Bundle[name] = product
-
-	local version = bundle.Version or 1
-	ProductService.registerValidator(product, function(player)
-		return not ProductUtil.hasBundle(player, name)
-	end)
-	ProductService.ProductPurchased:Connect(function(player: Player, purchased: ProductConstants.Product)
-		if purchased == product then
-			for _, reward in bundle.Rewards do
-				RewardService.award(player, reward, "Bundle" .. name)
+		ProductService.ProductPurchased:Connect(function(player, purchasedProduct)
+			if purchasedProduct == product then
+				for _, reward in bundle.Rewards do
+					RewardService.award(player, reward, "Bundle" .. name, false)
+				end
 			end
+		end)
+	end
 
-			local ownedVersions = PlayerDataService.get(player, "OwnedBundles." .. name)
-			if not ownedVersions then
-				PlayerDataService.set(player, "OwnedBundles." .. name, { [tostring(version)] = true })
-			else
-				PlayerDataService.set(player, ("OwnedBundles.%s.%s"):format(name, version), true)
-			end
-		end
+	task.spawn(function()
+		updateRobuxPrices(ProductConstants.Products)
 	end)
 end
-
-updateRobuxPrices(ProductConstants.Products)
 
 MarketplaceService.ProcessReceipt = function(info)
 	GameAnalytics:ProcessReceiptCallback(info)

@@ -153,7 +153,7 @@ function Button.new(guiObject: GuiButton, mute: boolean?)
 	end)
 
 	button.Released:Connect(function()
-		if not InputUtil.isGamepadInput() and not UIUtil.isMouseWithinObjectBounds(guiObject, buttonSizeAtClick) then
+		if InputUtil.isPrimaryClickInput() and not UIUtil.isMouseWithinObjectBounds(guiObject, buttonSizeAtClick) then
 			return
 		end
 

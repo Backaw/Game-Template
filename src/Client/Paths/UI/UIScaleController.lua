@@ -2,16 +2,18 @@ local UIScaleController = {}
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local StarterGui = game:GetService("StarterGui")
 local Workspace = game:GetService("Workspace")
+local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
 local DescendantLooper = require(ReplicatedStorage.Modules.DescendantLooper)
 local Limiter = require(ReplicatedStorage.Modules.Limiter)
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
+local Signal = require(Paths.Shared.Signal)
 
 local BASE_RESOLUTION = Vector2.new(1920, 1080)
 
 local LIMITER_SCOPE = script.Name
 local UPDATE_COOLDOWN = 0.3
+
+local SCALE_MULT = 1
 
 -------------------------------------------------------------------------------
 -- PRIVATE MEMBERS
@@ -21,12 +23,14 @@ local playerGui = Players.LocalPlayer.PlayerGui
 local camera = Workspace.Camera
 local scale: number = 1
 
+local initialized = false
 local registeredInitProps: { [Instance]: { [string]: any } } = {}
 
 -------------------------------------------------------------------------------
 -- PUBLIC MEMBERS
 -------------------------------------------------------------------------------
 UIScaleController.IGNORE_ATTRIBUTE = "DoNotScale"
+UIScaleController.ScaleChanged = Signal.new()
 
 -------------------------------------------------------------------------------
 -- PRIVATE METHODS
@@ -50,11 +54,12 @@ local function registerInstance(instance: Instance)
 		return
 	end
 
+	local parent = instance.Parent
+
 	if instance:IsA("UICorner") then
 		initProps = { CornerRadius = instance.CornerRadius }
-	elseif instance:IsA("UIScale") and not UIScaleController.isObjectScaled(instance.Parent) then
-		local parent: GuiObject = instance.Parent
-		if parent:IsA("GuiObject") then
+	elseif instance:IsA("UIScale") and not UIScaleController.isObjectScaled(parent) then
+		if parent and parent:IsA("GuiObject") then
 			initProps = {
 				ParentSize = parent.Size,
 				Scale = instance.Scale,
@@ -71,13 +76,13 @@ end
 local function updateScale()
 	local ratio = camera.ViewportSize / BASE_RESOLUTION
 	local newScale = if math.abs(1 - ratio.X) > math.abs(1 - ratio.Y) then ratio.X else ratio.Y
-
+	newScale *= SCALE_MULT
 	if scale ~= newScale then
 		scale = newScale
-
 		for instance in registeredInitProps do
 			scaleInstance(instance)
 		end
+		UIScaleController.ScaleChanged:Fire(scale)
 	end
 end
 
@@ -128,28 +133,42 @@ function UIScaleController.isObjectScaled(object: GuiObject)
 end
 
 function UIScaleController.getScale()
-	return scale
+	return if initialized then scale else 1
+end
+
+function UIScaleController.onScaleChanged(callback: (number) -> ())
+	callback(UIScaleController.getScale())
+	return UIScaleController.ScaleChanged:Connect(callback)
 end
 
 -------------------------------------------------------------------------------
 -- LOGIC
 -------------------------------------------------------------------------------
 function UIScaleController.init()
+	Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
+
 	updateScale()
 	camera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
 		Limiter.indecisive(LIMITER_SCOPE, "UpdateScale", UPDATE_COOLDOWN, updateScale)
 	end)
 
 	local screenGuis = {}
-	for _, screenGui in  (StarterGui:GetChildren()) do
+	for _, screenGui in Paths.UI:GetChildren() do
 		if screenGui:IsA("ScreenGui") then
-			table.insert(screenGuis, Paths.UI:WaitForChild(screenGui.Name))
+			table.insert(screenGuis, screenGui)
 		end
 	end
 
-	DescendantLooper.new(screenGuis, function(descendant)
-		registerInstance(descendant)
-	end)
+	DescendantLooper.new(
+		screenGuis,
+		function(descendant)
+			registerInstance(descendant)
+		end,
+		nil,
+		function()
+			initialized = true
+		end
+	)
 
 	Paths.UI.DescendantRemoving:Connect(function(descendant)
 		registeredInitProps[descendant] = nil

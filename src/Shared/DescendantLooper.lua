@@ -10,7 +10,12 @@ local THROTTLE_EVERY = 100
 
 export type DescendantLooper = Maid.Maid
 
-function DescendantLooper.new(instances: { Instance }, callback: (Instance) -> (), filter: ((instance: Instance) -> boolean)?)
+function DescendantLooper.new(
+	instances: { Instance },
+	callback: (Instance) -> (),
+	filter: ((instance: Instance) -> boolean)?,
+	onInitCompleted: () -> ()?
+)
 	local maid = Maid.new()
 
 	local initialized = 0
@@ -25,12 +30,16 @@ function DescendantLooper.new(instances: { Instance }, callback: (Instance) -> (
 		end
 	end
 
-	for _, instance in instances do
+	for i, instance in pairs(instances) do
 		task.spawn(function()
-			for _, descendant in (instance:GetDescendants()) do
+			for _, descendant in pairs(instance:GetDescendants()) do
 				forEveryDescendant(descendant)
 			end
 			maid:Add(instance.DescendantAdded:Connect(forEveryDescendant))
+
+			if i == #instances and onInitCompleted then
+				onInitCompleted()
+			end
 		end)
 	end
 

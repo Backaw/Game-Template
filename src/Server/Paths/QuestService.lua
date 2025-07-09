@@ -18,6 +18,7 @@ local statToQuest: { [string]: { QuestConstants.Quest } } = {}
 -- PUBLIC MEMBERS
 -------------------------------------------------------------------------------
 QuestService.QuestCompleted = Signal.new() --> (player : Player, category : string, quest : QuestConstants.Quest )
+QuestService.Stats = QuestConstants.Stats
 
 -------------------------------------------------------------------------------
 -- PRIVATE METHODS
@@ -26,7 +27,7 @@ local function checkCompletion(player: Player, stat: string)
 	local progress = PlayerDataService.get(player, ("Quests.Stats.%s"):format(stat))
 	local quests = statToQuest[stat]
 	if quests then
-		for _, quest in  (quests) do
+		for _, quest in quests do
 			local name = quest.Name
 
 			-- CONTINUE: Quest has already been completed
@@ -52,14 +53,7 @@ local function checkCompletion(player: Player, stat: string)
 				end
 			end
 
-			PlayerDataService.set(player, completedAddress, true, "QuestCompleted", {
-				Name = name,
-			})
-
-			QuestService.QuestCompleted:Fire(player, quest)
-			GameAnalyticsService.addEvent("DesignEvent", player.UserId, {
-				eventId = ("%s:%s:%s"):format("QuestCompleted", "Persistent", name), -- Don't remove the persisitent part
-			})
+			QuestService.completeQuest(player, name)
 		end
 	end
 end
@@ -85,8 +79,24 @@ function QuestService.incrementStat(player: Player, stat: string, addend: number
 	checkCompletion(player, stat)
 end
 
+function QuestService.completeQuest(player: Player, questName: string)
+	local completedAddress = ("Quests.Completed.%s"):format(questName)
+	if PlayerDataService.get(player, completedAddress) then
+		return
+	end
+
+	PlayerDataService.set(player, completedAddress, true, "QuestCompleted", {
+		Name = questName,
+	})
+
+	QuestService.QuestCompleted:Fire(player, QuestConstants.Quests[questName])
+	GameAnalyticsService.addEvent("DesignEvent", player.UserId, {
+		eventId = ("%s:%s"):format("QuestCompleted", questName),
+	})
+end
+
 QuestService.loadPlayer = PlayersService.promisifyLoader(function(player)
-	for stat in  (QuestConstants.DefaultStats) do
+	for stat in QuestConstants.DefaultStats do
 		checkCompletion(player, stat)
 	end
 end, "Quests")
@@ -94,10 +104,12 @@ end, "Quests")
 -------------------------------------------------------------------------------
 -- LOGIC
 -------------------------------------------------------------------------------
-for _, quest in  (QuestConstants.Quests) do
+for _, quest in QuestConstants.Quests do
 	local stat = quest.Stat
-	statToQuest[stat] = statToQuest[stat] or {}
-	table.insert(statToQuest[stat], quest)
+	if stat then
+		statToQuest[stat] = statToQuest[stat] or {}
+		table.insert(statToQuest[stat], quest)
+	end
 end
 
 return QuestService

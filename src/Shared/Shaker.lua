@@ -1,82 +1,87 @@
 local Shaker = {}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local TweenableValue = require(ReplicatedStorage.Modules.TweenableValue)
 
-type NumVect = number | Vector3
+local Spring = require(ReplicatedStorage.Modules.Spring)
+
+export type NumVect = number | Vector3
 export type Shaker = typeof(Shaker.new())
+
+local random = Random.new()
+
+-------------------------------------------------------------------------------
 
 Shaker.Defaults = {
 	Speed = 10,
-	Magnitude = 1.5,
-	RotationalMagnitude = 0.8,
-	DecaySpeed = 3,
-	BuildTweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
+	Force = 4,
+	Damping = 0.9,
 }
 
-function Shaker.new(speed: NumVect?, magnitude: NumVect?, rotationalMagnitude: NumVect?, decaySpeed: number?, buildTweenInfo: TweenInfo?)
+local MASS = 1
+
+function Shaker.new(
+	rotationConfig: { Speed: NumVect, Force: NumVect, Damping: NumVect }?,
+	positionConfig: { Speed: NumVect, Force: NumVect, Damping: NumVect }?
+)
 	local shaker = {}
 
 	-------------------------------------------------------------------------------
 	-- PRIVATE MEMBERS
 	-------------------------------------------------------------------------------
-	speed = speed or Shaker.Defaults.Speed
-	magnitude = magnitude or Shaker.Defaults.Magnitude
-	rotationalMagnitude = rotationalMagnitude or Shaker.Defaults.RotationalMagnitude
-	decaySpeed = decaySpeed or Shaker.Defaults.DecaySpeed
-	buildTweenInfo = buildTweenInfo or Shaker.Defaults.BuildTweenInfo
 
-	local et = 0
-	local factor = TweenableValue.new("NumberValue", 0, buildTweenInfo)
-	local totalOffset: CFrame = CFrame.new()
+	positionConfig = positionConfig or {}
+	rotationConfig = rotationConfig or {}
 
-	-------------------------------------------------------------------------------
-	-- PRIVATE METHODS
-	-------------------------------------------------------------------------------
-	local function getPerlinValue(id: number)
-		return math.clamp(math.noise(id, et, 10), -1, 1)
-	end
+	local positionSpring: Spring.Spring
+	local rotationSpring: Spring.Spring
 
 	-------------------------------------------------------------------------------
 	-- PUBLIC METHODS
 	-------------------------------------------------------------------------------
+
 	function shaker:Update(dt: number): CFrame
-		local offset: CFrame
-		local factorValue = factor:Get()
-		if factorValue ~= 0 then
-			et += dt * math.pow(factorValue, 1 / 2) * speed
+		local position = positionSpring:Update(Vector3.zero, dt)
+		local rotation = rotationSpring:Update(Vector3.zero, dt)
 
-			-- Bind movement to the desired range
-			local positionalOffset = CFrame.new(Vector3.new(getPerlinValue(1), getPerlinValue(50), 0) * magnitude * factorValue)
-			local rotationalOffset = CFrame.fromEulerAnglesXYZ(
-				math.rad(positionalOffset.X * rotationalMagnitude),
-				math.rad(positionalOffset.X * rotationalMagnitude),
-				math.rad(positionalOffset.Y * rotationalMagnitude)
-			)
-
-			offset = positionalOffset * rotationalOffset
-			totalOffset *= offset
-
-			if not factor:IsPlaying() then
-				factor:Set(math.max(0, factorValue - dt * decaySpeed))
-			end
-		else
-			-- Reset camera to original state
-			local newTotalOffset = totalOffset:Lerp(CFrame.new(), dt * 1.5)
-			offset = totalOffset:ToObjectSpace(newTotalOffset)
-			totalOffset = newTotalOffset
-		end
-
-		return offset
+		return CFrame.Angles(rotation.X, rotation.Y, rotation.Z) + position
 	end
 
-	function shaker:Impulse(factorGoal: number): Tween
-		return factor:Haste(factorGoal, buildTweenInfo.Time * factorGoal)
+	function shaker:Impulse(rotImpulse: NumVect?, posImpulse: NumVect?, dontRandomize: boolean?)
+		if posImpulse then
+			positionSpring:Impulse(posImpulse * (dontRandomize and 1 or random:NextUnitVector()))
+		end
+
+		if rotImpulse then
+			rotationSpring:Impulse(rotImpulse * (dontRandomize and 1 or random:NextUnitVector()))
+		end
 	end
 
 	function shaker:Reset()
-		factor:Reset()
+		positionSpring:Reset(Vector3.zero)
+		rotationSpring:Reset(Vector3.zero)
 	end
+
+	function shaker:SetPosition(position: NumVect)
+		positionSpring:Set(position)
+	end
+
+	function shaker:SetRotation(rotation: NumVect)
+		rotationSpring:Set(rotation)
+	end
+
+	-------------------------------------------------------------------------------
+	-- LOGIC
+	-------------------------------------------------------------------------------
+	for key, value in Shaker.Defaults do
+		for _, config in { positionConfig, rotationConfig } do
+			if config[key] == nil then
+				config[key] = value
+			end
+		end
+	end
+
+	rotationSpring = Spring.new(Vector3.zero, MASS, rotationConfig.Force, rotationConfig.Damping, rotationConfig.Speed)
+	positionSpring = Spring.new(Vector3.zero, MASS, positionConfig.Force, positionConfig.Damping, positionConfig.Speed)
 
 	return shaker
 end

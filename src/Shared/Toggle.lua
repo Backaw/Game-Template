@@ -90,9 +90,13 @@ function Toggle.new(initialValue: boolean)
 	end
 
 	function toggle:ForceSet(newValue)
-		toggle.Changed:Fire(newValue)
-
 		jobs = {}
+
+		if value == newValue then
+			return
+		end
+
+		toggle.Changed:Fire(newValue)
 		value = newValue
 	end
 

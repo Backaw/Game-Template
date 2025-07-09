@@ -46,9 +46,9 @@ function UIController.registerScreenStateCallbacks(state: string, callbacks: Scr
 end
 
 function UIController.init()
-	for _, descedant in (Paths.Controllers.UI:GetDescendants()) do
-		if descedant:IsA("ModuleScript") and StringUtil.endsWith(descedant.Name, "Screen") then
-			require(descedant)
+	for _, descendant in (Paths.Controllers.UI:GetDescendants()) do
+		if descendant:IsA("ModuleScript") and StringUtil.endsWith(descendant.Name, "Screen") then
+			require(descendant)
 		end
 	end
 end
@@ -73,7 +73,7 @@ end
 
 function UIController.resetToHUD()
 	if UIUtil.isStackHUDPermissive(uiStateMachine:GetStack()) then
-		uiStateMachine:PopUpto(UIConstants.States.HUD)
+		uiStateMachine:PopUpToExclusive(UIConstants.States.HUD)
 	end
 end
 
@@ -123,5 +123,7 @@ uiStateMachine:RegisterGlobalCallback(function(fromState, toState, data)
 	lastUiStateStack = stack
 	UIController.ScreenStateTransition:invokeResolve()
 end)
+
+Paths.UI.Components.Enabled = false
 
 return UIController

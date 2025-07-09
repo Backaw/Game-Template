@@ -8,12 +8,12 @@ local Toggle = require(Paths.Shared.Toggle)
 local TweenUtil = require(Paths.Shared.Utils.TweenUtil)
 local Binder = require(Paths.Shared.Binder)
 
-local ANIMATION_LENGTH = 0.3
+local ANIMATION_LENGTH = 0.2
 local PROMPT_ANIMATION_LENGTH = ANIMATION_LENGTH / 2
 
 local BINDING_KEY = "PromptToggle"
--- local OPEN_BLUR_SIZE = 20
-local DEFAULT_BACKGROUND_TRANSPARENCY = 0.6
+local OPEN_BLUR_SIZE = 0
+local DEFAULT_BACKGROUND_TRANSPARENCY = 0.835
 
 local blurEffect = Instance.new("BlurEffect")
 blurEffect.Size = 0
@@ -40,12 +40,15 @@ PromptUtil.Direction = {
 -------------------------------------------------------------------------------
 function PromptUtil.openBackground(frame: Frame?)
 	frame = frame or backgroundFrame
-	local screen: ScreenGui = frame.Parent
 
 	local initialTransparency = Binder.bindFirst(frame, "InitialTransparency", frame.BackgroundTransparency)
 	frame.BackgroundTransparency = 1
 	frame.Visible = true
-	screen.Enabled = true
+
+	local screen: ScreenGui? = frame.Parent
+	if screen:IsA("ScreenGui") then
+		screen.Enabled = true
+	end
 
 	TweenUtil.bind(
 		frame,
@@ -104,7 +107,7 @@ function PromptUtil.slideOpen(prompt: GuiObject, cosmetics: boolean?, direction:
 		BINDING_KEY,
 		TweenService:Create(
 			prompt,
-			TweenInfo.new(PROMPT_ANIMATION_LENGTH, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+			TweenInfo.new(PROMPT_ANIMATION_LENGTH, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
 			{ Position = initialPosition }
 		)
 	)
@@ -150,7 +153,7 @@ backgroundScreen.Frame.BackgroundTransparency = DEFAULT_BACKGROUND_TRANSPARENCY
 
 cosmeticsEnabled.Changed:Connect(function(toggle)
 	if toggle then
-		--[[ TweenUtil.bind(
+		TweenUtil.bind(
 			blurEffect,
 			BINDING_KEY,
 			TweenService:Create(
@@ -158,11 +161,11 @@ cosmeticsEnabled.Changed:Connect(function(toggle)
 				TweenInfo.new(ANIMATION_LENGTH, Enum.EasingStyle.Linear, Enum.EasingDirection.Out),
 				{ Size = OPEN_BLUR_SIZE }
 			)
-		) *]]
+		)
 
 		PromptUtil.openBackground()
 	else
-		--[[ TweenUtil.bind(
+		TweenUtil.bind(
 			blurEffect,
 			BINDING_KEY,
 			TweenService:Create(
@@ -171,7 +174,6 @@ cosmeticsEnabled.Changed:Connect(function(toggle)
 				{ Size = 0 }
 			)
 		)
- *]]
 
 		backgroundScreen.Enabled = false
 	end

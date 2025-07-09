@@ -18,7 +18,7 @@ end
 -------------------------------------------------------------------------------
 -- PUBLIC
 -------------------------------------------------------------------------------
-function Sounds.create(name: string, parent: Instance?)
+function Sounds.create(name: string, parent: Instance?): Sound
 	local sound = soundTemplates[name]
 	if not sound then
 		error(("Sound %s doesn't exist"):format(name))
@@ -30,7 +30,7 @@ function Sounds.create(name: string, parent: Instance?)
 	return sound
 end
 
-function Sounds.play(name: string, dontRemove: boolean?, parent: any?, timePosition: number?, pitch: number?): Sound?
+function Sounds.play(name: string, dontDestroyAfterPLay: boolean?, parent: any?, timePosition: number?, pitch: number?): Sound?
 	--[[
 	local sound = Sounds.create(name, parent)
 	sound.TimePosition = timePosition or 0
@@ -41,7 +41,7 @@ function Sounds.play(name: string, dontRemove: boolean?, parent: any?, timePosit
 		effect.Parent = sound
 	end
 
-	if dontRemove then
+	if dontDestroyAfterPLay then
 		sound:Play()
 		return sound
 	end
@@ -54,6 +54,10 @@ function Sounds.play(name: string, dontRemove: boolean?, parent: any?, timePosit
 	sound.PlayOnRemove = true
 	sound:Destroy()
 	*]]
+end
+
+function Sounds.getSoundDuration(sound: string)
+	return soundTemplates[sound].TimeLength
 end
 
 function Sounds.fadeIn(sound: Sound, duration: number?)
@@ -104,9 +108,9 @@ end
 function Sounds.getSoundsInCategory(categoryName: string)
 	local sounds = {}
 
-	for _, category: Folder in  (SoundService:GetDescendants()) do
+	for _, category: Folder in (SoundService:GetDescendants()) do
 		if category.Name == categoryName and category:IsA("Folder") then
-			for _, child in  (category:GetChildren()) do
+			for _, child in (category:GetChildren()) do
 				table.insert(sounds, child.Name)
 			end
 
@@ -120,10 +124,10 @@ end
 -------------------------------------------------------------------------------
 -- INTIIALIZATION
 -------------------------------------------------------------------------------
-for _, group in  (SoundService:GetChildren()) do
+for _, group in (SoundService:GetChildren()) do
 	group = group :: SoundGroup
 	if group:IsA("SoundGroup") then
-		for _, sound in  (group:GetDescendants()) do
+		for _, sound in (group:GetDescendants()) do
 			sound = sound :: Sound
 			if sound:IsA("Sound") then
 				local name = sound.Name

@@ -5,37 +5,28 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local Paths = require(ServerScriptService.Paths)
 local CollisionConstants = require(Paths.Shared.Constants.CollisionConstants)
 
+local GROUPS = CollisionConstants.Groups
+
+-------------------------------------------------------------------------------
+-- PRIVATE METHODS
+-------------------------------------------------------------------------------
 local function setGroupCollideableBlacklist(group: string, blacklist: CollisionConstants.Groups)
 	for _, otherGroup in CollisionConstants.Groups do
-		if not table.find(blacklist, otherGroup) then
-			PhysicsService:CollisionGroupSetCollidable(group, otherGroup, true)
-		else
-			PhysicsService:CollisionGroupSetCollidable(group, otherGroup, false)
-		end
+		PhysicsService:CollisionGroupSetCollidable(group, otherGroup, not table.find(blacklist, otherGroup))
 	end
 end
 
 local function setGroupCollideableWhitelist(group: string, whitelist: CollisionConstants.Groups)
 	for _, otherGroup in CollisionConstants.Groups do
-		if table.find(whitelist, otherGroup) then
-			PhysicsService:CollisionGroupSetCollidable(group, otherGroup, true)
-		else
-			PhysicsService:CollisionGroupSetCollidable(group, otherGroup, false)
-		end
+		PhysicsService:CollisionGroupSetCollidable(group, otherGroup, table.find(whitelist, otherGroup) ~= nil)
 	end
 end
 
-local function setCollision(group, collidableGroups: CollisionConstants.Groups?, nonCollidableGroups: CollisionConstants.Groups?)
-	for _, otherGroup in collidableGroups or {} do
-		PhysicsService:CollisionGroupSetCollidable(group, otherGroup, true)
-	end
+-------------------------------------------------------------------------------
+-- LOGIC
+-------------------------------------------------------------------------------
 
-	for _, otherGroup in nonCollidableGroups or {} do
-		PhysicsService:CollisionGroupSetCollidable(group, otherGroup, false)
-	end
-end
-
-for _, group in CollisionConstants.Groups do
+for _, group in GROUPS do
 	if group ~= CollisionConstants.Groups.Default then
 		PhysicsService:RegisterCollisionGroup(group)
 	end

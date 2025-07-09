@@ -1,6 +1,6 @@
 local Vector3Util = {}
 
-local AXIIS = { X = true, Y = true, Z = true }
+local AXIS = { X = true, Y = true, Z = true }
 
 function Vector3Util.ifNanThen0(vector: Vector3): Vector3
 	local x, y, z = vector.X, vector.Y, vector.Z
@@ -33,6 +33,14 @@ function Vector3Util.sign(vector: Vector3): Vector3
 	return Vector3.new(math.sign(vector.X), math.sign(vector.Y), math.sign(vector.Z))
 end
 
+function Vector3Util.clamp(vector: Vector3, vectorMin: Vector3, vectorMax: Vector3): Vector3
+	return Vector3.new(
+		math.clamp(vector.X, vectorMin.X, vectorMax.X),
+		math.clamp(vector.Y, vectorMin.Y, vectorMax.Y),
+		math.clamp(vector.Z, vectorMin.Z, vectorMax.Z)
+	)
+end
+
 function Vector3Util.floor(vector: Vector3)
 	return Vector3.new(math.floor(vector.X), math.floor(vector.Y), math.floor(vector.Z))
 end
@@ -50,6 +58,30 @@ function Vector3Util.maxComponent(vector: Vector3): number
 	return math.max(vector.X, vector.Y, vector.Z)
 end
 
+--- Distance is optional. No distance = number result only.
+function Vector3Util.manhattanDistance(a: Vector3, b: Vector3, distance: number?)
+	local dist = a - b
+	local manhattanDist = math.abs(dist.X) + math.abs(dist.Y) + math.abs(dist.Z)
+
+	if distance then
+		return math.abs(dist.X) <= distance and math.abs(dist.Y) <= distance and math.abs(dist.Z) <= distance
+	else
+		return manhattanDist
+	end
+end
+
+--- Distance is optional. No distance = number result only.
+function Vector3Util.squaredDistance(a: Vector3, b: Vector3, distance: number?)
+	local dist = a - b
+	local distSqrd = (dist.X * dist.X) + (dist.Y * dist.Y) + (dist.Z * dist.Z)
+
+	if distance then
+		return distSqrd <= distance * distance
+	else
+		return math.sqrt(distSqrd)
+	end
+end
+
 function Vector3Util.isPointInBounds(point: Vector3, boundsPosiiton: Vector3, boundsSize: Vector3): boolean
 	boundsSize /= 2
 	return (point.X <= boundsPosiiton.X + boundsSize.X and point.X >= boundsPosiiton.X - boundsSize.X)
@@ -63,7 +95,7 @@ function Vector3Util.getImpactInDirection(vector: Vector3, direction: Vector3): 
 end
 
 function Vector3Util.forEveryAxis(callback: (string) -> ())
-	for axis in  (AXIIS) do
+	for axis in AXIS do
 		callback(axis)
 	end
 end

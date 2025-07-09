@@ -35,12 +35,12 @@ function ProductUtil.getRobuxProducts()
 	return robuxProducts
 end
 
-function ProductUtil.hasGamePass(player: Player?, product: ProductConstants.Product | number)
+function ProductUtil.hasGamePass(product: ProductConstants.Product | number, player: Player?)
 	local id = if typeof(product) == "number" then product else product.Price.Id
 	return DataUtil.get(player, "GamePasses." .. id) ~= nil
 end
 
-function ProductUtil.hasBundle(player: Player?, name: string)
+function ProductUtil.hasBundle(name: string, player: Player?)
 	local bundle = ProductConstants.Bundles[name]
 
 	local ownedVersions = DataUtil.get(player, "OwnedBundles." .. name)
@@ -52,11 +52,6 @@ function ProductUtil.hasBundle(player: Player?, name: string)
 	return false
 end
 
-function ProductUtil.isPremium(product: table)
-	local currency = product.Price.Currency
-	return currency == CurrencyConstants.Currencies.DevProduct or currency == CurrencyConstants.Currencies.GamePass
-end
-
 function ProductUtil.getProduct(type: string, name: string)
 	-- ERROR: Invalid product type
 	if not ProductConstants.Types[type] then
@@ -64,6 +59,11 @@ function ProductUtil.getProduct(type: string, name: string)
 	end
 
 	return ProductConstants.Products[type][name]
+end
+
+function ProductUtil.isPremium(product: table)
+	local currency = product.Price.Currency
+	return currency == CurrencyConstants.Currencies.DevProduct or currency == CurrencyConstants.Currencies.GamePass
 end
 
 function ProductUtil.getCmdrGamepasses()

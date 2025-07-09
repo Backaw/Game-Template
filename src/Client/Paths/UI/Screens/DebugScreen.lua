@@ -3,6 +3,7 @@ local DebugScreen = {}
 local Players = game:GetService("Players")
 local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
 local TemplateUtil = require(Paths.Shared.Utils.TemplateUtil)
+local DebugUtil = require(Paths.Shared.Utils.DebugUtil)
 
 local HUD: ScreenGui = Paths.UI.HUD
 local screen: ScreenGui = Paths.UI.Debug
@@ -37,7 +38,7 @@ function DebugScreen.writeNumber(label: string, value: number, highlight: Color3
 end
 
 function DebugScreen.writeVector(label: string, value: Vector3, highlight: Color3?)
-	DebugScreen.write(label, ("(%.3f, %.3f, %.3f)"):format(value.X, value.Y, value.Z), highlight)
+	DebugScreen.write(label, DebugUtil.printVector3(value, 2), highlight)
 end
 
 -------------------------------------------------------------------------------

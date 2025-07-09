@@ -6,7 +6,6 @@ local ServerStorage = game:GetService("ServerStorage")
 local Paths = require(ServerScriptService.Paths)
 local PlayersService = require(Paths.Services.PlayersService)
 local Permissions = require(Paths.Shared.Permissions)
-local CharacterUtil = require(Paths.Shared.Character.CharacterUtil)
 local CharacterConstants = require(Paths.Shared.Character.CharacterConstants)
 
 -------------------------------------------------------------------------------

@@ -13,8 +13,7 @@ DataConstants.Version = {
 	Dev = 1,
 }
 
-local leaderstats: { [string]: string } = {}
-
+local leaderstats: { [string]: { Address: string, Event: string } } = {}
 local leaderboards: { [string]: { Stat: string, Formatter: ((number, boolean) -> string) | nil } } = {}
 
 DataConstants.Leaderboards = leaderboards

@@ -7,12 +7,19 @@ local GROUP_ID = 32584322
 local ADMIN_RANK = 253
 local TESTER_RANK = 3
 
+local function getRank(player: Player)
+	local success, result = pcall(function()
+		return player:GetRankInGroup(GROUP_ID)
+	end)
+
+	return success and result or 0
+end
 function Permissions.isAdmin(player: Player)
-	return player:GetRankInGroup(GROUP_ID) >= ADMIN_RANK
+	return getRank(player) >= ADMIN_RANK
 end
 
 function Permissions.isTester(player: Player)
-	return player:GetRankInGroup(GROUP_ID) == TESTER_RANK
+	return getRank(player) == TESTER_RANK
 end
 
 function Permissions.canRunCommands(player: Player)

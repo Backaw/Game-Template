@@ -36,4 +36,11 @@ function ScrollingFrameUtil.scaleToHorizontalGrid(frame: ScrollingFrame)
 	frame.CanvasSize = UDim2.fromOffset(size, 0)
 end
 
+function ScrollingFrameUtil.setGridSize(grid: UIGridLayout, cellCount: number, heightScale: number?)
+	grid.CellSize = UDim2.new(1 / cellCount, -math.ceil(grid.CellPadding.X.Offset * (cellCount - 1) / cellCount), 0, 0)
+	task.defer(function()
+		grid.CellSize += UDim2.fromOffset(0, grid.AbsoluteCellSize.X * (heightScale or 1))
+	end)
+end
+
 return ScrollingFrameUtil
