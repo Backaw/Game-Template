@@ -7,7 +7,6 @@ local TransitionController = require(Paths.Controllers.UI.Transitions.Transition
 local CameraController = require(Paths.Controllers.Camera.CameraController)
 local UIController = require(Paths.Controllers.UI.UIController)
 local InstanceUtil = require(Paths.Shared.Utils.InstanceUtil)
-local UIConstants = require(Paths.Controllers.UI.UIConstants)
 local DebugUtil = require(Paths.Shared.Utils.DebugUtil)
 
 -------------------------------------------------------------------------------
@@ -19,7 +18,6 @@ type Callback = { Handler: Handler, Priority: number, Traceback: string? }
 -------------------------------------------------------------------------------
 -- PRIVATE MEMBERS
 -------------------------------------------------------------------------------
-
 local DEBUG = DebugUtil.isDebugging(false)
 
 local RESPAWN_TIME = Players.RespawnTime
@@ -47,7 +45,7 @@ end
 local function loadCharacter(character: Model?)
 	if character then
 		local humanoid: Humanoid = character:WaitForChild("Humanoid")
-		UIController.resetToHUD({ UIConstants.States.Reward })
+		UIController.resetToHUD()
 
 		for _, callback in loadCallbacks do
 			if DEBUG then
@@ -115,6 +113,13 @@ function CharacterController.registerUnloadCallback(handler: Handler, priority: 
 
 	table.insert(unloadCallbacks, callback)
 	table.sort(unloadCallbacks, sortByPriority)
+
+	return function()
+		local index = table.find(unloadCallbacks, callback)
+		if index then
+			table.remove(unloadCallbacks, index)
+		end
+	end
 end
 
 -- Not for spawning standing on something

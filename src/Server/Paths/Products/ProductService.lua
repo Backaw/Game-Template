@@ -114,7 +114,13 @@ function ProductService.giveProduct(player: Player, product: ProductConstants.Pr
 	Remotes.fireClient(player, "ProductGiven", product.Type, product.Name, count or 1)
 end
 
-function ProductService.purchaseProduct(player: Player, productType: string, productName: string, count: number?, source: string)
+function ProductService.purchaseProduct(
+	player: Player,
+	productType: string,
+	productName: string,
+	count: number?,
+	attribution: ProductConstants.PurchaseAttribution
+)
 	local success = false
 
 	count = count or 1
@@ -172,10 +178,33 @@ function ProductService.purchaseProduct(player: Player, productType: string, pro
 			end
 		end
 
-		if source and id then
-			GameAnalyticsService.addEvent("DesignEvent", player.UserId, {
-				eventId = ("%s:%s:%s:%s"):format("PremiumProductPrompted", tostring(id), tostring(source), tostring(success)),
-			})
+		if attribution and id then
+			local source
+			local itemId
+			if typeof(attribution) == "table" then
+				source = attribution.Source
+				local item = attribution.Item
+				if item then
+					itemId = item.Type .. item.Name
+				end
+			else
+				source = attribution
+				itemId = "None"
+			end
+
+			GameAnalyticsService.addEvent(
+				"DesignEvent",
+				player.UserId,
+				{
+					eventId = ("%s:%s:%s:%s:%s "):format(
+						"PremiumProductPrompted",
+						tostring(id),
+						tostring(source),
+						tostring(success),
+						itemId
+					),
+				}
+			)
 		end
 	end
 
@@ -251,10 +280,22 @@ do
 
 		ProductConstants.Products.Bundle[name] = product
 
+		local version = bundle.Version or 1
+		ProductService.registerValidator(product, function(player)
+			return not ProductUtil.hasBundle(name, player)
+		end)
+
 		ProductService.ProductPurchased:Connect(function(player, purchasedProduct)
 			if purchasedProduct == product then
 				for _, reward in bundle.Rewards do
 					RewardService.award(player, reward, "Bundle" .. name, false)
+				end
+
+				local ownedVersions = PlayerDataService.get(player, "OwnedBundles." .. name)
+				if not ownedVersions then
+					PlayerDataService.set(player, "OwnedBundles." .. name, { [tostring(version)] = true })
+				else
+					PlayerDataService.set(player, ("OwnedBundles.%s.%s"):format(name, version), true)
 				end
 			end
 		end)

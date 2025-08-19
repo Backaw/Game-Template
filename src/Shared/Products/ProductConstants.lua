@@ -2,6 +2,7 @@ local ProductConstants = {}
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CurrencyConstants = require(ReplicatedStorage.Modules.Currency.CurrencyConstants)
 local RewardConstants = require(ReplicatedStorage.Modules.Rewards.RewardConstants)
+local ItemConstants = require(ReplicatedStorage.Modules.Items.ItemConstants)
 
 export type Product = {
 	Name: string?,
@@ -24,6 +25,14 @@ export type Bundle = {
 export type ProductList = { [string]: Product }
 export type ProductCategories = { [string]: ProductList }
 
+export type PurchaseAttribution = string | {
+	Source: string,
+	Item: {
+		Type: string,
+		Name: string,
+	}?,
+}
+
 -------------------------------------------------------------------------------
 -- PRIVATE MEMBERS
 -------------------------------------------------------------------------------
@@ -39,8 +48,6 @@ local bundles: { [string]: Bundle } = {}
 -------------------------------------------------------------------------------
 ProductConstants.Types = {
 	Cash = "Cash",
-	Tool = "Tool",
-	Eye = "Eye",
 }
 ProductConstants.Bundles = bundles
 ProductConstants.Products = products
@@ -48,6 +55,10 @@ ProductConstants.Products = products
 -------------------------------------------------------------------------------
 -- INIT
 -------------------------------------------------------------------------------
+for _, itemType in pairs(ItemConstants.Types) do
+	ProductConstants.Types[itemType] = itemType
+end
+
 for _, productType in pairs(ProductConstants.Types) do
 	products[productType] = products[productType] or {}
 end

@@ -20,14 +20,20 @@ local PlayersService = require(Paths.Services.PlayersService)
 local Promise = require(Paths.Shared.Packages.Promise)
 local GameUtil = require(Paths.Shared.Game.GameUtil)
 
-local DONT_SAVE_DATA = false
+local RECONCILIATION_TYPES = {
+	Pre = 1,
+	Post = 2,
+}
 
 -------------------------------------------------------------------------------
 -- PRIVATE MEMBERS
 -------------------------------------------------------------------------------
 local clientsReadyForData: { [Player]: true? } = {}
 local clientReadyForData = Signal.new()
-local reconcilers: { Pre: { (DataFormatUtil.Store) -> () }, Post: { (DataFormatUtil.Store) -> () } } = { Pre = {}, Post = {} }
+local reconcilers: { [number]: { (DataFormatUtil.Store) -> () } } = {
+	[RECONCILIATION_TYPES.Pre] = {},
+	[RECONCILIATION_TYPES.Post] = {},
+}
 
 -------------------------------------------------------------------------------
 -- PUBLIC MEMBERS
@@ -40,7 +46,7 @@ PlayerDataService.Updated = Signal.new() --> (event: string, player: Player, new
 -------------------------------------------------------------------------------
 local function reconcile(data: DataFormatUtil.Store, default: DataFormatUtil.Store, recursiveCase: true?)
 	if not recursiveCase then
-		for _, reconciler in pairs(reconcilers.Pre) do
+		for _, reconciler in pairs(reconcilers[RECONCILIATION_TYPES.Pre]) do
 			reconciler(data)
 		end
 	end
@@ -54,7 +60,7 @@ local function reconcile(data: DataFormatUtil.Store, default: DataFormatUtil.Sto
 	end
 
 	if not recursiveCase then
-		for _, reconciler in pairs(reconcilers.Post) do
+		for _, reconciler in pairs(reconcilers[RECONCILIATION_TYPES.Post]) do
 			reconciler(data)
 		end
 	end
@@ -63,8 +69,8 @@ end
 -------------------------------------------------------------------------------
 -- PUBLIC METHODS
 -------------------------------------------------------------------------------
-function PlayerDataService.registerReconciler(reconciler: (DataFormatUtil.Store) -> (), isPreDefaultRecociliation: true?)
-	table.insert(reconcilers[if isPreDefaultRecociliation then "Pre" else "Post"], reconciler)
+function PlayerDataService.registerReconciler(reconciler: (DataFormatUtil.Store) -> (), runFirst: boolean?)
+	table.insert(reconcilers[if runFirst then RECONCILIATION_TYPES.Pre else RECONCILIATION_TYPES.Post], reconciler)
 end
 
 function PlayerDataService.get(player: Player, address: string): DataFormatUtil.Data
@@ -153,7 +159,7 @@ function PlayerDataService.loadPlayer(player: Player)
 			until profile
 
 			-- Data was wiped, reconcile so that stuff unloads properly
-			if (DONT_SAVE_DATA and not GameUtil.isLive()) or not profile.Data then
+			if ((not DataConstants.SaveData) and (not GameUtil.isLive())) or not profile.Data then
 				profile.Data = {}
 				profile:Reconcile()
 			end

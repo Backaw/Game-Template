@@ -140,6 +140,24 @@ function Remotes.declareEvent(name: string)
 	getEventHandler(name)
 end
 
+function Remotes.bindEventWithActions(eventName: string, actions: { [string]: EventCallback })
+	if IS_SERVER then
+		Remotes.bindEvents({
+			[eventName] = function(player: Player, action: string, ...)
+				local handler = assert(actions[action], `{eventName} has no valid handler for {action}`)
+				handler(player, ...)
+			end,
+		})
+	else
+		Remotes.bindEvents({
+			[eventName] = function(action: string, ...)
+				local handler = assert(actions[action], `{eventName} has no valid handler for {action}`)
+				handler(...)
+			end,
+		})
+	end
+end
+
 if IS_SERVER then
 	communicationFolder = InstanceUtil.newNameParent("Folder", "Communication", ReplicatedStorage)
 	functionFolder = InstanceUtil.newNameParent("Folder", "Functions", communicationFolder)
@@ -147,8 +165,9 @@ if IS_SERVER then
 
 	function Remotes.fireClient(client: Player, eventName: string, ...: any)
 		task.spawn(function(...)
-			if not client.Parent == Players then
+			if not client or client.Parent ~= Players then
 				warn(("Can't fire to non-existent player %q"):format(tostring(client.Name)))
+				return
 			end
 
 			getEventHandler(eventName).Remote:FireClient(client, ...)
@@ -163,6 +182,14 @@ if IS_SERVER then
 
 	function Remotes.fireAllClients(eventName: string, ...: any)
 		Remotes.fireClients(Players:GetPlayers() :: { Player }, eventName, ...)
+	end
+
+	function Remotes.fireAllClientsFiltered(eventName: string, filter: (client: Player) -> boolean, ...)
+		for _, player in Players:GetPlayers() do
+			if filter(player) then
+				Remotes.fireClient(player, eventName, ...)
+			end
+		end
 	end
 
 	function Remotes.fireAllOtherClients(ignoreClient: Player, eventName: string, ...: any)

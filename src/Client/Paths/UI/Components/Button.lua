@@ -33,6 +33,8 @@ function Button.new(guiObject: GuiButton, mute: boolean?)
 	local buttonSizeAtClick: Vector2
 	local stateRestriction: string?
 
+	local maid = button:GetMaid()
+
 	-------------------------------------------------------------------------------
 	-- PUBLIC VARIABLES
 	-------------------------------------------------------------------------------
@@ -95,10 +97,22 @@ function Button.new(guiObject: GuiButton, mute: boolean?)
 		end
 	end
 
+	function button:Destroy(keepButton: boolean?)
+		if keepButton then
+			guiObject.Active = false
+			guiObject.Selectable = false
+			guiObject.Selected = false
+		else
+			guiObject:Destroy()
+		end
+
+		maid:Destroy()
+		table.clear(button)
+	end
 	-------------------------------------------------------------------------------
 	-- Event handlers
 	-------------------------------------------------------------------------------
-	guiObject.MouseButton1Down:Connect(function()
+	maid:Add(guiObject.MouseButton1Down:Connect(function()
 		if not clickDebounce then
 			clickDebounce = true
 
@@ -128,39 +142,41 @@ function Button.new(guiObject: GuiButton, mute: boolean?)
 						or userInputType == Enum.UserInputType.Gamepad1
 					) and pressed
 				then
-					button.Released:Fire()
 					connection:Disconnect()
+					if button.Released then
+						button.Released:Fire()
+					end
 				end
 			end)
 
 			task.wait(CLICK_COOLDOWN)
 			clickDebounce = false
 		end
-	end)
+	end))
 
-	guiObject.MouseEnter:Connect(function()
+	maid:Add(guiObject.MouseEnter:Connect(function()
 		if not hovering then
 			hovering = true
 			button.HoverStarted:Fire()
 		end
-	end)
+	end))
 
-	guiObject.MouseLeave:Connect(function()
+	maid:Add(guiObject.MouseLeave:Connect(function()
 		if hovering then
 			hovering = false
 			button.HoverEnded:Fire()
 		end
-	end)
+	end))
 
-	button.Released:Connect(function()
+	maid:Add(button.Released:Connect(function()
 		if InputUtil.isPrimaryClickInput() and not UIUtil.isMouseWithinObjectBounds(guiObject, buttonSizeAtClick) then
 			return
 		end
 
 		button.Clicked:Fire()
-	end)
+	end))
 
-	button:GetMaid():Add(GuiService.Changed:Connect(function(changed)
+	maid:Add(GuiService.Changed:Connect(function(changed)
 		if changed ~= "SelectedObject" then
 			return
 		end
@@ -181,8 +197,6 @@ function Button.new(guiObject: GuiButton, mute: boolean?)
 	guiObject.Active = true
 	guiObject.Selectable = true
 	guiObject.AutoButtonColor = false
-
-	button:GetMaid():Add(guiObject)
 
 	return button
 end

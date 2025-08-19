@@ -68,7 +68,7 @@ function CurrencyService.transact(
 	return false
 end
 
-function CurrencyService.transactCoins(
+function CurrencyService.transactCash(
 	player: Player,
 	transacting: number,
 	resourceType: string?,
@@ -76,10 +76,10 @@ function CurrencyService.transactCoins(
 	clientInitiated: boolean?
 )
 	local success, transacted =
-		CurrencyService.transact(player, CurrencyConstants.Currencies.Coin, transacting, resourceType, itemId, clientInitiated)
+		CurrencyService.transact(player, CurrencyConstants.Currencies.Cash, transacting, resourceType, itemId, clientInitiated)
 
 	if success and transacted > 0 then
-		QuestService.incrementStat(player, QuestConstants.Stats.CoinsEarned, transacted)
+		QuestService.incrementStat(player, QuestConstants.Stats.CashEarned, transacted)
 	end
 end
 
@@ -98,11 +98,11 @@ function CurrencyService.init()
 			continue
 		end
 
-		ProductService.ProductPurchased:Connect(function(player: Player, product: ProductConstants.Product)
-			local amount = tonumber(product.Name)
-			if product.Type == currency and amount then
+		ProductService.ProductPurchased:Connect(function(player: Player, productType: string, productName: string)
+			local amount = tonumber(productName)
+			if productType == currency and amount then
 				CurrencyService.transact(player, currency, amount, nil, nil, true)
-			elseif product.Type == "Multiplier" and product.Name == "X2_" .. currency then
+			elseif productType == "Multiplier" and productName == "X2_" .. currency then
 				PlayerDataService.increment(player, "Multipliers." .. currency, 1, currency .. "MultiplierChanged")
 			end
 		end)

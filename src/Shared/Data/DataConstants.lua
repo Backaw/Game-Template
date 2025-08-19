@@ -7,15 +7,15 @@ local QuestConstants = require(ReplicatedStorage.Modules.Quests.QuestConstants)
 local ItemConstants = require(ReplicatedStorage.Modules.Items.ItemConstants)
 local GameConstants = require(ReplicatedStorage.Modules.Game.GameConstants)
 
+local leaderstats: { [string]: { Address: string, Event: string } } = {}
+local leaderboards: { [string]: { Stat: string, Formatter: ((number, boolean) -> string) | nil } } = {}
+
+DataConstants.SaveData = true
 DataConstants.Version = {
 	Live = 1,
 	QA = 1,
 	Dev = 1,
 }
-
-local leaderstats: { [string]: { Address: string, Event: string } } = {}
-local leaderboards: { [string]: { Stat: string, Formatter: ((number, boolean) -> string) | nil } } = {}
-
 DataConstants.Leaderboards = leaderboards
 DataConstants.Leaderstats = leaderstats
 
@@ -28,10 +28,10 @@ DataConstants.DefaultPlayerData = function()
 	}
 
 	store.Currencies = {
-		Coin = 0,
+		Cash = 0,
 	}
 	store.Multipliers = {
-		Coin = 1,
+		Cash = 1,
 	}
 	store.Boosts = {}
 

@@ -47,6 +47,10 @@ function PriceLabel.new()
 		parent.BackgroundTransparency = if hideBackground then 1 else parent.BackgroundTransparency
 	end
 
+	function PriceLabel:GetParent()
+		return label.Parent
+	end
+
 	function priceLabel:Align(alignment: Enum.HorizontalAlignment)
 		uiListLayout.HorizontalAlignment = alignment
 	end
@@ -67,9 +71,9 @@ function PriceLabel.new()
 			icon.Image = Images.Currencies[currency] :: typeof(icon.Image)
 			icon.Visible = true
 		elseif currency == CurrencyConstants.Currencies.DevProduct or currency == CurrencyConstants.Currencies.GamePass then
-			setText(if price.PriceInRobux then StringUtil.commafiedNumber(tostring(price.PriceInRobux)) else "nil")
+			setText(" " .. (if price.PriceInRobux then StringUtil.commafiedNumber(tostring(price.PriceInRobux)) else "nil"))
 
-			icon.Visible = true
+			icon.Visible = false
 			icon.Image = Images.Currencies.Robux :: typeof(icon.Image)
 		else
 			setText("Free")

@@ -5,10 +5,13 @@ local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
 local UIConstants = require(Paths.Controllers.UI.UIConstants)
+local UIController = require(Paths.Controllers.UI.UIController)
 
 local GUI_INSET_Y = GuiService:GetGuiInset().Y
 
 export type Input = Enum.UserInputType | Enum.KeyCode | nil
+
+local uiStateMachine = UIController.getStateMachine()
 
 -------------------------------------------------------------------------------
 -- PUBLIC METHODS
@@ -18,7 +21,7 @@ function UIUtil.isStateInteractionPermissive(state: string)
 end
 
 function UIUtil.isStateHUDPermissive(state: string)
-	return UIUtil.isState(state, UIConstants.States.HUD) or table.find(UIConstants.HUDPermissiveStates, state) ~= nil
+	return (UIUtil.isState(state, UIConstants.States.HUD) or table.find(UIConstants.HUDPermissiveStates, state) ~= nil)
 end
 
 -- Checks if a state is the state itself or a psuedoState
@@ -27,7 +30,8 @@ function UIUtil.isState(potentially: string, thisState: string)
 		or (UIConstants.PsuedoStates[thisState] and table.find(UIConstants.PsuedoStates[thisState], potentially))
 end
 
-function UIUtil.isStackHUDPermissive(stack: { string })
+function UIUtil.isStackHUDPermissive()
+	local stack = uiStateMachine:GetStack()
 	-- Every state between HUD and new state should permit HUD inorder to show HUD
 	for i = #stack, table.find(stack, UIConstants.States.HUD), -1 do
 		if not UIUtil.isStateHUDPermissive(stack[i]) then

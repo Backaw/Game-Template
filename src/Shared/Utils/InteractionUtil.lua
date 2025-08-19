@@ -18,7 +18,7 @@ local interactions: { [string]: { Handler: InteractionHandler, ObjectText: strin
 -- PRIVATE METHODS
 -------------------------------------------------------------------------------
 local function getAttachedInteraction(instance: PVInstance)
-	for _, tag in  (CollectionService:GetTags(instance)) do
+	for _, tag in (CollectionService:GetTags(instance)) do
 		if interactions[tag] then
 			return tag
 		end
@@ -54,7 +54,7 @@ function InteractionUtil.attachPrompt(instance: PVInstance, objectText: string?,
 	return proximityPrompt
 end
 
-function InteractionUtil.registerInteraction(name: string, handler: InteractionHandler, actionText: string?, objectText: string?)
+function InteractionUtil.logInteraction(name: string, handler: InteractionHandler, actionText: string?, objectText: string?)
 	-- ERROR: Interaction has already been registered
 	if interactions[name] then
 		error(("Interaction %s has already been registered"):format(name))
@@ -67,7 +67,7 @@ function InteractionUtil.registerInteraction(name: string, handler: InteractionH
 	}
 
 	-- Adding
-	for _, instance in  (CollectionService:GetTagged(name)) do
+	for _, instance in (CollectionService:GetTagged(name)) do
 		InteractionUtil.attachPrompt(instance, objectText, actionText)
 	end
 	CollectionService:GetInstanceAddedSignal(name):Connect(function(instance)
@@ -97,7 +97,7 @@ function InteractionUtil.getAllPromptsFromInteraction(name: string)
 	end
 
 	local proximityPrompts = {}
-	for _, instance in  (CollectionService:GetTagged(name)) do
+	for _, instance in (CollectionService:GetTagged(name)) do
 		table.insert(proximityPrompts, instance:FindFirstChildOfClass("ProximityPrompt"))
 	end
 

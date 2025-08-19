@@ -14,7 +14,7 @@ dependencies = []
 
 [[package]]
 name = "gameanalytics/gameanalytics-sdk"
-version = "2.2.4"
+version = "2.2.6"
 dependencies = []
 
 [[package]]
@@ -23,9 +23,9 @@ version = "1.5.0"
 dependencies = []
 
 [[package]]
-name = "larsb/slidedownahill"
+name = "larsb/ragdollanimals"
 version = "0.1.0"
-dependencies = [["Cmdr", "evaera/cmdr@1.12.0"], ["GameAnalytics", "gameanalytics/gameanalytics-sdk@2.2.4"], ["Promise", "evaera/promise@4.0.0"], ["ProfileService", "jakebball/profileservice@1.5.0"], ["ProfileStore", "lm-loleris/profilestore@1.0.1"]]
+dependencies = [["Cmdr", "evaera/cmdr@1.12.0"], ["GameAnalytics", "gameanalytics/gameanalytics-sdk@2.2.6"], ["Promise", "evaera/promise@4.0.0"], ["ProfileService", "jakebball/profileservice@1.5.0"], ["ProfileStore", "lm-loleris/profilestore@1.0.1"]]
 
 [[package]]
 name = "lm-loleris/profilestore"

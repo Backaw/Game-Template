@@ -6,9 +6,9 @@ local StateMachine = require(Paths.Shared.StateMachine)
 local UIConstants = require(Paths.Controllers.UI.UIConstants)
 local StringUtil = require(Paths.Shared.Utils.StringUtil)
 local TableUtil = require(Paths.Shared.Utils.TableUtil)
-local UIUtil = require(Paths.Controllers.UI.Utils.UIUtil)
 local DeferredPromise = require(Paths.Shared.DeferredPromise)
 local Promise = require(Paths.Shared.Packages.Promise)
+local UIUtil: typeof(require(Paths.Controllers.UI.Utils.UIUtil))
 
 type ScreenStateCallback = ((table?) -> ())?
 type ScreenStateCallbacks = {
@@ -46,6 +46,8 @@ function UIController.registerScreenStateCallbacks(state: string, callbacks: Scr
 end
 
 function UIController.init()
+	UIUtil = require(Paths.Controllers.UI.Utils.UIUtil)
+
 	for _, descendant in (Paths.Controllers.UI:GetDescendants()) do
 		if descendant:IsA("ModuleScript") and StringUtil.endsWith(descendant.Name, "Screen") then
 			require(descendant)
@@ -60,6 +62,8 @@ function UIController.toggleScreenState(state: string)
 		uiStateMachine:Pop()
 	elseif UIUtil.isState(currentState, UIConstants.States.HUD) then
 		uiStateMachine:Push(state)
+	elseif uiStateMachine:HasState(state) then
+		uiStateMachine:PopUpToExclusive(state)
 	else
 		uiStateMachine:ReplaceUpTill(state, UIConstants.States.HUD)
 	end
@@ -72,7 +76,7 @@ function UIController.openScreenState(state: string)
 end
 
 function UIController.resetToHUD()
-	if UIUtil.isStackHUDPermissive(uiStateMachine:GetStack()) then
+	if UIUtil.isStackHUDPermissive() then
 		uiStateMachine:PopUpToExclusive(UIConstants.States.HUD)
 	end
 end
@@ -125,5 +129,8 @@ uiStateMachine:RegisterGlobalCallback(function(fromState, toState, data)
 end)
 
 Paths.UI.Components.Enabled = false
+for _, tooltip in Paths.UI.Tooltips:GetChildren() do
+	tooltip.Visible = false
+end
 
 return UIController

@@ -1,15 +1,15 @@
 local CurrencyConstants = {}
 
-export type Currency = "Free" | "Coin" | "GamePass" | "ProductId"
+export type Currency = "Free" | "Cash" | "GamePass" | "ProductId"
 
 CurrencyConstants.Currencies = {
-	Coin = "Coin",
+	Cash = "Cash",
 	GamePass = "GamePass",
 	DevProduct = "DevProduct",
 	Free = "Free",
 }
 
-CurrencyConstants.IngameCurrencies = { CurrencyConstants.Currencies.Coin }
+CurrencyConstants.IngameCurrencies = { CurrencyConstants.Currencies.Cash }
 
 CurrencyConstants.InfoType = {
 	[CurrencyConstants.Currencies.GamePass] = Enum.InfoType.GamePass,
@@ -19,7 +19,7 @@ CurrencyConstants.InfoType = {
 export type Price = {
 	Currency: "Free",
 } | {
-	Currency: "Coin",
+	Currency: "Cash",
 	Amount: number,
 } | {
 	Currency: "GamePass",

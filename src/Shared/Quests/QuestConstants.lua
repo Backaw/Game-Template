@@ -13,18 +13,26 @@ export type Quest = {
 	Reward: RewardConstants.Reward | nil,
 }
 
+-------------------------------------------------------------------------------
+-- PRIVATE VARIABLES
+-------------------------------------------------------------------------------
+local quests: { [string]: Quest } = {}
+
+-------------------------------------------------------------------------------
+-- PUBLIC VARIABLES
+-------------------------------------------------------------------------------
 QuestConstants.Stats = {
-	CoinsEarned = "CoinsEarned",
+	CashEarned = "CashEarned",
 	MinutesPlayed = "MinutesPlayed",
 }
 
 QuestConstants.DefaultStats = {
-	[QuestConstants.Stats.CoinsEarned] = 0,
+	[QuestConstants.Stats.CashEarned] = 0,
 	[QuestConstants.Stats.MinutesPlayed] = 0,
 }
 
 QuestConstants.Templates = {
-	CoinsEarned = {
+	CashEarned = {
 		Description = "Earn %s coins",
 		Stat = QuestConstants.Stats.Wins,
 	},
@@ -33,18 +41,26 @@ QuestConstants.Templates = {
 		Stat = QuestConstants.Stats.MinutesPlayed,
 	},
 }
+
+QuestConstants.Quests = quests
+
+-------------------------------------------------------------------------------
+-- LOGIC
+-------------------------------------------------------------------------------
 do
-	local quests: { [string]: Quest } = {}
-
-	QuestConstants.Quests = quests
-
-	for questName, constants in  (quests) do
+	for questName, constants in quests do
 		constants.Name = questName
 
 		local template = QuestConstants.Templates[questName:gsub("%d", "")]
 		if template then
-			constants.Description = constants.Description or template.Description
+			-- constants.Description = constants.Description or template.Description
 			constants.Stat = template.Stat
+		end
+	end
+
+	for _, stat in QuestConstants.Stats do
+		if not QuestConstants.DefaultStats[stat] then
+			QuestConstants.DefaultStats[stat] = 0
 		end
 	end
 end

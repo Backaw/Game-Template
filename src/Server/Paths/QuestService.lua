@@ -8,6 +8,7 @@ local GameAnalyticsService = require(Paths.Services.GameAnalyticsService)
 local TableUtil = require(Paths.Shared.Utils.TableUtil)
 local QuestConstants = require(Paths.Shared.Quests.QuestConstants)
 local PlayersService = require(Paths.Services.PlayersService)
+local QuestUtil = require(Paths.Shared.Quests.QuestUtil)
 
 -------------------------------------------------------------------------------
 -- PRIVATE MEMBERS
@@ -61,6 +62,10 @@ end
 -------------------------------------------------------------------------------
 -- PUBLIC METHODS
 -------------------------------------------------------------------------------
+function QuestService.getStat(player: Player, stat: string)
+	return QuestUtil.getStat(stat, player)
+end
+
 function QuestService.incrementStat(player: Player, stat: string, addend: number | string)
 	local statAddress = ("Quests.Stats.%s"):format(stat)
 	local statChangedMetadata = {

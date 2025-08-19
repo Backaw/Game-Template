@@ -29,7 +29,7 @@ function DescendantLooper.new(
 			callback(descendant)
 		end
 	end
-
+	local completed = 0
 	for i, instance in pairs(instances) do
 		task.spawn(function()
 			for _, descendant in pairs(instance:GetDescendants()) do
@@ -37,7 +37,8 @@ function DescendantLooper.new(
 			end
 			maid:Add(instance.DescendantAdded:Connect(forEveryDescendant))
 
-			if i == #instances and onInitCompleted then
+			completed += 1
+			if completed == #instances and onInitCompleted then
 				onInitCompleted()
 			end
 		end)
