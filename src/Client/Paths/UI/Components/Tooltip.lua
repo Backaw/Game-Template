@@ -4,13 +4,13 @@ local GuiService = game:GetService("GuiService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
-local Button = require(Paths.Controllers.UI.Components.Button)
-local Maid = require(Paths.Shared.Maid)
-local DeviceUtil = require(Paths.Controllers.Utils.DeviceUtil)
-local UIController = require(Paths.Controllers.UI.UIController)
-
-local uiStateMachine = UIController.getStateMachine()
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Shared = ReplicatedStorage.Modules
+local Controllers = Players.LocalPlayer.PlayerScripts.Paths
+local Button = require(Controllers.UI.Components.Button)
+local Maid = require(Shared.Maid)
+local UIController = require(Controllers.UI.UIController)
+local InputUtil = require(Controllers.Utils.InputUtil)
 
 local OFFSET = 20
 local GUI_INSET_Y = GuiService:GetGuiInset().Y
@@ -18,10 +18,12 @@ local GUI_INSET_Y = GuiService:GetGuiInset().Y
 -------------------------------------------------------------------------------
 -- PRIVATE MEMBERS
 -------------------------------------------------------------------------------
-local screen: ScreenGui = Paths.UI.Tooltips
+local screen: ScreenGui = Players.LocalPlayer.PlayerGui.Tooltips
 
 local maid = Maid.new()
 local opened: Button.Button?
+
+local uiStateMachine = UIController.getStateMachine()
 
 -------------------------------------------------------------------------------
 -- PUBLIC METHODS
@@ -47,7 +49,7 @@ function Tooltip.bindToButton(tooltip: GuiObject, button: Button.Button, onRende
 		onRendered()
 		tooltip.Visible = true
 
-		if DeviceUtil.isGamepadInput() then
+		if InputUtil.isGamepadInput() then
 			local guiObject = button:GetGuiObject()
 			task.defer(function()
 				local selectionLocation = guiObject.AbsolutePosition + guiObject.AbsoluteSize / 2
@@ -75,7 +77,7 @@ end
 -- LOGIC
 -------------------------------------------------------------------------------
 screen.Enabled = true
-for _, tooltip in  (screen:GetChildren()) do
+for _, tooltip in (screen:GetChildren()) do
 	tooltip.AnchorPoint = Vector2.new(0, 0)
 	tooltip.Visible = false
 end

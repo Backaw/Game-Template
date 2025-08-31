@@ -2,27 +2,31 @@ local InputScreen = {}
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
-local SquishyButton = require(Paths.Controllers.UI.Components.SquishyButton)
-local InputUtil = require(Paths.Controllers.Utils.InputUtil)
-local Button = require(Paths.Controllers.UI.Components.Button)
-local TemplateUtil = require(Paths.Shared.Utils.TemplateUtil)
-local InputUIUtil = require(Paths.Controllers.UI.Utils.InputUIUtil)
-local Maid = require(Paths.Shared.Maid)
-local UIController = require(Paths.Controllers.UI.UIController)
-local UIConstants = require(Paths.Controllers.UI.UIConstants)
-local InputController: typeof(require(Paths.Controllers.InputController))
-local Signal = require(Paths.Shared.Signal)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Shared = ReplicatedStorage.Modules
+local Controllers = Players.LocalPlayer.PlayerScripts.Paths
+local SquishyButton = require(Controllers.UI.Components.SquishyButton)
+local InputUtil = require(Controllers.Utils.InputUtil)
+local Button = require(Controllers.UI.Components.Button)
+local TemplateUtil = require(Shared.Utils.TemplateUtil)
+local InputUIUtil = require(Controllers.UI.Utils.InputUIUtil)
+local Maid = require(Shared.Maid)
+local UIController = require(Controllers.UI.UIController)
+local UIConstants = require(Controllers.UI.UIConstants)
+local Signal = require(Shared.Signal)
+local InputController
 
 type MaidList = { [string]: Maid.Maid }
 
-export type MobileButtonProps = {
-	Size: number?,
-	Position: Vector2?,
-	Icon: string?,
-	AnchorPoint: string?,
+export type MobileButton = {
+	ButtonReference: GuiButton,
+	InstantiationProps: {
+		Size: number,
+		Position: Vector2,
+		Icon: string,
+		AnchorPoint: string,
+	}?,
 	IsToggle: boolean?,
-	ButtonGuiObject: GuiButton?,
 }
 
 -------------------------------------------------------------------------------
@@ -32,9 +36,9 @@ local UI_STATE = UIConstants.States.HUD
 local KEYBIND_TRANSPARENCY = 0.85
 local KEYBIND_TWEEN_INFO = TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
-local screen: ScreenGui = Paths.UI.Input
-local keybinds: Frame = screen.Keybinds
-local mobileButtons: Frame = screen.Mobile
+local screen = Players.LocalPlayer.PlayerGui.Input
+local keybinds = screen.Keybinds
+local mobileButtons = screen.Mobile
 
 local constructors = {
 	Keybind = TemplateUtil.constructor(keybinds.TEMP_KEYBIND),
@@ -66,15 +70,16 @@ local function setAnchoredPosition(label: ImageButton, anchorType: string, posit
 		label.AnchorPoint = Vector2.new(1, 0.5)
 		label.Position = UDim2.fromScale(1, 0) + UDim2.fromOffset(-position.X, position.Y)
 	elseif anchorType == InputScreen.MobileButtonAnchors.Jump then
-		local jumpButton: ImageButton = Paths.UI:WaitForChild("TouchGui"):WaitForChild("TouchControlFrame"):WaitForChild("JumpButton")
+		local jumpButton: ImageButton = screen:WaitForChild("TouchGui"):WaitForChild("TouchControlFrame"):WaitForChild("JumpButton")
+		local parent = label.Parent :: ScreenGui
 
-		local uiScale = label.Parent.UIScale.Scale
+		local uiScale = parent.UIScale.Scale
 		local theta = position.X
 		local offset = position.Y
 		local jumpRadius = jumpButton.AbsoluteSize.X / 2 / uiScale
 		local labelRadius = label.AbsoluteSize.X / 2 / uiScale
 
-		local anchorPoint = (-label.Parent.AbsolutePosition + jumpButton.AbsolutePosition) / uiScale + Vector2.new(jumpRadius, jumpRadius)
+		local anchorPoint = (-parent.AbsolutePosition + jumpButton.AbsolutePosition) / uiScale + Vector2.new(jumpRadius, jumpRadius)
 
 		label.AnchorPoint = Vector2.new(0.5, 0.5)
 		label.Position = UDim2.fromOffset(anchorPoint.X, anchorPoint.Y)
@@ -85,11 +90,7 @@ local function setAnchoredPosition(label: ImageButton, anchorType: string, posit
 	end
 end
 
-local function createMobileButton(
-	id: string,
-	buttonProps: InputController.MobileButtonProps,
-	handler: (Enum.UserInputState) -> ()
-): Maid.Maid
+local function createMobileButton(id: string, mobileButton: MobileButton, handler: (Enum.UserInputState) -> ()): Maid.Maid
 	local maid = registeredInputs[id].Maid
 
 	local button: Button.Button
@@ -108,12 +109,14 @@ local function createMobileButton(
 		handler(inputState)
 	end
 
-	if buttonProps.ButtonGuiObject then
-		button = Button.new(buttonProps.ButtonGuiObject, true)
+	if mobileButton.ButtonReference then
+		button = Button.new(mobileButton.ButtonReference, true)
 	else
+		local props = mobileButton.InstantiationProps
+
 		local buttonTemplate = constructors.Button() :: ImageButton
 		buttonTemplate.Name = id
-		buttonTemplate.Size = UDim2.fromScale(buttonProps.Size, buttonProps.Size)
+		buttonTemplate.Size = UDim2.fromScale(props.Size, props.Size)
 		buttonTemplate.UICorner.CornerRadius = UDim.new(0.5, 0)
 		buttonTemplate.AnchorPoint = Vector2.new(0.5, 0.5)
 		-- 	buttonTemplate.Image = buttonProps.Icon :: typeof(buttonTemplate.Image)
@@ -126,15 +129,16 @@ local function createMobileButton(
 		squishyButton:SetHoverScalable(icon)
 
 		button = squishyButton
+
+		maid:Add(InputUtil.onInputTypeChanged(function(inputType: string)
+			if inputType == InputUtil.InputTypes.Touch then
+				setAnchoredPosition(button:GetGuiObject(), props.AnchorPoint, props.Position)
+			end
+		end))
 	end
 	maid:Add(button)
-	maid:Add(InputUtil.onInputTypeChanged(function(inputType: string)
-		if inputType == InputUtil.InputTypes.Touch then
-			setAnchoredPosition(button:GetGuiObject(), buttonProps.AnchorPoint, buttonProps.Position)
-		end
-	end))
 
-	if buttonProps.IsToggle then
+	if mobileButton.IsToggle then
 		local toggle = false
 		maid:Add(button.Clicked:Connect(function()
 			toggle = not toggle
@@ -151,7 +155,7 @@ local function createMobileButton(
 	end
 end
 
-local function createKeybindLabel(id: string, keyboardInput: InputController.Input, gamepadInput: InputController.Input)
+local function createKeybindLabel(id: string, keyboardInput: InputUtil.Input, gamepadInput: InputUtil.Input)
 	local maid = registeredInputs[id].Maid
 
 	local frame = constructors.Keybind() :: Frame
@@ -192,15 +196,15 @@ end
 -- PUBLIC FUNCTIONS
 -------------------------------------------------------------------------------
 function InputScreen.init()
-	InputController = require(Paths.Controllers.InputController)
-	InputController.InputRegistered:Connect(function(id, keyboard, gamepad, mobileButtonProps, handler)
+	InputController = require(Controllers.InputController) :: typeof(Controllers.InputController)
+	InputController.InputRegistered:Connect(function(id, keyboard, gamepad, MobileButton, handler)
 		local maid = Maid.new()
 		registeredInputs[id] = {
 			Maid = maid,
 		}
 
-		if mobileButtonProps then
-			createMobileButton(id, mobileButtonProps, handler)
+		if MobileButton then
+			createMobileButton(id, MobileButton, handler)
 		end
 
 		if keyboard or gamepad then
@@ -211,7 +215,7 @@ function InputScreen.init()
 				maid:Add(InputUtil.onInputTypeChanged(function(inputType: string)
 					if inputType == InputUtil.InputTypes.Gamepad then
 						keybindLabel.Visible = gamepad ~= nil
-					elseif inputType == InputUIUtil.InputTypes.Keyboard then
+					elseif inputType == InputUtil.InputTypes.Keyboard then
 						keybindLabel.Visible = keyboard ~= nil
 					end
 				end))

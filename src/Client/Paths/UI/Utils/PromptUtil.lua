@@ -2,11 +2,12 @@ local PromptUtil = {}
 
 local Lighting = game:GetService("Lighting")
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
-local Toggle = require(Paths.Shared.Toggle)
-local TweenUtil = require(Paths.Shared.Utils.TweenUtil)
-local Binder = require(Paths.Shared.Binder)
+local Shared = ReplicatedStorage.Modules
+local Toggle = require(Shared.Toggle)
+local TweenUtil = require(Shared.Utils.TweenUtil)
+local Binder = require(Shared.Binder)
 
 local ANIMATION_LENGTH = 0.2
 local PROMPT_ANIMATION_LENGTH = ANIMATION_LENGTH / 2
@@ -20,7 +21,7 @@ blurEffect.Size = 0
 blurEffect.Enabled = true
 blurEffect.Parent = Lighting
 
-local backgroundScreen: ScreenGui = Paths.UI.Background
+local backgroundScreen: ScreenGui = Players.LocalPlayer.PlayerGui.Background
 local backgroundFrame: Frame = backgroundScreen.Frame
 
 local cosmeticsEnabled = Toggle.new(false)

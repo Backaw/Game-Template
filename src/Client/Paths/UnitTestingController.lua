@@ -1,9 +1,9 @@
 local UnitTestingController = {}
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
-local UnitTester = require(Paths.Shared.UnitTester)
+local UnitTester = require(ReplicatedStorage.Modules.UnitTester)
 
-UnitTester.run(Paths.Controllers)
+UnitTester.run(Players.LocalPlayer.PlayerScripts.Paths)
 
 return UnitTestingController

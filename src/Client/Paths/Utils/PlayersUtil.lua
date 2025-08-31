@@ -1,10 +1,11 @@
 local PlayersUtil = {}
 
 local Players = game:GetService("Players")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
-local Maid = require(Paths.Shared.Maid)
-local InstanceUtil = require(Paths.Shared.Utils.InstanceUtil)
-local CharacterUtil = require(Paths.Shared.Character.CharacterUtil)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Shared = ReplicatedStorage.Modules
+local Maid = require(Shared.Maid)
+local InstanceUtil = require(Shared.Utils.InstanceUtil)
+local CharacterUtil = require(Shared.Character.CharacterUtil)
 
 function PlayersUtil.loadPlayers(playerHandler: (player: Player, maid: Maid.Maid) -> (((Model) -> ())?, ((Model) -> ())?))
 	local maid = Maid.new()
@@ -47,7 +48,7 @@ function PlayersUtil.loadPlayers(playerHandler: (player: Player, maid: Maid.Maid
 	end
 
 	maid:Add(Players.PlayerAdded:Connect(loadPlayer))
-	for _, player in  (Players:GetPlayers()) do
+	for _, player in (Players:GetPlayers()) do
 		loadPlayer(player)
 	end
 

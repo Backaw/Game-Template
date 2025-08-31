@@ -4,7 +4,7 @@ local RunService = game:GetService("RunService")
 
 local loadTimes: { { Module: ModuleScript, Length: number } } = {}
 
-function PathsUtil.initModules(initializing: { table })
+function PathsUtil.initModules(initializing: { { any } })
 	for _, module in initializing do
 		local method = module.init
 		if method then

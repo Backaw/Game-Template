@@ -1,11 +1,10 @@
 local HUDScreen = {}
 
 local Players = game:GetService("Players")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
-local UIController = require(Paths.Controllers.UI.UIController)
-local UIConstants = require(Paths.Controllers.UI.UIConstants)
-local UIUtil = require(Paths.Controllers.UI.Utils.UIUtil)
-local SquishyButton = require(Paths.Controllers.UI.Components.SquishyButton)
+local Controllers = Players.LocalPlayer.PlayerScripts.Paths
+local UIController = require(Controllers.UI.UIController)
+local UIConstants = require(Controllers.UI.UIConstants)
+local UIUtil = require(Controllers.UI.Utils.UIUtil)
 
 local UI_STATE = UIConstants.States.HUD
 
@@ -14,7 +13,7 @@ local UI_STATE = UIConstants.States.HUD
 -------------------------------------------------------------------------------
 local uiStateMachine = UIController.getStateMachine()
 
-local screen: ScreenGui = Paths.UI.HUD
+local screen: ScreenGui = Players.LocalPlayer.PlayerGui.HUD
 
 -------------------------------------------------------------------------------
 -- PRIVATE METHODS

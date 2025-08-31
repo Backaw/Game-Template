@@ -1,5 +1,5 @@
 local Paths = {}
-local Players = game:GetService("Players")
+
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LoadingController = require(script.LoadingController)
 local GameConstants = require(ReplicatedStorage.Modules.Game.GameConstants)
@@ -25,12 +25,14 @@ local INITIALIZING = {
 	script.Parent:WaitForChild("GameAnalyticsClient"),
 }
 
-Paths.Controllers = script
-Paths.Shared = ReplicatedStorage.Modules
-Paths.Assets = ReplicatedStorage.Assets
-Paths.UI = Players.LocalPlayer.PlayerGui
+-------------------------------------------------------------------------------
+-- PUBLIC VARIABLES
+-------------------------------------------------------------------------------
 Paths.Initialized = LoadingController.Loaded
 
+-------------------------------------------------------------------------------
+-- INIT
+-------------------------------------------------------------------------------
 task.defer(function()
 	local ping = os.clock()
 
@@ -63,4 +65,5 @@ task.defer(function()
 
 	LoadingController.start()
 end)
+
 return Paths

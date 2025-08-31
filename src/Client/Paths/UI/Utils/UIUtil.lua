@@ -3,9 +3,9 @@ local UIUtil = {}
 local GuiService = game:GetService("GuiService")
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
-local UIConstants = require(Paths.Controllers.UI.UIConstants)
-local UIController = require(Paths.Controllers.UI.UIController)
+local Controllers = Players.LocalPlayer.PlayerScripts.Paths
+local UIConstants = require(Controllers.UI.UIConstants)
+local UIController = require(Controllers.UI.UIController)
 
 local GUI_INSET_Y = GuiService:GetGuiInset().Y
 
@@ -33,7 +33,12 @@ end
 function UIUtil.isStackHUDPermissive()
 	local stack = uiStateMachine:GetStack()
 	-- Every state between HUD and new state should permit HUD inorder to show HUD
-	for i = #stack, table.find(stack, UIConstants.States.HUD), -1 do
+	local hudIndex = table.find(stack, UIConstants.States.HUD)
+	if not hudIndex then
+		return false
+	end
+
+	for i = #stack, hudIndex, -1 do
 		if not UIUtil.isStateHUDPermissive(stack[i]) then
 			return false
 		end
@@ -54,7 +59,8 @@ function UIUtil.isMouseWithinObjectBounds(guiObject: GuiObject, size: Vector2?)
 end
 
 function UIUtil.mountZIndex(guiObject: GuiObject, ignoreGuiObject: boolean?)
-	local baseZIndex = guiObject.Parent.ZIndex
+	local parent = guiObject.Parent
+	local baseZIndex = if parent then parent.ZIndex else 9
 
 	if not ignoreGuiObject then
 		guiObject.ZIndex += baseZIndex

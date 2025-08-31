@@ -1,24 +1,27 @@
 local Button = {}
 
 local GuiService = game:GetService("GuiService")
-local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
-local Signal = require(Paths.Shared.Signal)
-local Component = require(Paths.Controllers.UI.Components.Component)
-local ClickIndicator = require(Paths.Controllers.UI.Components.ClickIndicator)
-local Sounds = require(Paths.Shared.Sounds)
-local InputUtil = require(Paths.Controllers.Utils.InputUtil)
-local UIUtil = require(Paths.Controllers.UI.Utils.UIUtil)
-local UIController = require(Paths.Controllers.UI.UIController)
-
-export type Button = typeof(Button.new())
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Shared = ReplicatedStorage.Modules
+local Controllers = Players.LocalPlayer.PlayerScripts.Paths
+local Signal = require(Shared.Signal)
+local Sounds = require(Shared.Sounds)
+local Component = require(Controllers.UI.Components.Component)
+local ClickIndicator = require(Controllers.UI.Components.ClickIndicator)
+local InputUtil = require(Controllers.Utils.InputUtil)
+local UIUtil = require(Controllers.UI.Utils.UIUtil)
+local UIController = require(Controllers.UI.UIController)
 
 local CLICK_COOLDOWN = 0.05
 
 local playerGui = Players.LocalPlayer.PlayerGui
 local uiStateMachine = UIController.getStateMachine()
 
+-------------------------------------------------------------------------------
+-- PUBLIC FUNCTIONS
+-------------------------------------------------------------------------------
 function Button.new(guiObject: GuiButton, mute: boolean?)
 	local button = Component.new()
 
@@ -47,8 +50,8 @@ function Button.new(guiObject: GuiButton, mute: boolean?)
 	-------------------------------------------------------------------------------
 	-- PUBLIC FUNCTIONS
 	-------------------------------------------------------------------------------
-	function button:Mount(parent: Instance?, hideBackground: boolean?)
-		if hideBackground then
+	function button:Mount(parent: GuiObject?, hideBackground: boolean?)
+		if hideBackground and parent then
 			parent.BackgroundTransparency = 1
 		end
 
@@ -85,16 +88,6 @@ function Button.new(guiObject: GuiButton, mute: boolean?)
 
 	function button:EnableClickIndicator()
 		clickIndicatorEnabled = true
-	end
-
-	function button:ToggleColor(toggle: boolean)
-		if toggle then
-			guiObject.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-			guiObject:FindFirstChildOfClass("UIGradient").Enabled = true
-		else
-			guiObject.BackgroundColor3 = Color3.fromRGB(162, 162, 162)
-			guiObject:FindFirstChildOfClass("UIGradient").Enabled = false
-		end
 	end
 
 	function button:Destroy(keepButton: boolean?)
@@ -200,5 +193,7 @@ function Button.new(guiObject: GuiButton, mute: boolean?)
 
 	return button
 end
+
+export type Button = typeof(Button.new(...))
 
 return Button

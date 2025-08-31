@@ -1,11 +1,10 @@
 local TabbedWindow = {}
 
 local Players = game:GetService("Players")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
-local Signal = require(Paths.Shared.Signal)
-local Button = require(Paths.Controllers.UI.Components.Button)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Signal = require(ReplicatedStorage.Modules.Signal)
+local Button = require(Players.LocalPlayer.PlayerScripts.Paths.UI.Components.Button)
 
-export type TabbedWindow = typeof(TabbedWindow.new())
 export type Window = GuiObject | (boolean) -> ()
 
 function TabbedWindow.new(
@@ -115,5 +114,7 @@ function TabbedWindow.new(
 
 	return tabbedWindow
 end
+
+export type TabbedWindow = typeof(TabbedWindow.new(...))
 
 return TabbedWindow

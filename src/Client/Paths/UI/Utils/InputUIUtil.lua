@@ -3,12 +3,14 @@ local InputUIUtil = {}
 local GuiService = game:GetService("GuiService")
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
-local InstanceUtil = require(Paths.Shared.Utils.InstanceUtil)
-local InputUtil = require(Paths.Controllers.Utils.InputUtil)
-local KeybindSprites = require(Paths.Controllers.UI.KeybindSprites)
-local Button = require(Paths.Controllers.UI.Components.Button)
-local Maid = require(Paths.Shared.Maid)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Shared = ReplicatedStorage.Modules
+local Controllers = Players.LocalPlayer.PlayerScripts.Paths
+local InstanceUtil = require(Shared.Utils.InstanceUtil)
+local Maid = require(Shared.Maid)
+local InputUtil = require(Controllers.Utils.InputUtil)
+local KeybindSprites = require(Controllers.UI.KeybindSprites)
+local Button = require(Controllers.UI.Components.Button)
 
 function InputUIUtil.findNextButton(body: Frame, currentButton: ImageButton | GuiButton)
 	local buttons = InstanceUtil.getChildrenOfClass(body, "ImageButton")
@@ -24,9 +26,14 @@ function InputUIUtil.findNextButton(body: Frame, currentButton: ImageButton | Gu
 				return btn
 			end
 		end
+		return nil
 	end
 
-	local startIndex = table.find(buttons, currentButton) + 1
+	local foundIndex = table.find(buttons, currentButton)
+	if not foundIndex then
+		error("Current button not found in list")
+	end
+	local startIndex = foundIndex + 1
 
 	-- Go forward in list
 	local forwardResult = loop(startIndex, #buttons, 1)
@@ -40,7 +47,7 @@ function InputUIUtil.findNextButton(body: Frame, currentButton: ImageButton | Gu
 end
 
 function InputUIUtil.closeGamepadSelect()
-	GuiService.SelectedObject = nil :: Instance
+	GuiService.SelectedObject = nil
 end
 
 function InputUIUtil.gamepadSelect(guiObject: GuiObject)

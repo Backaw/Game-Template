@@ -13,20 +13,6 @@
       "end)"
     ]
   },
-  "ClientPath": {
-    "prefix": ["paths-client"],
-    "body": [
-      "local Players = game:GetService(\"Players\")",
-      "local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)"
-    ]
-  },
-  "ServerPath": {
-    "prefix": ["paths-server"],
-    "body": [
-      "local ServerScriptService = game:GetService(\"ServerScriptService\")",
-      "local Paths = require(ServerScriptService.Paths)"
-    ]
-  },
   "LocalPlayer": {
     "prefix": ["localplayer"],
     "body": ["local player = Players.LocalPlayer"]
@@ -56,32 +42,13 @@
       "local uiStateMachine = UIController.getStateMachine()"
     ]
   },
-  "SharedModule": {
-    "prefix": ["shared-module"],
-    "body": [
-      "local ${1:Module} = require(ReplicatedStorage.Modules.${1:Module})"
-    ]
-  },
-
-  "SharedUtil": {
-    "prefix": ["shared-util"],
-    "body": [
-      "local ${1:Module} = require(ReplicatedStorage.Modules.Utils.${1:Module})"
-    ]
-  },
-
-  "PathsController": {
-    "prefix": ["paths-controller"],
-    "body": ["local ${1:Module} = require(Paths.Controllers.${1:Module})"]
-  },
-
-  "PathsService": {
-    "prefix": ["paths-service"],
-    "body": ["local ${1:Module} = require(Paths.Services.${1:Module})"]
-  },
-
-  "PathsSharedUtil": {
-    "prefix": ["paths-shared-util"],
-    "body": ["local ${1:Module} = require(Paths.Shared.Utils.${1:Module})"]
-  }
+  "PathsClient": {
+  "prefix": ["paths-client"],
+  "body": [
+    "local Players = game:GetService(\"Players\")",
+    "local ReplicatedStorage = game:GetService(\"ReplicatedStorage\")",
+    "local Shared = ReplicatedStorage.Modules",
+    "local Controllers = Players.LocalPlayer.PlayerScripts.Paths"
+  ]
+}
 }

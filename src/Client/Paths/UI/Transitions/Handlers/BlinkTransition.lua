@@ -2,9 +2,8 @@ local WipeTransition = {}
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
 
-local screen: ScreenGui = Paths.UI.Transitions
+local screen: ScreenGui = Players.LocalPlayer.PlayerGui.Transitions
 local frame: Frame = screen.Blink
 
 local TWEEN_INFO = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)

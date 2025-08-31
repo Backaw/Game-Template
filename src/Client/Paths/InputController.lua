@@ -1,22 +1,25 @@
 local InputController = {}
 
 local Players = game:GetService("Players")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
-local UIController = require(Paths.Controllers.UI.UIController)
-local UIConstants = require(Paths.Controllers.UI.UIConstants)
-local InputUtil = require(Paths.Controllers.Utils.InputUtil)
-local Toggle = require(Paths.Shared.Toggle)
-local Maid = require(Paths.Shared.Maid)
-local CharacterController = require(Paths.Controllers.Character.CharacterController)
-local CharacterUtil = require(Paths.Shared.Character.CharacterUtil)
-local Signal = require(Paths.Shared.Signal)
-local InputScreen = require(Paths.Controllers.UI.Screens.InputScreen)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Controllers = Players.LocalPlayer.PlayerScripts.Paths
+local Shared = ReplicatedStorage.Modules
+local Toggle = require(Shared.Toggle)
+local Maid = require(Shared.Maid)
+local Signal = require(Shared.Signal)
+local UIController = require(Controllers.UI.UIController)
+local UIConstants = require(Controllers.UI.UIConstants)
+local InputUtil = require(Controllers.Utils.InputUtil)
+local CharacterController = require(Controllers.Character.CharacterController)
+local CharacterUtil = require(Shared.Character.CharacterUtil)
+local InputScreen = require(Controllers.UI.Screens.InputScreen)
+local Paths = require(Controllers)
 
 -------------------------------------------------------------------------------
 -- TYPES
 -------------------------------------------------------------------------------
 export type Input = InputUtil.Input
-export type MobileButtonProps = InputScreen.MobileButtonProps
+export type MobileButtonProps = InputScreen.MobileButton
 
 type Id = string
 type Handler = (Enum.UserInputState) -> ()
@@ -52,7 +55,7 @@ InputController.MobileButtonAnchors = InputScreen.MobileButtonAnchors
 -- PUBLIC METHODS
 -------------------------------------------------------------------------------
 function InputController.registerInputs(inputList: {
-	[Id]: { Keyboard: Input, Gamepad: Input, MobileButtonProps: InputScreen.MobileButtonProps?, Handler: Handler },
+	[Id]: { Keyboard: Input, Gamepad: Input, MobileButtonProps: InputScreen.MobileButton?, Handler: Handler },
 })
 	for id, data in inputList do
 		InputController.registerInput(id, data.Keyboard, data.Gamepad, data.MobileButtonProps, data.Handler)
@@ -63,7 +66,7 @@ function InputController.registerInput(
 	id: Id,
 	keyboard: Input,
 	gamepad: Input,
-	mobileButtonProps: InputScreen.MobileButtonProps? | nil,
+	mobileButtonProps: InputScreen.MobileButton? | nil,
 	handler: Handler,
 	overrideGameInput: boolean?
 )

@@ -2,14 +2,15 @@ local CmdrController = {}
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
-local Permissions = require(Paths.Shared.Permissions)
+local Controllers = Players.LocalPlayer.PlayerScripts.Paths
+local Shared = ReplicatedStorage.Modules
+local Permissions = require(Shared.Permissions)
 local Cmdr = require(ReplicatedStorage:WaitForChild("CmdrClient"))
-local Button = require(Paths.Controllers.UI.Components.Button)
+local Button = require(Controllers.UI.Components.Button)
 
 local ACTIVATION_KEYS = { Enum.KeyCode.Semicolon }
 
-local toggleButton = Paths.UI.TopBar.Cmdr
+local toggleButton = Players.LocalPlayer.PlayerGui.TopBar.Cmdr
 
 function CmdrController.init()
 	if Permissions.canRunCommands(Players.LocalPlayer) then

@@ -17,18 +17,10 @@ CurrencyConstants.InfoType = {
 }
 
 export type Price = {
-	Currency: "Free",
-} | {
-	Currency: "Cash",
-	Amount: number,
-} | {
-	Currency: "GamePass",
-	Id: number,
+	Currency: string,
+	Amount: number?,
 	PriceInRobux: number?,
-} | {
-	Currency: "DevProduct",
-	Id: number,
-	PriceInRobux: number?,
+	Id: number?,
 }
 
 return CurrencyConstants

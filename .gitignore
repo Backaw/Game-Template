@@ -1,0 +1,6 @@
+# Source map
+sourcemap.json
+
+# Packages
+Packages/
+ServerPackages/

@@ -2,11 +2,12 @@ local Snackbar = {}
 
 local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
-local TemplateUtil = require(Paths.Shared.Utils.TemplateUtil)
-local TweenUtil = require(Paths.Shared.Utils.TweenUtil)
-local Toggle = require(Paths.Shared.Toggle)
-local Signal = require(Paths.Shared.Signal)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Shared = ReplicatedStorage.Modules
+local TemplateUtil = require(Shared.Utils.TemplateUtil)
+local TweenUtil = require(Shared.Utils.TweenUtil)
+local Toggle = require(Shared.Toggle)
+local Signal = require(Shared.Signal)
 
 local HEIGHT = 0.15
 local BUMP_LENGTH = 0.5
@@ -17,8 +18,8 @@ local FADE_OUT_TWEEN_INFO = TweenInfo.new(LIFETIME * 0.25, Enum.EasingStyle.Line
 -------------------------------------------------------------------------------
 -- PRIVATE MEMBERS
 -------------------------------------------------------------------------------
-local screen: ScreenGui = Paths.UI:WaitForChild("Snackbars")
-local container: Frame = screen.Container
+local screen = Players.LocalPlayer.PlayerGui.Snackbars
+local container = screen.Container
 local constructor = TemplateUtil.constructor(container.TEMP_SNACKBAR)
 
 local delayEnded = Signal.new()
@@ -51,7 +52,7 @@ local function createSnackbar(message: string, color: Color3, ignoreDelay: true?
 		otherSnackbar.LayoutOrder = order
 	end
 
-	local label: TextLabel = constructor() :: TextLabel
+	local label = constructor() :: TextLabel
 	label.Position = UDim2.fromScale(0.5, 1)
 	label.Size = UDim2.fromScale(0, 0)
 	label.Name = message

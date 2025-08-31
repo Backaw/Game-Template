@@ -1,11 +1,11 @@
 local DataController = {}
 
-local Players = game:GetService("Players")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
-local Signal = require(Paths.Shared.Signal)
-local Promise = require(Paths.Shared.Packages.Promise)
-local Remotes = require(Paths.Shared.Remotes)
-local DataFormatUtil = require(Paths.Shared.Data.DataFormatUtil)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Shared = ReplicatedStorage.Modules
+local Signal = require(Shared.Signal)
+local Promise = require(Shared.Packages.Promise)
+local Remotes = require(Shared.Remotes)
+local DataFormatUtil = require(Shared.Data.DataFormatUtil)
 
 local bank: DataFormatUtil.Store = {}
 DataController.Updated = Signal.new() -- {event: string, newValue: any, eventMeta: table?}

@@ -3,13 +3,15 @@ local ClickIndicator = {}
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
-local UDim2Util = require(Paths.Shared.Utils.UDim2Util)
-local TweenUtil = require(Paths.Shared.Utils.TweenUtil)
-local InputUtil = require(Paths.Controllers.Utils.InputUtil)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Shared = ReplicatedStorage.Modules
+local Controllers = Players.LocalPlayer.PlayerScripts.Paths
+local UDim2Util = require(Shared.Utils.UDim2Util)
+local TweenUtil = require(Shared.Utils.TweenUtil)
+local InputUtil = require(Controllers.Utils.InputUtil)
 
-local screen: ScreenGui = Players.LocalPlayer.PlayerGui.Mouse
-local clickIndicator: Frame = screen.ClickIndicator
+local screen = Players.LocalPlayer.PlayerGui.Mouse
+local clickIndicator = screen.ClickIndicator
 
 local MIN_TRANSPARENCY = 0.2
 local TWEEN_INFO = TweenInfo.new(0.2, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)

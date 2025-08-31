@@ -2,13 +2,11 @@ local TextLabelUtil = {}
 local TextService = game:GetService("TextService")
 
 local Players = game:GetService("Players")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
-local UIScaleController = require(Paths.Controllers.UI.UIScaleController)
+local UIScaleController = require(Players.LocalPlayer.PlayerScripts.Paths.UI.UIScaleController)
 
 local FONT = Font.new("rbxasset://fonts/families/SourceSansPro.json", Enum.FontWeight.Bold)
 
 function TextLabelUtil.setScaleableText(label: TextLabel, text: string)
-	-- task.defer(function()
 	label.AutomaticSize = Enum.AutomaticSize.None
 
 	local params = Instance.new("GetTextBoundsParams")
@@ -22,7 +20,6 @@ function TextLabelUtil.setScaleableText(label: TextLabel, text: string)
 	label.Size = UDim2.fromScale(size.X / parentSize.X * UIScaleController.getScale(), size.Y / parentSize.Y * UIScaleController.getScale())
 	label.Text = text
 	label.TextScaled = true
-	-- end)
 end
 
 function TextLabelUtil.getContainerSize(text: string, textSize: number)

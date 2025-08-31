@@ -1,13 +1,15 @@
 local CharacterController = {}
 
 local Players = game:GetService("Players")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
-local CharacterUtil = require(Paths.Shared.Character.CharacterUtil)
-local TransitionController = require(Paths.Controllers.UI.Transitions.TransitionController)
-local CameraController = require(Paths.Controllers.Camera.CameraController)
-local UIController = require(Paths.Controllers.UI.UIController)
-local InstanceUtil = require(Paths.Shared.Utils.InstanceUtil)
-local DebugUtil = require(Paths.Shared.Utils.DebugUtil)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Shared = ReplicatedStorage.Modules
+local Controllers = Players.LocalPlayer.PlayerScripts.Paths
+local CharacterUtil = require(Shared.Character.CharacterUtil)
+local TransitionController = require(Controllers.UI.Transitions.TransitionController)
+local CameraController = require(Controllers.Camera.CameraController)
+local UIController = require(Controllers.UI.UIController)
+local InstanceUtil = require(Shared.Utils.InstanceUtil)
+local DebugUtil = require(Shared.Utils.DebugUtil)
 
 -------------------------------------------------------------------------------
 -- TYPES
@@ -44,7 +46,8 @@ end
 
 local function loadCharacter(character: Model?)
 	if character then
-		local humanoid: Humanoid = character:WaitForChild("Humanoid")
+		local humanoid = character:WaitForChild("Humanoid") :: Humanoid
+
 		UIController.resetToHUD()
 
 		for _, callback in loadCallbacks do
@@ -62,7 +65,7 @@ local function loadCharacter(character: Model?)
 
 			alive = false
 
-			player.Character = nil :: Model
+			player.Character = nil
 
 			for _, callback in unloadCallbacks do
 				if DEBUG then
@@ -132,7 +135,7 @@ function CharacterController.teleportTo(spawnPoint: CFrame)
 			CameraController.lookForward()
 			UIController.resetToHUD()
 
-			local humanoid: Humanoid = character:WaitForChild("Humanoid")
+			local humanoid = character:WaitForChild("Humanoid") :: Humanoid
 			if humanoid:GetState() == Enum.HumanoidStateType.Seated then
 				humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
 			end

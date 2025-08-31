@@ -3,13 +3,15 @@ local CameraController = {}
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 local Players = game:GetService("Players")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
-local TweenableValue = require(Paths.Shared.TweenableValue)
-local Shaker = require(Paths.Shared.Shaker)
-local CFrameUtil = require(Paths.Shared.Utils.CFrameUtil)
-local StateMachine = require(Paths.Shared.StateMachine)
-local CharacterController: typeof(require(Paths.Controllers.Character.CharacterController))
-local TableUtil = require(Paths.Shared.Utils.TableUtil)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Shared = ReplicatedStorage.Modules
+local Controllers = Players.LocalPlayer.PlayerScripts.Paths
+local TweenableValue = require(Shared.TweenableValue)
+local Shaker = require(Shared.Shaker)
+local CFrameUtil = require(Shared.Utils.CFrameUtil)
+local StateMachine = require(Shared.StateMachine)
+local TableUtil = require(Shared.Utils.TableUtil)
+local CharacterController
 
 local RENDER_PRIORITY = Enum.RenderPriority.Camera.Value
 
@@ -28,9 +30,6 @@ local camera = Workspace.CurrentCamera
 
 local shakers: { Shaker.Shaker } = {}
 local lastShakeOffset: CFrame
-
-local cameraFocusJob: string?
-local cameraFocus: (Vector3 | BasePart)?
 
 local fieldOfView =
 	TweenableValue.new("NumberValue", camera.FieldOfView, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out))
@@ -60,20 +59,6 @@ function CameraController.resetFov(animationLength: number?)
 		fieldOfView:HasteReset(animationLength or 0.3)
 	else
 		fieldOfView:TweenReset()
-	end
-end
-
-function CameraController.focusOn(job: string, focusOn: Vector3 | BasePart)
-	if not cameraFocusJob or cameraFocusJob == job then
-		cameraFocusJob = job
-		cameraFocus = focusOn
-	end
-end
-
-function CameraController.resetFocus(job: string)
-	if cameraFocusJob == job then
-		cameraFocusJob = nil
-		cameraFocus = nil
 	end
 end
 
@@ -121,7 +106,7 @@ function CameraController.getShakeOffset()
 end
 
 function CameraController.init()
-	CharacterController = require(Paths.Controllers.Character.CharacterController)
+	CharacterController = require(Controllers.Character.CharacterController) :: typeof(require(Controllers.Character.CharacterController))
 	CharacterController.registerLoadCallback(CameraController.lookForward)
 
 	-- Reset camera to default when the character is unloaded
@@ -151,11 +136,6 @@ do
 		lastShakeOffset = CFrame.new()
 		for _, shaker in shakers do
 			lastShakeOffset *= shaker:Update(dt)
-		end
-
-		if cameraFocus then
-			local lookAt = type(cameraFocus) == "vector" and cameraFocus or cameraFocus.Position
-			camera.CFrame = CFrame.lookAt(camera.CFrame.Position, lookAt)
 		end
 
 		camera.CFrame *= lastShakeOffset

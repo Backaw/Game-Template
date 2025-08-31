@@ -8,10 +8,10 @@ export type ItemSource = CurrencyConstants.Price | { Level: number } | nil | Que
 
 export type Item = {
 	Name: string,
-	Alias: string?,
 	Type: string,
 	Icon: string,
 	Source: ItemSource,
+	Alias: string?,
 }
 
 ItemConstants.Types = {}

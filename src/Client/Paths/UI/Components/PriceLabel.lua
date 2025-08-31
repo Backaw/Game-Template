@@ -1,16 +1,16 @@
 local PriceLabel = {}
 
 local Players = game:GetService("Players")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
-local Component = require(Paths.Controllers.UI.Components.Component)
-local CurrencyConstants = require(Paths.Shared.Currency.CurrencyConstants)
-local TemplateUtil = require(Paths.Shared.Utils.TemplateUtil)
-local UIScaleController = require(Paths.Controllers.UI.UIScaleController)
-local Images = require(Paths.Shared.Images)
-local StringUtil = require(Paths.Shared.Utils.StringUtil)
-local TextLabelUtil = require(Paths.Controllers.UI.Utils.TextLabelUtil)
-
-export type PriceLabel = typeof(PriceLabel.new())
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Shared = ReplicatedStorage.Modules
+local Controllers = Players.LocalPlayer.PlayerScripts.Paths
+local Component = require(Controllers.UI.Components.Component)
+local CurrencyConstants = require(Shared.Currency.CurrencyConstants)
+local TemplateUtil = require(Shared.Utils.TemplateUtil)
+local UIScaleController = require(Controllers.UI.UIScaleController)
+local Images = require(Shared.Images)
+local StringUtil = require(Shared.Utils.StringUtil)
+local TextLabelUtil = require(Controllers.UI.Utils.TextLabelUtil)
 
 function PriceLabel.new()
 	local priceLabel = Component.new()
@@ -18,7 +18,7 @@ function PriceLabel.new()
 	-------------------------------------------------------------------------------
 	-- PRIVATE MEMBERS
 	-------------------------------------------------------------------------------
-	local components = TemplateUtil.cloneChildren(Paths.UI.Components.PriceLabel)
+	local components = TemplateUtil.cloneChildren(Players.LocalPlayer.PlayerGui.Components.PriceLabel)
 
 	local label: TextLabel = components.TextLabel
 	local icon: ImageLabel = components.Icon
@@ -43,7 +43,11 @@ function PriceLabel.new()
 		icon.Parent = parent
 		uiListLayout.Parent = parent
 
-		textSize = label:FindFirstAncestorWhichIsA("GuiObject").AbsoluteSize.Y / UIScaleController.getScale()
+		local ancestor = label:FindFirstAncestorWhichIsA("GuiObject")
+		if ancestor then
+			textSize = ancestor.AbsoluteSize.Y / UIScaleController.getScale()
+		end
+
 		parent.BackgroundTransparency = if hideBackground then 1 else parent.BackgroundTransparency
 	end
 
@@ -66,7 +70,7 @@ function PriceLabel.new()
 		local currency = price.Currency
 
 		if currency == CurrencyConstants.Currencies.Cash then
-			setText(StringUtil.getCompactNumber(price.Amount))
+			setText(StringUtil.getCompactNumber(price.Amount :: number))
 
 			icon.Image = Images.Currencies[currency] :: typeof(icon.Image)
 			icon.Visible = true
@@ -94,5 +98,7 @@ function PriceLabel.new()
 
 	return priceLabel
 end
+
+export type PriceLabel = typeof(PriceLabel.new())
 
 return PriceLabel

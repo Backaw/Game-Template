@@ -1,13 +1,15 @@
 local DebugScreen = {}
 
 local Players = game:GetService("Players")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
-local TemplateUtil = require(Paths.Shared.Utils.TemplateUtil)
-local DebugUtil = require(Paths.Shared.Utils.DebugUtil)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Shared = ReplicatedStorage.Modules
+local TemplateUtil = require(Shared.Utils.TemplateUtil)
+local DebugUtil = require(Shared.Utils.DebugUtil)
 
-local HUD: ScreenGui = Paths.UI.HUD
-local screen: ScreenGui = Paths.UI.Debug
-local labels: Frame = screen.States
+local playerGui = Players.LocalPlayer.PlayerGui
+local HUD = playerGui.HUD
+local screen = playerGui.Debug
+local labels = screen.States
 local itemConstructor = TemplateUtil.constructor(labels.TEMP_STATE)
 
 local DISABLED = false
@@ -20,7 +22,7 @@ function DebugScreen.write(label: string, value: any, highlight: Color3?)
 		return
 	end
 
-	local textLabel: TextLabel = labels:FindFirstChild(label)
+	local textLabel = labels:FindFirstChild(label)
 	if not textLabel then
 		textLabel = itemConstructor() :: TextLabel
 		textLabel.Name = label

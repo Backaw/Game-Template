@@ -1,9 +1,8 @@
 local Confetti = {}
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
 
 local SCALE = 0.025
 local SCALES = {
@@ -24,7 +23,7 @@ local LAYER_DELAY = 0.1
 local random = Random.new()
 local camera = Workspace.Camera
 
-local particleTempate: MeshPart = Paths.Assets.VFXPresets.ScreenConfetti
+local particleTempate: MeshPart = ReplicatedStorage.Assets.VFXPresets.ScreenConfetti
 local particles: { [BasePart]: {
 	Position: Vector3,
 	Rotation: Vector3,

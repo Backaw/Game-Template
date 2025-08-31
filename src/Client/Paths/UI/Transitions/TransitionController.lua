@@ -1,10 +1,12 @@
 local TransitionsController = {}
 
 local Players = game:GetService("Players")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
-local CameraController = require(Paths.Controllers.Camera.CameraController)
-local Toggle = require(Paths.Shared.Toggle)
-local Limiter = require(Paths.Shared.Limiter)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Shared = ReplicatedStorage.Modules
+local Controllers = Players.LocalPlayer.PlayerScripts.Paths
+local CameraController = require(Controllers.Camera.CameraController)
+local Toggle = require(Shared.Toggle)
+local Limiter = require(Shared.Limiter)
 
 local MAX_TRANSITION_TIME = 8
 
@@ -84,7 +86,7 @@ for _, transition in pairs(TransitionsController.Transitions) do
 end
 
 do
-	local screen = Paths.UI.Transitions
+	local screen = Players.LocalPlayer.PlayerGui.Transitions
 	screen.Enabled = true
 
 	for _, child in screen:GetChildren() do

@@ -3,9 +3,9 @@ local MouseUtil = {}
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 local Players = game:GetService("Players")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
-local InputUtil = require(Paths.Controllers.Utils.InputUtil)
-local RayUtil = require(Paths.Shared.Utils.RayUtil)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local InputUtil = require(Players.LocalPlayer.PlayerScripts.Paths.Utils.InputUtil)
+local RayUtil = require(ReplicatedStorage.Modules.Utils.RayUtil)
 
 -------------------------------------------------------------------------------
 -- PRIVATE MEMBERS

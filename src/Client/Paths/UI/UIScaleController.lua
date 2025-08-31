@@ -3,10 +3,10 @@ local UIScaleController = {}
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
-local DescendantLooper = require(ReplicatedStorage.Modules.DescendantLooper)
-local Limiter = require(ReplicatedStorage.Modules.Limiter)
-local Signal = require(Paths.Shared.Signal)
+local Shared = ReplicatedStorage.Modules
+local DescendantLooper = require(Shared.DescendantLooper)
+local Limiter = require(Shared.Limiter)
+local Signal = require(Shared.Signal)
 
 local BASE_RESOLUTION = Vector2.new(1920, 1080)
 
@@ -40,7 +40,9 @@ local function scaleInstance(instance: Instance)
 
 	if instance:IsA("UIScale") then
 		local initParentSize = initProps.ParentSize
-		instance.Parent.Size =
+
+		local parent = instance.Parent :: GuiObject
+		parent.Size =
 			UDim2.new(initParentSize.X.Scale / scale, initParentSize.X.Offset, initParentSize.Y.Scale / scale, initParentSize.Y.Offset)
 
 		instance.Scale = initProps.Scale * scale
@@ -90,7 +92,7 @@ end
 -- PUBLIC METHODS
 -------------------------------------------------------------------------------
 function UIScaleController.isObjectCustomScaled(object: GuiObject)
-	if not object:IsDescendantOf(Paths.UI) then
+	if not object:IsDescendantOf(playerGui) then
 		return false
 	end
 
@@ -114,7 +116,7 @@ function UIScaleController.isObjectCustomScaled(object: GuiObject)
 end
 
 function UIScaleController.isObjectScaled(object: GuiObject)
-	if not object:IsDescendantOf(Paths.UI) then
+	if not object:IsDescendantOf(playerGui) then
 		return false
 	end
 
@@ -145,15 +147,13 @@ end
 -- LOGIC
 -------------------------------------------------------------------------------
 function UIScaleController.init()
-	Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
-
 	updateScale()
 	camera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
 		Limiter.indecisive(LIMITER_SCOPE, "UpdateScale", UPDATE_COOLDOWN, updateScale)
 	end)
 
 	local screenGuis = {}
-	for _, screenGui in Paths.UI:GetChildren() do
+	for _, screenGui in playerGui:GetChildren() do
 		if screenGui:IsA("ScreenGui") then
 			table.insert(screenGuis, screenGui)
 		end
@@ -170,7 +170,7 @@ function UIScaleController.init()
 		end
 	)
 
-	Paths.UI.DescendantRemoving:Connect(function(descendant)
+	playerGui.DescendantRemoving:Connect(function(descendant)
 		registeredInitProps[descendant] = nil
 	end)
 end

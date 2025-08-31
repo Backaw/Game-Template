@@ -1,12 +1,14 @@
 local SettingsController = {}
 
 local Players = game:GetService("Players")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
-local DataController = require(Paths.Controllers.DataController)
-local SettingsConstants = require(Paths.Shared.Constants.SettingsConstants)
-local Remotes = require(Paths.Shared.Remotes)
-local Signal = require(Paths.Shared.Signal)
-local Limiter = require(Paths.Shared.Limiter)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Controllers = Players.LocalPlayer.PlayerScripts.Paths
+local Shared = ReplicatedStorage.Modules
+local DataController = require(Controllers.DataController)
+local SettingsConstants = require(Shared.Constants.SettingsConstants)
+local Remotes = require(Shared.Remotes)
+local Signal = require(Shared.Signal)
+local Limiter = require(Shared.Limiter)
 
 SettingsController.OptionToggled = Signal.new() -- (option : string, value : boolean)
 

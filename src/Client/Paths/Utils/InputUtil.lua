@@ -2,11 +2,12 @@ local InputUtil = {}
 
 local GuiService = game:GetService("GuiService")
 local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
-local Remotes = require(Paths.Shared.Remotes)
-local Signal = require(Paths.Shared.Signal)
-local Maid = require(Paths.Shared.Maid)
+local Shared = ReplicatedStorage.Modules
+local Remotes = require(Shared.Remotes)
+local Signal = require(Shared.Signal)
+local Maid = require(Shared.Maid)
 
 export type Input = Enum.KeyCode | Enum.UserInputType | nil
 
@@ -97,7 +98,7 @@ function InputUtil.listenToKeyInput(
 	keyboardMouseInput: Input,
 	gamepadInput: Input,
 	overrideGameInput: boolean?
-): Maid.Maid
+): Maid.Maid | nil
 	if not (keyboardMouseInput or gamepadInput) then
 		return
 	end
@@ -191,7 +192,7 @@ do
 	end
 end
 
-local screenSize = (Paths.UI.HUD :: ScreenGui).AbsoluteSize
+local screenSize = (Players.LocalPlayer.PlayerGui.HUD :: ScreenGui).AbsoluteSize
 Remotes.fireServer("DeviceDetermined", ("%s (%sx%s)"):format(InputUtil.getDeviceType(), screenSize.X, screenSize.Y))
 
 return InputUtil

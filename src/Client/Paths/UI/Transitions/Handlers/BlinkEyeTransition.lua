@@ -2,7 +2,6 @@ local BlinkEyeTransition = {}
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
 
 -------------------------------------------------------------------------------
 -- PRIVATE VARIABLES
@@ -12,7 +11,7 @@ local CLOSING_LENGTH = OPENING_LENGTH * 0.75
 
 local CLOSE_SIZE = UDim2.fromScale(2, 2)
 
-local screen: ScreenGui = Paths.UI.Transitions
+local screen: ScreenGui = Players.LocalPlayer.PlayerGui.Transitions
 local eye: ImageLabel = screen.BlinkEye
 local allFrames: { GuiObject }
 

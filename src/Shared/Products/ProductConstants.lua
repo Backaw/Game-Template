@@ -5,16 +5,16 @@ local RewardConstants = require(ReplicatedStorage.Modules.Rewards.RewardConstant
 local ItemConstants = require(ReplicatedStorage.Modules.Items.ItemConstants)
 
 export type Product = {
-	Name: string?,
+	Name: string,
+	Type: string,
 	Alias: string?,
+	Icon: string,
 	Price: CurrencyConstants.Price,
-	Type: string?,
-	Icon: string?,
 	LimitedTime: boolean?,
 }
 
 export type Bundle = {
-	Name: string?,
+	Name: string,
 	ExpiresAt: number?,
 	Icon: string,
 	Price: CurrencyConstants.Price,
@@ -36,11 +36,17 @@ export type PurchaseAttribution = string | {
 -------------------------------------------------------------------------------
 -- PRIVATE MEMBERS
 -------------------------------------------------------------------------------
-local products: { [string]: { [string]: Product } } = {
-	-- Item products are created below
-	Cash = {},
-	Multiplier = {},
-}
+local products: { [string]: { [string]: {
+	Price: CurrencyConstants.Price,
+	Icon: string,
+	LimitedTime: boolean?,
+	Alias: string?,
+} } } =
+	{
+		-- Item products are created below
+		Cash = {},
+		Multiplier = {},
+	}
 local bundles: { [string]: Bundle } = {}
 
 -------------------------------------------------------------------------------
@@ -58,7 +64,6 @@ ProductConstants.Products = products
 for _, itemType in pairs(ItemConstants.Types) do
 	ProductConstants.Types[itemType] = itemType
 end
-
 for _, productType in pairs(ProductConstants.Types) do
 	products[productType] = products[productType] or {}
 end

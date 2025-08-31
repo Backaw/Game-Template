@@ -1,9 +1,8 @@
 local TopbarScreen = {}
 
 local Players = game:GetService("Players")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
 
-local screen: ScreenGui = Paths.UI.TopBar
+local screen: ScreenGui = Players.LocalPlayer.PlayerGui.TopBar
 screen.ScreenInsets = Enum.ScreenInsets.TopbarSafeInsets
 screen.Enabled = true
 

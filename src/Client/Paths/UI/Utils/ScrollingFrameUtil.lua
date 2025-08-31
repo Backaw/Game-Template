@@ -1,8 +1,7 @@
 local ScrollingFrameUtil = {}
 
 local Players = game:GetService("Players")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
-local UIScaleController = require(Paths.Controllers.UI.UIScaleController)
+local UIScaleController = require(Players.LocalPlayer.PlayerScripts.Paths.UI.UIScaleController)
 
 function ScrollingFrameUtil.scaleToVerticalGrid(frame: ScrollingFrame)
 	local gridLayout: UIGridStyleLayout? = frame:FindFirstChildOfClass("UIGridLayout") or frame:FindFirstChildOfClass("UIListLayout")

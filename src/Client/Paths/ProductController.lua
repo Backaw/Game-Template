@@ -1,20 +1,22 @@
 local ProductController = {}
 
 local Players = game:GetService("Players")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
-local Remotes = require(Paths.Shared.Remotes)
-local ProductUtil = require(Paths.Shared.Products.ProductUtil)
-local ProductConstants = require(Paths.Shared.Products.ProductConstants)
-local CurrencyConstants = require(Paths.Shared.Currency.CurrencyConstants)
-local CurrencyController = require(Paths.Controllers.CurrencyController)
-local CurrencyUtil = require(Paths.Shared.Currency.CurrencyUtil)
-local Snackbar = require(Paths.Controllers.UI.Components.Snackbar)
-local Promise = require(Paths.Shared.Packages.Promise)
-local Signal = require(Paths.Shared.Signal)
--- local Confetti = require(Paths.Controllers.UI.Particles.Confetti)
-local Sounds = require(Paths.Shared.Sounds)
-local DebugUtil = require(Paths.Shared.Utils.DebugUtil)
-local TableUtil = require(Paths.Shared.Utils.TableUtil)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Controllers = Players.LocalPlayer.PlayerScripts.Paths
+local Shared = ReplicatedStorage.Modules
+local Remotes = require(Shared.Remotes)
+local ProductUtil = require(Shared.Products.ProductUtil)
+local ProductConstants = require(Shared.Products.ProductConstants)
+local CurrencyConstants = require(Shared.Currency.CurrencyConstants)
+local CurrencyUtil = require(Shared.Currency.CurrencyUtil)
+local Promise = require(Shared.Packages.Promise)
+local Signal = require(Shared.Signal)
+local Sounds = require(Shared.Sounds)
+local DebugUtil = require(Shared.Utils.DebugUtil)
+local TableUtil = require(Shared.Utils.TableUtil)
+local Snackbar = require(Controllers.UI.Components.Snackbar)
+local CurrencyController = require(Controllers.CurrencyController)
+-- local Confetti = require(Controllers .UI.Particles.Confetti)
 
 export type Product = ProductConstants.Product
 
@@ -93,7 +95,7 @@ function ProductController.trackAffordability(price: CurrencyConstants.Price, ha
 		return false
 	end
 
-	handler(CurrencyController.get(price.Currency) >= price.Amount)
+	handler(CurrencyController.get(price.Currency) >= price.Amount :: number)
 	local tracker = { Price = price, Handler = handler }
 
 	table.insert(priceTrackers, tracker)

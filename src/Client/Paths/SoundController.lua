@@ -1,12 +1,15 @@
 local SoundController = {}
 
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local SoundService = game:GetService("SoundService")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
-local Sounds = require(Paths.Shared.Sounds)
-local SettingsController = require(Paths.Controllers.SettingsController)
-local SettingsConstants = require(Paths.Shared.Constants.SettingsConstants)
-local ArrayUtil = require(Paths.Shared.Utils.ArrayUtil)
+local Controllers = Players.LocalPlayer.PlayerScripts.Paths
+local Shared = ReplicatedStorage.Modules
+local Sounds = require(Shared.Sounds)
+local SettingsController = require(Controllers.SettingsController)
+local SettingsConstants = require(Shared.Constants.SettingsConstants)
+local ArrayUtil = require(Shared.Utils.ArrayUtil)
+local Paths = require(Controllers)
 
 Paths.Initialized:andThen(function()
 	local songs = {}

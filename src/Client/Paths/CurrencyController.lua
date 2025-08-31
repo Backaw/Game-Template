@@ -1,11 +1,13 @@
 local CurrencyController = {}
 
 local Players = game:GetService("Players")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
-local Signal = require(Paths.Shared.Signal)
-local DataController = require(Paths.Controllers.DataController)
-local CurrencyUtil = require(Paths.Shared.Currency.CurrencyUtil)
-local CurrencyConstants = require(Paths.Shared.Currency.CurrencyConstants)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Controllers = Players.LocalPlayer.PlayerScripts.Paths
+local Shared = ReplicatedStorage.Modules
+local DataController = require(Controllers.DataController)
+local CurrencyUtil = require(Shared.Currency.CurrencyUtil)
+local CurrencyConstants = require(Shared.Currency.CurrencyConstants)
+local Signal = require(Shared.Signal)
 
 -------------------------------------------------------------------------------
 -- PRIVATE MEMBERS

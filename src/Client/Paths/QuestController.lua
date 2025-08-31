@@ -1,11 +1,9 @@
 local QuestController = {}
 
 local Players = game:GetService("Players")
-
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
-
-local DataController = require(Paths.Controllers.DataController)
-local QuestUtil = require(Paths.Shared.Quests.QuestUtil)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local DataController = require(Players.LocalPlayer.PlayerScripts.Paths.DataController)
+local QuestUtil = require(ReplicatedStorage.Modules.Quests.QuestUtil)
 
 -------------------------------------------------------------------------------
 -- PUBLIC FUNCTIONS
@@ -13,7 +11,7 @@ local QuestUtil = require(Paths.Shared.Quests.QuestUtil)
 function QuestController.trackStatProgress(questStat: string, handler)
 	task.spawn(handler, QuestUtil.getStat, questStat)
 
-	return DataController.Updated:Connect(function(event: string, _newValue: any, eventMeta: table?)
+	return DataController.Updated:Connect(function(event: string, _newValue, eventMeta)
 		if event == "QuestStatChanged" and eventMeta.Stat == questStat then
 			handler(QuestUtil.getStat(questStat))
 		end

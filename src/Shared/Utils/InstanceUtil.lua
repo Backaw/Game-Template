@@ -32,7 +32,7 @@ function InstanceUtil.onDestroyed(instance: Instance, callback: () -> ())
 end
 
 function InstanceUtil.findFirstDescendant(instance: Instance, searchingFor: string): Instance?
-	for _, descendant in  (instance:GetDescendants()) do
+	for _, descendant in (instance:GetDescendants()) do
 		if descendant.Name == searchingFor then
 			return descendant
 		end
@@ -40,7 +40,7 @@ function InstanceUtil.findFirstDescendant(instance: Instance, searchingFor: stri
 end
 
 function InstanceUtil.findFirstDescendantWhichIsA(instance: Instance, className: string): Instance?
-	for _, descendant in  (instance:GetDescendants()) do
+	for _, descendant in (instance:GetDescendants()) do
 		if descendant:IsA(className) then
 			return descendant
 		end
@@ -68,6 +68,34 @@ function InstanceUtil.waitForFirstChildOfClass(instance: Instance, className: st
 		child = instance:FindFirstChildOfClass(className)
 	until child
 	return child
+end
+
+function InstanceUtil.getChildrenOfClass(parent: Instance, class: string, filterMethod: ((child: Instance) -> boolean)?)
+	local children = {}
+	for _, v in parent:GetChildren() do
+		if v:IsA(class) then
+			if filterMethod ~= nil and not filterMethod(v) then
+				continue
+			end
+			table.insert(children, v)
+		end
+	end
+	return children
+end
+
+function InstanceUtil.findLastAncestorOfClass(instance: Instance, className: string): Instance?
+	local lastAncestor = nil
+	local parent = instance.Parent
+
+	while parent and parent ~= game do
+		if not parent:IsA(className) then
+			break
+		end
+		lastAncestor = parent
+		parent = parent.Parent
+	end
+
+	return lastAncestor
 end
 
 return InstanceUtil

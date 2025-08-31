@@ -1,16 +1,18 @@
 local UIController = {}
 
 local Players = game:GetService("Players")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
-local StateMachine = require(Paths.Shared.StateMachine)
-local UIConstants = require(Paths.Controllers.UI.UIConstants)
-local StringUtil = require(Paths.Shared.Utils.StringUtil)
-local TableUtil = require(Paths.Shared.Utils.TableUtil)
-local DeferredPromise = require(Paths.Shared.DeferredPromise)
-local Promise = require(Paths.Shared.Packages.Promise)
-local UIUtil: typeof(require(Paths.Controllers.UI.Utils.UIUtil))
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Shared = ReplicatedStorage.Modules
+local Controllers = Players.LocalPlayer.PlayerScripts.Paths
+local StateMachine = require(Shared.StateMachine)
+local UIConstants = require(Controllers.UI.UIConstants)
+local StringUtil = require(Shared.Utils.StringUtil)
+local TableUtil = require(Shared.Utils.TableUtil)
+local DeferredPromise = require(Shared.DeferredPromise)
+local Promise = require(Shared.Packages.Promise)
+local UIUtil
 
-type ScreenStateCallback = ((table?) -> ())?
+type ScreenStateCallback = (({ any }?) -> ())?
 type ScreenStateCallbacks = {
 	Boot: ScreenStateCallback,
 	Shutdown: ScreenStateCallback,
@@ -46,9 +48,8 @@ function UIController.registerScreenStateCallbacks(state: string, callbacks: Scr
 end
 
 function UIController.init()
-	UIUtil = require(Paths.Controllers.UI.Utils.UIUtil)
-
-	for _, descendant in (Paths.Controllers.UI:GetDescendants()) do
+	UIUtil = require(Controllers.UI.Utils.UIUtil)
+	for _, descendant in (Controllers.UI:GetDescendants()) do
 		if descendant:IsA("ModuleScript") and StringUtil.endsWith(descendant.Name, "Screen") then
 			require(descendant)
 		end
@@ -128,9 +129,8 @@ uiStateMachine:RegisterGlobalCallback(function(fromState, toState, data)
 	UIController.ScreenStateTransition:invokeResolve()
 end)
 
-Paths.UI.Components.Enabled = false
-for _, tooltip in Paths.UI.Tooltips:GetChildren() do
-	tooltip.Visible = false
+do
+	Players.LocalPlayer.PlayerGui.Components.Enabled = false
 end
 
 return UIController

@@ -2,15 +2,14 @@ local EyeTransition = {}
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
-
-local TWEEN_INFO = TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
-local CLOSE_SIZE = UDim2.fromScale(2, 2)
 
 -------------------------------------------------------------------------------
 -- PRIVATE VARIABLES
 -------------------------------------------------------------------------------
-local screen: ScreenGui = Paths.UI.Transitions
+local TWEEN_INFO = TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
+local CLOSE_SIZE = UDim2.fromScale(2, 2)
+
+local screen: ScreenGui = Players.LocalPlayer.PlayerGui.Transitions
 local frame: ImageLabel = screen.Eye
 
 local tween

@@ -2,9 +2,9 @@ local InteractionController = {}
 
 local ProximityPromptService = game:GetService("ProximityPromptService")
 local Players = game:GetService("Players")
-local Paths = require(Players.LocalPlayer.PlayerScripts.Paths)
-local UIController = require(Paths.Controllers.UI.UIController)
-local UIUtil = require(Paths.Controllers.UI.Utils.UIUtil)
+local Controllers = Players.LocalPlayer.PlayerScripts.Paths
+local UIController = require(Controllers.UI.UIController)
+local UIUtil = require(Controllers.UI.Utils.UIUtil)
 
 function InteractionController.start()
 	-- Disable interactions for certain ui states
