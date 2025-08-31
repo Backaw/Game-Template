@@ -10,14 +10,12 @@ type State = {
 }
 type Condition = {
 	TransitionState: string,
-	Evaluate: (Condition) -> boolean,
+	Evaluate: (number) -> boolean,
 }
 
-export type Handler = (() -> ()) | nil
+export type Handler = ((number?) -> ()) | nil
 
-local DEFAULT_STATE_REFRESH_TIME = 0.2
-
-function StateMachine.new(stateNames: { string }, conditionNames: { string }, refreshTime: number?, doDebug: boolean?)
+function StateMachine.new(stateNames: { string }, conditionNames: { string }, doDebug: boolean?)
 	local stateMachine = {}
 
 	-------------------------------------------------------------------------------
@@ -29,9 +27,7 @@ function StateMachine.new(stateNames: { string }, conditionNames: { string }, re
 	local stateToConditions: { [string]: { string } } = {}
 	local conditionsToTransitionState: { [string]: string } = {}
 
-	local activeState: State?
-
-	refreshTime = refreshTime or DEFAULT_STATE_REFRESH_TIME
+	local activeState: State?, onUpdate: ((number) -> ()) | nil
 
 	-------------------------------------------------------------------------------
 	-- PUBLIC VARIABLES
@@ -67,55 +63,55 @@ function StateMachine.new(stateNames: { string }, conditionNames: { string }, re
 
 		stateToConditions[name] = linkedConditions
 
-		local running = false
+		local function run(dt)
+			--check conditions
+			for _, conditionName in pairs(linkedConditions) do
+				local condition = conditions[conditionName]
+				--print("Checking " .. condition.Name)
+				if condition.Evaluate(dt) then
+					if doDebug then
+						warn(("%s is true. Switching state to %s "):format(conditionName, condition.TransitionState))
+					end
+
+					stateMachine:SwitchState(condition.TransitionState)
+					return
+				end
+			end
+
+			--if no conditions satisfied, perform action
+			if actionHandler then
+				actionHandler(dt)
+			end
+		end
+
 		states[name] = {
 			Name = name,
 			Run = function()
-				if running then
+				if onUpdate == run then
 					error("No bueno")
 				end
 
-				running = true
+				onUpdate = run
 
 				if initHandler then
 					initHandler()
 				end
-
-				task.spawn(function()
-					while running do
-						--check conditions
-						for _, conditionName in pairs(linkedConditions) do
-							local condition = conditions[conditionName]
-							--print("Checking " .. condition.Name)
-							if condition:Evaluate() then
-								if doDebug then
-									warn(("%s is true. Switching state to %s "):format(conditionName, condition.TransitionState))
-								end
-
-								stateMachine:SwitchState(condition.TransitionState)
-								return
-							end
-						end
-
-						--if no conditions satisfied, perform action
-						if actionHandler then
-							actionHandler()
-						end
-
-						task.wait(refreshTime)
-					end
-				end)
 			end,
 			Stop = function()
+				if onUpdate ~= run then
+					error("No bueno 2 ")
+				end
+
 				if closeHandler then
 					closeHandler()
 				end
-				running = false
+
+				onUpdate = nil
 			end,
 		}
 	end
 
-	function stateMachine:RegisterCondition(name: string, transitionState: string, evaluate: () -> boolean)
+	function stateMachine:RegisterCondition(name: string, transitionState: string, evaluate: (number) -> boolean)
 		verifyConditionValidity(name)
 		verifyStateValidity(transitionState)
 
@@ -162,6 +158,12 @@ function StateMachine.new(stateNames: { string }, conditionNames: { string }, re
 		if activeState then
 			activeState:Stop()
 			activeState = nil
+		end
+	end
+
+	function stateMachine:Update(dt)
+		if onUpdate then
+			onUpdate(dt)
 		end
 	end
 
