@@ -3,10 +3,12 @@ local CharactersService = {}
 local Players = game:GetService("Players")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
-local Paths = require(ServerScriptService.Paths)
-local PlayersService = require(Paths.Services.PlayersService)
-local Permissions = require(Paths.Shared.Permissions)
-local CharacterConstants = require(Paths.Shared.Character.CharacterConstants)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Services = ServerScriptService.Paths
+local Shared = ReplicatedStorage.Modules
+local PlayersService = require(Services.PlayersService)
+local Permissions = require(Shared.Permissions)
+local CharacterConstants = require(Shared.Character.CharacterConstants)
 
 -------------------------------------------------------------------------------
 -- PRIVATE METHODS

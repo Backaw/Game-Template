@@ -1,10 +1,10 @@
 local UnitTestingService = {}
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
-local Paths = require(ServerScriptService.Paths)
-local UnitTester = require(Paths.Shared.UnitTester)
+local UnitTester = require(ReplicatedStorage.Modules.UnitTester)
 
-UnitTester.run(Paths.Shared)
-UnitTester.run(Paths.Services)
+UnitTester.run(ReplicatedStorage.Modules)
+UnitTester.run(ServerScriptService.Paths)
 
 return UnitTestingService

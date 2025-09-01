@@ -1,17 +1,17 @@
 local CurrencyService = {}
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
-local Paths = require(ServerScriptService.Paths)
-local CurrencyConstants = require(Paths.Shared.Currency.CurrencyConstants)
-local CurrencyUtil = require(Paths.Shared.Currency.CurrencyUtil)
-local PlayerDataService = require(Paths.Services.Data.PlayerDataService)
-local ProductService: typeof(require(Paths.Services.Products.ProductService))
-local ProductConstants = require(Paths.Shared.Products.ProductConstants)
-local GameAnalytics = require(Paths.Shared.Packages.GameAnalytics)
-local GameAnalyticsService: typeof(require(Paths.Services.GameAnalyticsService))
-local TableUtil = require(Paths.Shared.Utils.TableUtil)
-local QuestConstants = require(Paths.Shared.Quests.QuestConstants)
-local QuestService: typeof(require(Paths.Services.QuestService))
+local Services = ServerScriptService.Paths
+local Shared = ReplicatedStorage.Modules
+local CurrencyConstants = require(Shared.Currency.CurrencyConstants)
+local CurrencyUtil = require(Shared.Currency.CurrencyUtil)
+local ProductConstants = require(Shared.Products.ProductConstants)
+local GameAnalytics = require(Shared.Packages.GameAnalytics)
+local TableUtil = require(Shared.Utils.TableUtil)
+local QuestConstants = require(Shared.Quests.QuestConstants)
+local PlayerDataService = require(Services.Data.PlayerDataService)
+local QuestService, ProductService, GameAnalyticsService
 
 -------------------------------------------------------------------------------
 -- PUBLIC MEMBERS
@@ -88,9 +88,9 @@ function CurrencyService.getResourceTypes()
 end
 
 function CurrencyService.init()
-	ProductService = require(Paths.Services.Products.ProductService)
-	GameAnalyticsService = require(Paths.Services.GameAnalyticsService)
-	QuestService = require(Paths.Services.QuestService)
+	ProductService = require(Services.Products.ProductService)
+	GameAnalyticsService = require(Services.GameAnalyticsService)
+	QuestService = require(Services.QuestService)
 
 	for _, currency in CurrencyConstants.IngameCurrencies do
 		-- CONTINUE: Currency isn't purchaseable

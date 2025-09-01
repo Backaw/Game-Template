@@ -1,7 +1,7 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
-local Paths = require(ServerScriptService.Paths)
-local PlayerDataService = require(Paths.Services.Data.PlayerDataService)
-local TableUtil = require(Paths.Shared.Utils.TableUtil)
+local PlayerDataService = require(ServerScriptService.Paths.Data.PlayerDataService)
+local TableUtil = require(ReplicatedStorage.Modules.Utils.TableUtil)
 
 return function(_, player: Player)
 	TableUtil.print(PlayerDataService.get(player, ""))

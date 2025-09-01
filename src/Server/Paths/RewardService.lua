@@ -1,11 +1,13 @@
 local RewardService = {}
 
 local ServerScriptService = game:GetService("ServerScriptService")
-local Paths = require(ServerScriptService.Paths)
-local RewardConstants = require(Paths.Shared.Rewards.RewardConstants)
-local CurrencyService = require(Paths.Services.CurrencyService)
-local ItemService: typeof(require(Paths.Services.ItemService))
-local BoostService = require(Paths.Services.BoostService)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Services = ServerScriptService.Paths
+local Shared = ReplicatedStorage.Modules
+local RewardConstants = require(Shared.Rewards.RewardConstants)
+local CurrencyService = require(Services.CurrencyService)
+local BoostService = require(Services.BoostService)
+local ItemService
 
 function RewardService.award(player: Player, reward: RewardConstants.Reward, source: string, clientInitiated: boolean?)
 	if reward.Type == RewardConstants.Types.Currency then
@@ -18,7 +20,7 @@ function RewardService.award(player: Player, reward: RewardConstants.Reward, sou
 end
 
 function RewardService.init()
-	ItemService = require(Paths.Services.ItemService)
+	ItemService = require(Services.ItemService)
 end
 
 return RewardService

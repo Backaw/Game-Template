@@ -1,10 +1,12 @@
 local BoostService = {}
 
 local ServerScriptService = game:GetService("ServerScriptService")
-local Paths = require(ServerScriptService.Paths)
-local PlayerDataService = require(Paths.Services.Data.PlayerDataService)
-local PlayersService = require(Paths.Services.PlayersService)
-local BoostConstants = require(Paths.Shared.Constants.BoostConstants)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Services = ServerScriptService.Paths
+local Shared = ReplicatedStorage.Modules
+local PlayerDataService = require(Services.Data.PlayerDataService)
+local PlayersService = require(Services.PlayersService)
+local BoostConstants = require(Shared.Constants.BoostConstants)
 
 type Store = {
 	CountdownStartTime: number,

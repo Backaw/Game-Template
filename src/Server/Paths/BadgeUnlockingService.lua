@@ -2,12 +2,14 @@ local BadgeUnlockingService = {}
 
 local BadgeService = game:GetService("BadgeService")
 local ServerScriptService = game:GetService("ServerScriptService")
-local Paths = require(ServerScriptService.Paths)
-local PlayersService = require(Paths.Services.PlayersService)
-local PlayerDataService = require(Paths.Services.Data.PlayerDataService)
-local BadgeConstants = require(Paths.Shared.Constants.BadgeConstants)
-local GameUtil = require(Paths.Shared.Game.GameUtil)
-local QuestUtil = require(Paths.Shared.Quests.QuestUtil)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Services = ServerScriptService.Paths
+local Shared = ReplicatedStorage.Modules
+local BadgeConstants = require(Shared.Constants.BadgeConstants)
+local GameUtil = require(Shared.Game.GameUtil)
+local QuestUtil = require(Shared.Quests.QuestUtil)
+local PlayersService = require(Services.PlayersService)
+local PlayerDataService = require(Services.Data.PlayerDataService)
 
 local DEBUGGING = false
 
@@ -56,7 +58,7 @@ end
 BadgeUnlockingService.loadPlayer = PlayersService.promisifyLoader(function(player)
 	-- BadgeUnlockingService.awardBadge(player, BadgeConstants.Badges.Play)
 
-	for _, badge in  (BadgeConstants.Badges) do
+	for _, badge in BadgeConstants.Badges do
 		local criteria = badge.AwardCriteria
 		if criteria then
 			local function checkCanAward(value: number)

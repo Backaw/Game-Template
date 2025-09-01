@@ -1,11 +1,13 @@
 local PlaytimeRewardService = {}
 
 local ServerScriptService = game:GetService("ServerScriptService")
-local Paths = require(ServerScriptService.Paths)
-local PlayersService = require(Paths.Services.PlayersService)
-local RewardService = require(Paths.Services.RewardService)
-local Remotes = require(Paths.Shared.Remotes)
-local PlaytimeRewardConstants = require(Paths.Shared.Constants.PlaytimeRewardConstants)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Services = ServerScriptService.Paths
+local Shared = ReplicatedStorage.Modules
+local Remotes = require(Shared.Remotes)
+local PlaytimeRewardConstants = require(Shared.Constants.PlaytimeRewardConstants)
+local PlayersService = require(Services.PlayersService)
+local RewardService = require(Services.RewardService)
 
 -------------------------------------------------------------------------------
 -- PRIVATE MEMBERS

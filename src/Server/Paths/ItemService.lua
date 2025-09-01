@@ -1,19 +1,21 @@
 local ItemService = {}
 
 local ServerScriptService = game:GetService("ServerScriptService")
-local Paths = require(ServerScriptService.Paths)
-local Signal = require(Paths.Shared.Signal)
-local PlayerDataService = require(Paths.Services.Data.PlayerDataService)
-local ItemUtil = require(Paths.Shared.Items.ItemUtil)
-local ItemConstants = require(Paths.Shared.Items.ItemConstants)
-local ProductConstants = require(Paths.Shared.Products.ProductConstants)
-local ProductService = require(Paths.Services.Products.ProductService)
-local TableUtil = require(Paths.Shared.Utils.TableUtil)
-local PlayersService = require(Paths.Services.PlayersService)
-local CurrencyConstants = require(Paths.Shared.Currency.CurrencyConstants)
-local GameAnalyticsService = require(Paths.Services.GameAnalyticsService)
-local QuestService: typeof(require(Paths.Services.QuestService))
-local ProductUtil = require(Paths.Shared.Products.ProductUtil)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Services = ServerScriptService.Paths
+local Shared = ReplicatedStorage.Modules
+local Signal = require(Shared.Signal)
+local ItemUtil = require(Shared.Items.ItemUtil)
+local ItemConstants = require(Shared.Items.ItemConstants)
+local ProductConstants = require(Shared.Products.ProductConstants)
+local TableUtil = require(Shared.Utils.TableUtil)
+local CurrencyConstants = require(Shared.Currency.CurrencyConstants)
+local ProductUtil = require(Shared.Products.ProductUtil)
+local ProductService = require(Services.Products.ProductService)
+local PlayersService = require(Services.PlayersService)
+local PlayerDataService = require(Services.Data.PlayerDataService)
+local GameAnalyticsService = require(Services.GameAnalyticsService)
+local QuestService
 
 type Validator = (Player) -> boolean
 
@@ -97,7 +99,7 @@ ItemService.loadPlayer = PlayersService.promisifyLoader(function(player)
 end, "Items")
 
 function ItemService.init()
-	QuestService = require(Paths.Services.QuestService)
+	QuestService = require(Services.QuestService)
 end
 
 -------------------------------------------------------------------------------

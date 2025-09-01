@@ -1,15 +1,15 @@
 local CollisionService = {}
 
 local PhysicsService = game:GetService("PhysicsService")
-local ServerScriptService = game:GetService("ServerScriptService")
-local Paths = require(ServerScriptService.Paths)
-local CollisionConstants = require(Paths.Shared.Constants.CollisionConstants)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local CollisionConstants = require(ReplicatedStorage.Modules.Constants.CollisionConstants)
 
 local GROUPS = CollisionConstants.Groups
 
 -------------------------------------------------------------------------------
 -- PRIVATE METHODS
 -------------------------------------------------------------------------------
+--[[
 local function setGroupCollideableBlacklist(group: string, blacklist: CollisionConstants.Groups)
 	for _, otherGroup in CollisionConstants.Groups do
 		PhysicsService:CollisionGroupSetCollidable(group, otherGroup, not table.find(blacklist, otherGroup))
@@ -21,6 +21,7 @@ local function setGroupCollideableWhitelist(group: string, whitelist: CollisionC
 		PhysicsService:CollisionGroupSetCollidable(group, otherGroup, table.find(whitelist, otherGroup) ~= nil)
 	end
 end
+]]
 
 -------------------------------------------------------------------------------
 -- LOGIC

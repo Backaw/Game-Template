@@ -1,6 +1,5 @@
 local ServerScriptService = game:GetService("ServerScriptService")
-local Paths = require(ServerScriptService.Paths)
-local PlayerDataService = require(Paths.Services.Data.PlayerDataService)
+local PlayerDataService = require(ServerScriptService.Paths.Data.PlayerDataService)
 
 return function(_, player: Player)
 	PlayerDataService.wipe(player)

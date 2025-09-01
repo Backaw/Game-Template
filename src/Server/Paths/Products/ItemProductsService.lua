@@ -1,17 +1,20 @@
 local ItemProductsService = {}
 
 local ServerScriptService = game:GetService("ServerScriptService")
-local Paths = require(ServerScriptService.Paths)
-local ProductService = require(Paths.Services.Products.ProductService)
-local ProductConstants = require(Paths.Shared.Products.ProductConstants)
-local ItemUtil = require(Paths.Shared.Items.ItemUtil)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Services = ServerScriptService.Paths
+local Shared = ReplicatedStorage.Modules
+local ProductService = require(Services.Products.ProductService)
+local ProductConstants = require(Shared.Products.ProductConstants)
+local ItemUtil = require(Shared.Items.ItemUtil)
+
 --[[
-local ItemConstants = require(Paths.Shared.Items.ItemConstants)
-local RotatingProductConstants = require(Paths.Shared.Products.RotatingProductConstants)
-local RotatingShopUtil = require(Paths.Shared.Products.RotatingShopUtil)
-local RarityUtil = require(Paths.Shared.Rarity.RarityUtil)
-local RarityConstants = require(Paths.Shared.Rarity.RarityConstants)
-local TableUtil = require(Paths.Shared.Utils.TableUtil)
+local ItemConstants = require(Shared.Items.ItemConstants)
+local RotatingProductConstants = require(Shared.Products.RotatingProductConstants)
+local RotatingShopUtil = require(Shared.Products.RotatingShopUtil)
+local RarityUtil = require(Shared.Rarity.RarityUtil)
+local RarityConstants = require(Shared.Rarity.RarityConstants)
+local TableUtil = require(Shared.Utils.TableUtil)
  *]]
 
 -- Generate items from product

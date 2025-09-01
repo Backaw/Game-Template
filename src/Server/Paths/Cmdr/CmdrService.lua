@@ -1,15 +1,15 @@
 local CmdrService = {}
 
-local ServerScriptService = game:GetService("ServerScriptService")
-local Paths = require(ServerScriptService.Paths)
-local Permissions = require(Paths.Shared.Permissions)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Shared = ReplicatedStorage.Modules
+local Permissions = require(Shared.Permissions)
 
 -- Takes a while to load, so put on a separate thread
 task.spawn(function()
-	local Cmdr = require(Paths.Shared.Packages.Cmdr)
+	local Cmdr = require(Shared.Packages.Cmdr)
 
 	-- Cmdr:RegisterDefaultCommands()
-	-- Cmdr:RegisterCommand(Paths.Shared.Packages.Cmdr:WaitForChild("Server commands").help)
+	-- Cmdr:RegisterCommand(Shared .Packages.Cmdr:WaitForChild("Server commands").help)
 
 	Cmdr:RegisterCommandsIn(script.Parent.Commands)
 	Cmdr:RegisterTypesIn(script.Parent.Types)

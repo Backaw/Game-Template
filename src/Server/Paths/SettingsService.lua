@@ -1,11 +1,13 @@
 local SettingsService = {}
 
 local ServerScriptService = game:GetService("ServerScriptService")
-local Paths = require(ServerScriptService.Paths)
-local Remotes = require(Paths.Shared.Remotes)
-local Signal = require(Paths.Shared.Signal)
-local PlayerDataService = require(Paths.Services.Data.PlayerDataService)
-local SettingsConstants = require(Paths.Shared.Constants.SettingsConstants)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Services = ServerScriptService.Paths
+local Shared = ReplicatedStorage.Modules
+local Remotes = require(Shared.Remotes)
+local Signal = require(Shared.Signal)
+local SettingsConstants = require(Shared.Constants.SettingsConstants)
+local PlayerDataService = require(Services.Data.PlayerDataService)
 
 SettingsService.OptionToggled = Signal.new() -->  (player: Player, option: string, toggle: boolean)
 

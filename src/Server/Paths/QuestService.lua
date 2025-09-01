@@ -1,14 +1,16 @@
 local QuestService = {}
 
 local ServerScriptService = game:GetService("ServerScriptService")
-local Paths = require(ServerScriptService.Paths)
-local Signal = require(Paths.Shared.Signal)
-local PlayerDataService = require(Paths.Services.Data.PlayerDataService)
-local GameAnalyticsService = require(Paths.Services.GameAnalyticsService)
-local TableUtil = require(Paths.Shared.Utils.TableUtil)
-local QuestConstants = require(Paths.Shared.Quests.QuestConstants)
-local PlayersService = require(Paths.Services.PlayersService)
-local QuestUtil = require(Paths.Shared.Quests.QuestUtil)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Services = ServerScriptService.Paths
+local Shared = ReplicatedStorage.Modules
+local Signal = require(Shared.Signal)
+local TableUtil = require(Shared.Utils.TableUtil)
+local QuestConstants = require(Shared.Quests.QuestConstants)
+local QuestUtil = require(Shared.Quests.QuestUtil)
+local PlayerDataService = require(Services.Data.PlayerDataService)
+local GameAnalyticsService = require(Services.GameAnalyticsService)
+local PlayersService = require(Services.PlayersService)
 
 -------------------------------------------------------------------------------
 -- PRIVATE MEMBERS

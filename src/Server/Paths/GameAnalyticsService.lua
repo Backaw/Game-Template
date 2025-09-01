@@ -2,20 +2,22 @@ local GameAnalyticsService = {}
 
 local RunService = game:GetService("RunService")
 local ServerScriptService = game:GetService("ServerScriptService")
-local Paths = require(ServerScriptService.Paths)
-local GameAnalytics = require(Paths.Shared.Packages.GameAnalytics)
-local GameConstants = require(Paths.Shared.Game.GameConstants)
-local ProductUtil = require(Paths.Shared.Products.ProductUtil)
-local TableUtil = require(Paths.Shared.Utils.TableUtil)
-local PlayersService = require(Paths.Services.PlayersService)
-local CurrencyService = require(Paths.Services.CurrencyService)
-local GameUtil = require(Paths.Shared.Game.GameUtil)
-local CurrencyConstants = require(Paths.Shared.Currency.CurrencyConstants)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Services = ServerScriptService.Paths
+local Shared = ReplicatedStorage.Modules
+local GameAnalytics = require(Shared.Packages.GameAnalytics)
+local GameConstants = require(Shared.Game.GameConstants)
+local ProductUtil = require(Shared.Products.ProductUtil)
+local TableUtil = require(Shared.Utils.TableUtil)
+local GameUtil = require(Shared.Game.GameUtil)
+local CurrencyConstants = require(Shared.Currency.CurrencyConstants)
+local PlayersService = require(Services.PlayersService)
+local CurrencyService = require(Services.CurrencyService)
 
 local DEBUGGING = false
 
 local IS_LIVE = GameUtil.isLive()
-local IS_TRACKING = false -- (RunService:IsStudio() or IS_LIVE)
+local IS_TRACKING = (RunService:IsStudio() or IS_LIVE)
 
 local onPlayerReady: BindableEvent = game:GetService("ReplicatedStorage"):WaitForChild("OnPlayerReadyEvent")
 

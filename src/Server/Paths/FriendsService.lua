@@ -2,12 +2,12 @@ local FriendsService = {}
 
 local Players = game:GetService("Players")
 local ServerScriptService = game:GetService("ServerScriptService")
-local Paths = require(ServerScriptService.Paths)
-local PlayerService = require(Paths.Services.PlayersService)
-local QuestService = require(Paths.Services.QuestService)
+local Services = ServerScriptService.Paths
+local PlayerService = require(Services.PlayersService)
+local QuestService = require(Services.QuestService)
 
 FriendsService.loadPlayer = PlayerService.promisifyLoader(function(player)
-	for _, otherPlayer in  (Players:GetPlayers()) do
+	for _, otherPlayer in (Players:GetPlayers()) do
 		pcall(function()
 			if player ~= otherPlayer and otherPlayer:IsFriendsWith(player.UserId) then
 				QuestService.incrementStat(player, "InvitedFriends", tostring(otherPlayer.UserId))

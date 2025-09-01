@@ -1,21 +1,20 @@
 local Paths = {}
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
-local DebugUtil = require(ReplicatedStorage.Modules.Utils.DebugUtil)
-local PathsUtil = require(ReplicatedStorage.Modules.Utils.PathsUtil)
+local Services = ServerScriptService.Paths
+local Shared = ReplicatedStorage.Modules
+local DebugUtil = require(Shared.Utils.DebugUtil)
+local PathsUtil = require(Shared.Utils.PathsUtil)
 
 local DEBUG = DebugUtil.isDebugging(false)
 
 -------------------------------------------------------------------------------
 -- PUBLIC VARIABLES
 -------------------------------------------------------------------------------
-Paths.Services = script
-Paths.Shared = ReplicatedStorage.Modules
-
-Paths.Initialized = require(Paths.Shared.DeferredPromise).new()
-Paths.Assets = ReplicatedStorage.Assets
+Paths.Initialized = require(Shared.DeferredPromise).new()
 
 -------------------------------------------------------------------------------
 -- PRIVATE FUNCTIONS
@@ -50,21 +49,21 @@ task.delay(0, function()
 
 	local initializing = {
 		-- Services
-		loadModule(Paths.Services.UnitTestingService),
-		loadModule(Paths.Services.Products.ItemProductsService),
-		loadModule(Paths.Services.CollisionService),
-		loadModule(Paths.Services.PlayersService),
-		loadModule(Paths.Services.CurrencyService),
-		loadModule(Paths.Services.Products.ProductService),
-		loadModule(Paths.Services.SettingsService),
-		loadModule(Paths.Services.Cmdr.CmdrService),
-		loadModule(Paths.Services.GameAnalyticsService),
-		loadModule(Paths.Services.PromoCodeService),
-		loadModule(Paths.Services.ItemService),
+		loadModule(Services.UnitTestingService),
+		loadModule(Services.Products.ItemProductsService),
+		loadModule(Services.CollisionService),
+		loadModule(Services.PlayersService),
+		loadModule(Services.CurrencyService),
+		loadModule(Services.Products.ProductService),
+		loadModule(Services.SettingsService),
+		loadModule(Services.Cmdr.CmdrService),
+		loadModule(Services.GameAnalyticsService),
+		loadModule(Services.PromoCodeService),
+		loadModule(Services.ItemService),
 
-		-- loadModule(Paths.Services.Data.LeaderboardService),
-		loadModule(Paths.Services.RewardService),
-		loadModule(Paths.Services.FriendsService),
+		-- loadModule(Services .Data.LeaderboardService),
+		loadModule(Services.RewardService),
+		loadModule(Services.FriendsService),
 	}
 
 	for _, module in initializing do

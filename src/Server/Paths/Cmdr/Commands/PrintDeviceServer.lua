@@ -1,7 +1,6 @@
 local Players = game:GetService("Players")
-local ServerScriptService = game:GetService("ServerScriptService")
-local Paths = require(ServerScriptService.Paths)
-local Remotes = require(Paths.Shared.Remotes)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Remotes = require(ReplicatedStorage.Modules.Remotes)
 
 local devices: { [Player]: string } = {}
 

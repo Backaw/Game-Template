@@ -3,21 +3,23 @@ local ProductService = {}
 local Players = game:GetService("Players")
 local ServerScriptService = game:GetService("ServerScriptService")
 local MarketplaceService = game:GetService("MarketplaceService")
-local Paths = require(ServerScriptService.Paths)
-local Promise = require(Paths.Shared.Packages.Promise)
-local Signal = require(Paths.Shared.Signal)
-local Remotes = require(Paths.Shared.Remotes)
-local CurrencyConstants = require(Paths.Shared.Currency.CurrencyConstants)
-local CurrencyUtil = require(Paths.Shared.Currency.CurrencyUtil)
-local ProductConstants = require(Paths.Shared.Products.ProductConstants)
-local ProductUtil = require(Paths.Shared.Products.ProductUtil)
-local PlayerDataService = require(Paths.Services.Data.PlayerDataService)
-local CurrencyService = require(Paths.Services.CurrencyService)
-local PlayersService = require(Paths.Services.PlayersService)
-local GameAnalytics = require(Paths.Shared.Packages.GameAnalytics)
-local DeferredPromise = require(Paths.Shared.DeferredPromise)
-local RewardService = require(Paths.Services.RewardService)
-local GameAnalyticsService = require(Paths.Services.GameAnalyticsService)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Services = ServerScriptService.Paths
+local Shared = ReplicatedStorage.Modules
+local Promise = require(Shared.Packages.Promise)
+local Signal = require(Shared.Signal)
+local Remotes = require(Shared.Remotes)
+local CurrencyConstants = require(Shared.Currency.CurrencyConstants)
+local CurrencyUtil = require(Shared.Currency.CurrencyUtil)
+local ProductConstants = require(Shared.Products.ProductConstants)
+local ProductUtil = require(Shared.Products.ProductUtil)
+local GameAnalytics = require(Shared.Packages.GameAnalytics)
+local DeferredPromise = require(Shared.DeferredPromise)
+local RewardService = require(Services.RewardService)
+local PlayerDataService = require(Services.Data.PlayerDataService)
+local CurrencyService = require(Services.CurrencyService)
+local PlayersService = require(Services.PlayersService)
+local GameAnalyticsService = require(Services.GameAnalyticsService)
 
 local MAX_PRICE_LOAD_ATTEMPTS = 5
 
@@ -192,19 +194,9 @@ function ProductService.purchaseProduct(
 				itemId = "None"
 			end
 
-			GameAnalyticsService.addEvent(
-				"DesignEvent",
-				player.UserId,
-				{
-					eventId = ("%s:%s:%s:%s:%s "):format(
-						"PremiumProductPrompted",
-						tostring(id),
-						tostring(source),
-						tostring(success),
-						itemId
-					),
-				}
-			)
+			GameAnalyticsService.addEvent("DesignEvent", player.UserId, {
+				eventId = ("%s:%s:%s:%s:%s "):format("PremiumProductPrompted", tostring(id), tostring(source), tostring(success), itemId),
+			})
 		end
 	end
 
