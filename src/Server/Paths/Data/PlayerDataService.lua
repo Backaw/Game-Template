@@ -6,19 +6,21 @@
 ]]
 local PlayerDataService = {}
 
-local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
-
-local Paths = require(ServerScriptService.Paths)
-local Remotes = require(Paths.Shared.Remotes)
-local Signal = require(Paths.Shared.Signal)
-local DataFormatUtil = require(Paths.Shared.Data.DataFormatUtil)
-local DataConstants = require(Paths.Shared.Data.DataConstants)
-local ProfileService = require(ServerStorage.Packages.ProfileService)
-local TableUtil = require(Paths.Shared.Utils.TableUtil)
-local PlayersService = require(Paths.Services.PlayersService)
-local Promise = require(Paths.Shared.Packages.Promise)
-local GameUtil = require(Paths.Shared.Game.GameUtil)
+local ServerScriptService = game:GetService("ServerScriptService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local Services = ServerScriptService.Paths
+local Shared = ReplicatedStorage.Modules
+local Signal = require(Shared.Signal)
+local Remotes = require(Shared.Remotes)
+local DataFormatUtil = require(Shared.Data.DataFormatUtil)
+local DataConstants = require(Shared.Data.DataConstants)
+local TableUtil = require(Shared.Utils.TableUtil)
+local Promise = require(Shared.Packages.Promise)
+local GameUtil = require(Shared.Game.GameUtil)
+local ProfileStore = require(ServerStorage.Packages.ProfileStore)
+local PlayersService = require(Services.PlayersService)
 
 local RECONCILIATION_TYPES = {
 	Pre = 1,
@@ -35,10 +37,12 @@ local reconcilers: { [number]: { (DataFormatUtil.Store) -> () } } = {
 	[RECONCILIATION_TYPES.Post] = {},
 }
 
+local playerStore = ProfileStore.new(DataFormatUtil.getDataKey(), DataConstants.DefaultPlayerData())
+local profiles: { [Player]: typeof(playerStore:StartSessionAsync()) } = {}
+
 -------------------------------------------------------------------------------
 -- PUBLIC MEMBERS
 -------------------------------------------------------------------------------
-PlayerDataService.Profiles = {}
 PlayerDataService.Updated = Signal.new() --> (event: string, player: Player, newValue: any, eventMeta: table?)
 
 -------------------------------------------------------------------------------
@@ -74,7 +78,7 @@ function PlayerDataService.registerReconciler(reconciler: (DataFormatUtil.Store)
 end
 
 function PlayerDataService.get(player: Player, address: string): DataFormatUtil.Data
-	local profile = PlayerDataService.Profiles[player]
+	local profile = profiles[player]
 	if profile then
 		return DataFormatUtil.getFromAddress(profile.Data, address)
 	else
@@ -83,7 +87,7 @@ function PlayerDataService.get(player: Player, address: string): DataFormatUtil.
 end
 
 function PlayerDataService.set(player: Player, address: string, newValue: any, event: string?, eventMeta: table?)
-	local profile = PlayerDataService.Profiles[player]
+	local profile = profiles[player]
 
 	if profile then
 		DataFormatUtil.setFromAddress(profile.Data, address, newValue)
@@ -144,53 +148,36 @@ function PlayerDataService.multiply(player: Player, address: string, scalar: num
 end
 
 function PlayerDataService.wipe(player: Player)
-	local profile = PlayerDataService.Profiles[player]
+	local profile = profiles[player]
 
 	profile.Data = nil
 	player:Kick("DATA WIPE " .. player.Name)
 end
 
 function PlayerDataService.loadPlayer(player: Player)
-	return Promise.new(function(resolve, reject, onCancel)
+	return Promise.new(function(resolve, reject)
+		local cancelled = false
+
+		local profileKey, profileParams =
+			`{player.UserId}`, {
+				Cancel = function()
+					return cancelled or player.Parent ~= Players
+				end,
+			}
+
 		local profile
-		PlayersService.registerUnloadTask(player, function()
-			repeat
-				task.wait()
-			until profile
+		if (not DataConstants.SaveData) and (not GameUtil.isLive()) then
+			profile = playerStore.Mock:StartSessionAsync(profileKey, profileParams)
+		else
+			profile = playerStore:StartSessionAsync(`{player.UserId}`, profileParams)
+		end
 
-			-- Data was wiped, reconcile so that stuff unloads properly
-			if ((not DataConstants.SaveData) and (not GameUtil.isLive())) or not profile.Data then
-				profile.Data = {}
-				profile:Reconcile()
-			end
-
-			profile:Release()
-		end)
-
-		task.spawn(function()
-			local defaultData = DataConstants.DefaultPlayerData()
-			profile = ProfileService.GetProfileStore(DataFormatUtil.getDataKey(), defaultData)
-				:LoadProfileAsync(tostring(player.UserId), "ForceLoad")
-
-			-- RETURN: Couldn't retrieve a profile
-			if not profile then
-				reject("Data profile does not exist ")
-				return
-			end
-
-			-- RETURN: Player left
-			if not player.Parent then
-				return
-			end
-
-			reconcile(profile.Data, defaultData)
-			profile:ListenToRelease(function()
-				PlayerDataService.Profiles[player] = nil
-				player:Kick("Data profile released " .. player.Name)
-			end)
+		if profile then
+			profile:AddUserId(player.UserId)
+			reconcile(profile.Data, DataConstants.DefaultPlayerData())
 
 			local clientReadyConnection
-			local function cancelDataInitialization()
+			local function closeInitialization()
 				if clientReadyConnection then
 					clientReadyConnection:Disconnect()
 				end
@@ -198,39 +185,40 @@ function PlayerDataService.loadPlayer(player: Player)
 				clientsReadyForData[player] = nil
 			end
 
-			local function load()
+			local function initialize()
 				Remotes.fireClient(player, "DataInitialized", profile.Data)
-				PlayerDataService.Profiles[player] = profile
+				profiles[player] = profile
 
 				resolve()
-				cancelDataInitialization()
-			end
-
-			if profile.Data.Banned then
-				reject("Banned")
+				closeInitialization()
 			end
 
 			if clientsReadyForData[player] then
-				load()
+				initialize()
 			else
 				clientReadyConnection = clientReadyForData:Connect(function(client)
 					if client == player then
-						load()
-						cancelDataInitialization()
+						initialize()
 					end
 				end)
 			end
 
-			onCancel(function()
-				if cancelDataInitialization then
-					cancelDataInitialization()
-				end
-			end)
-		end)
+			PlayersService.registerUnloadTask(player, function()
+				cancelled = true
 
-		repeat
-			task.wait()
-		until profile
+				closeInitialization()
+
+				profiles[player] = nil
+				profile:EndSession()
+			end)
+
+			profile.OnSessionEnd:Connect(function()
+				profiles[player] = nil
+				player:Kick(`Profile session end - Please rejoin`)
+			end)
+		else
+			reject("Data profile does not exist - Please rejoin")
+		end
 	end)
 end
 

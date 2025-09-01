@@ -43,12 +43,21 @@
     ]
   },
   "PathsClient": {
-  "prefix": ["paths-client"],
-  "body": [
-    "local Players = game:GetService(\"Players\")",
-    "local ReplicatedStorage = game:GetService(\"ReplicatedStorage\")",
-    "local Shared = ReplicatedStorage.Modules",
-    "local Controllers = Players.LocalPlayer.PlayerScripts.Paths"
-  ]
-}
+    "prefix": ["paths-client"],
+    "body": [
+      "local Players = game:GetService(\"Players\")",
+      "local ReplicatedStorage = game:GetService(\"ReplicatedStorage\")",
+      "local Shared = ReplicatedStorage.Modules",
+      "local Controllers = Players.LocalPlayer.PlayerScripts.Paths"
+    ]
+  },
+  "PathsServer": {
+    "prefix": ["paths-server"],
+    "body": [
+      "local ServerScriptService = game:GetService(\"ServerScriptService\")",
+      "local ReplicatedStorage = game:GetService(\"ReplicatedStorage\")",
+      "local Services = ServerScriptService.Paths",
+      "local Shared = ReplicatedStorage.Modules"
+    ]
+  }
 }

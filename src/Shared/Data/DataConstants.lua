@@ -54,8 +54,6 @@ DataConstants.DefaultPlayerData = function()
 	store.RedeemedCodes = {}
 	store.Settings = TableUtil.getProperties(SettingConstans.Options, "Default")
 
-	store.Banned = false
-
 	return store
 end
 
