@@ -4,3 +4,6 @@ sourcemap.json
 # Packages
 Packages/
 ServerPackages/
+
+# Roblox lock files
+StarterPlace.rbxl.lock

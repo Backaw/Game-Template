@@ -30,8 +30,13 @@ function Sounds.create(name: string, parent: Instance?): Sound
 	return sound
 end
 
+function Sounds.play()
+	-- Temporary
+end
+
+--[[
 function Sounds.play(name: string, dontDestroyAfterPLay: boolean?, parent: any?, timePosition: number?, pitch: number?): Sound?
-	--[[
+
 	local sound = Sounds.create(name, parent)
 	sound.TimePosition = timePosition or 0
 
@@ -53,8 +58,8 @@ function Sounds.play(name: string, dontDestroyAfterPLay: boolean?, parent: any?,
 
 	sound.PlayOnRemove = true
 	sound:Destroy()
-	*]]
 end
+	*]]
 
 function Sounds.getSoundDuration(sound: string)
 	return soundTemplates[sound].TimeLength
