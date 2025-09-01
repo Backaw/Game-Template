@@ -57,7 +57,7 @@ task.delay(0, function()
 		loadModule(Services.Products.ProductService),
 		loadModule(Services.SettingsService),
 		loadModule(Services.Cmdr.CmdrService),
-		loadModule(Services.GameAnalyticsService),
+		-- loadModule(Services.GameAnalyticsService),
 		loadModule(Services.PromoCodeService),
 		loadModule(Services.ItemService),
 

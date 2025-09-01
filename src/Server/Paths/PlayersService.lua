@@ -8,14 +8,15 @@ local Shared = ReplicatedStorage.Modules
 local Promise = require(Shared.Packages.Promise)
 local Maid = require(Shared.Maid)
 local GameUtil = require(Shared.Game.GameUtil)
+local DebugUtil = require(Shared.Utils.DebugUtil)
 
 type Promise = typeof(Promise.new())
 
-local DEBUG = false
+local DEBUG = DebugUtil.isDebugging(false)
 local LOADERS = {
 	Services.PlaytimeRewardService,
 	Services.Data.PlayerDataService,
-	Services.GameAnalyticsService,
+	-- 	Services.GameAnalyticsService,
 	Services.Products.ProductService,
 	Services.Data.LeaderstatService,
 	Services.CharactersService,
@@ -111,7 +112,18 @@ function PlayersService.start()
 					error(("%s loader doesn't have a load method"):format(moduleScript.Name))
 				end
 
-				loaders = loaders:andThenCall(loader, player)
+				if DEBUG then
+					-- Track timing for each module
+					loaders = loaders:andThenCall(function(...)
+						local startTime = os.clock()
+						local result = loader(...)
+
+						print(("Player Loader (%s) took %.5f s"):format(moduleScript.Name, os.clock() - startTime))
+						return result
+					end, player)
+				else
+					loaders = loaders:andThenCall(loader, player)
+				end
 			end
 
 			sessions[player.UserId].Loading = loaders:andThen(function()

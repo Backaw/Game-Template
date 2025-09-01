@@ -15,7 +15,6 @@ local PlayersService = require(Services.PlayersService)
 local CurrencyService = require(Services.CurrencyService)
 
 local DEBUGGING = false
-
 local IS_LIVE = GameUtil.isLive()
 local IS_TRACKING = (RunService:IsStudio() or IS_LIVE)
 

@@ -37,7 +37,7 @@ local reconcilers: { [number]: { (DataFormatUtil.Store) -> () } } = {
 	[RECONCILIATION_TYPES.Post] = {},
 }
 
-local playerStore = ProfileStore.new(DataFormatUtil.getDataKey(), DataConstants.DefaultPlayerData())
+local playerStore = ProfileStore.New(DataFormatUtil.getDataKey(), DataConstants.DefaultPlayerData())
 local profiles: { [Player]: typeof(playerStore:StartSessionAsync()) } = {}
 
 -------------------------------------------------------------------------------
