@@ -30,7 +30,8 @@
     "body": [
       "-------------------------------------------------------------------------------",
       "-- ${0:COMMENT}",
-      "-------------------------------------------------------------------------------"
+      "-------------------------------------------------------------------------------",
+      "",
     ]
   },
   "UIStateMachine": {
@@ -45,19 +46,19 @@
   "PathsClient": {
     "prefix": ["paths-client"],
     "body": [
-      "local Players = game:GetService(\"Players\")",
       "local ReplicatedStorage = game:GetService(\"ReplicatedStorage\")",
-      "local Shared = ReplicatedStorage.Modules",
-      "local Controllers = Players.LocalPlayer.PlayerScripts.Paths"
+      "",
+      "local Shared = ReplicatedStorage.Shared",
+      "local Controllers = ReplicatedStorage.Client"
     ]
   },
   "PathsServer": {
     "prefix": ["paths-server"],
     "body": [
-      "local ServerScriptService = game:GetService(\"ServerScriptService\")",
+      "local ServerStorage = game:GetService(\"ServerStorage\")",
       "local ReplicatedStorage = game:GetService(\"ReplicatedStorage\")",
-      "local Services = ServerScriptService.Paths",
-      "local Shared = ReplicatedStorage.Modules"
+      "local Services = ServerStorage.Server",
+      "local Shared = ReplicatedStorage.Shared"
     ]
   }
 }

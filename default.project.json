@@ -1,5 +1,5 @@
 {
-  "name": "NEW_GAME",
+  "name": "NEW GAME",
   "tree": {
     "$className": "DataModel",
 
@@ -13,17 +13,29 @@
       "$className": "ReplicatedStorage",
       "$ignoreUnknownInstances": true,
 
-      "Modules": {
+      "Shared": {
         "$className": "Folder",
         "$path": "src/Shared",
 
         "Packages": {
           "$path": "Packages"
         }
+      },
+
+      "Client": {
+        "$className": "Folder",
+        "$path": "src/Client"
       }
     },
 
     "ServerStorage": {
+      "$className": "ServerStorage",
+      "$ignoreUnknownInstances": true,
+
+      "Server": {
+        "$path": "src/Server"
+      },
+
       "Packages": {
         "$path": "ServerPackages"
       }
@@ -31,7 +43,11 @@
 
     "ServerScriptService": {
       "$className": "ServerScriptService",
-      "$path": "src/Server"
+      "$ignoreUnknownInstances": true,
+
+      "Server": {
+        "$path": "src/Server.server.luau"
+      }
     },
 
     "StarterPlayer": {
@@ -39,9 +55,9 @@
       "$ignoreUnknownInstances": true,
 
       "StarterPlayerScripts": {
-        "$className": "StarterPlayerScripts",
-        "$ignoreUnknownInstances": true,
-        "$path": "src/Client"
+        "Client": {
+          "$path": "src/Client.client.luau"
+        }
       }
     }
   }

@@ -1,0 +1,35 @@
+--!strict
+local UIConstants = {}
+
+-------------------------------------------------------------------------------
+-- PRIVATE VARIABLES
+-------------------------------------------------------------------------------
+
+local states = {
+	HUD = "HUD",
+	Settings = "Settings",
+}
+
+local hudPermissiveStates: { State } = {}
+local psuedoStates: { [State]: { State } } = {}
+local interactionPermissiveStates: { State } = {
+	states.HUD,
+}
+
+-------------------------------------------------------------------------------
+-- PUBLIC VARIABLES
+-------------------------------------------------------------------------------
+
+UIConstants.InitialState = "Nothing"
+UIConstants.States = states :: { [State]: State }
+UIConstants.HUDPermissiveStates = hudPermissiveStates
+UIConstants.PsuedoStates = psuedoStates
+UIConstants.InteractionPermissiveStates = interactionPermissiveStates
+
+-------------------------------------------------------------------------------
+-- EXPORT TYPES
+-------------------------------------------------------------------------------
+
+export type State = keyof<typeof(states)>
+
+return UIConstants
