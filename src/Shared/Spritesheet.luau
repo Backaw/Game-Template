@@ -19,7 +19,7 @@ function Spritesheet.new(texture: string)
 
 	function spritesheet:ApplySprite(id: any, guiObject: ImageLabel | ImageButton)
 		if not id then
-			guiObject.Image = "" :: typeof(guiObject.Image)
+			guiObject.Image = ""
 			return
 		end
 
@@ -29,7 +29,7 @@ function Spritesheet.new(texture: string)
 			error(("%s is not a valid sprite"):format(tostring(id)))
 		end
 
-		guiObject.Image = texture :: typeof(guiObject.Image)
+		guiObject.Image = texture
 		guiObject.ImageRectOffset = sprite.Position
 		guiObject.ImageRectSize = sprite.Size
 	end
