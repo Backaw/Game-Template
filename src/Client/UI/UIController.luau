@@ -8,7 +8,7 @@ local UIConstants = require(ReplicatedStorage.Client.UI.UIConstants)
 local StringUtil = require(ReplicatedStorage.Shared.Utils.StringUtil)
 local TableUtil = require(ReplicatedStorage.Shared.Utils.TableUtil)
 local DeferredPromise = require(ReplicatedStorage.Shared.DeferredPromise)
-local Promise = require(ReplicatedStorage.Shared.Packages.Promise)
+local Promise = require(ReplicatedStorage.Shared.Promise)
 local UIUtil = require(ReplicatedStorage.Client.UI.Utils.UIUtil)
 
 type ScreenStateCallback = (({ any }?) -> any)?
@@ -31,7 +31,7 @@ local screenStateCallbacks: { [string]: ScreenStateCallbacks } = {}
 -------------------------------------------------------------------------------
 -- PUBLIC MEMBERS
 -------------------------------------------------------------------------------
-UIController.ScreenStateTransition = Promise.resolve() :: DeferredPromise.DeferredPromise
+UIController.ScreenStateTransition = Promise.resolved() :: DeferredPromise.DeferredPromise
 
 -------------------------------------------------------------------------------
 -- PUBLIC FUNCTIONS
@@ -89,14 +89,14 @@ uiStateMachine:RegisterGlobalCallback(function(fromState, toState, data)
 	for state, callbacks in screenStateCallbacks do
 		if state == toState then
 			if not table.find(lastUiStateStack, state) and callbacks.Boot then
-				local success, err = pcall(callbacks.Boot, data)
+				local success, err = pcall(callbacks.Boot :: any, data)
 				if not success then
 					warn(err)
 				end
 			end
 
 			if callbacks.Maximize then
-				local success, err = pcall(callbacks.Maximize, data)
+				local success, err = pcall(callbacks.Maximize :: any, data)
 				if not success then
 					warn(err)
 				end
@@ -107,7 +107,7 @@ uiStateMachine:RegisterGlobalCallback(function(fromState, toState, data)
 	for state, callbacks in screenStateCallbacks do
 		if fromState == state then
 			if callbacks.Minimize then
-				local success, err = pcall(callbacks.Minimize)
+				local success, err = pcall(callbacks.Minimize :: any)
 				if not success then
 					warn(err)
 				end
@@ -116,7 +116,7 @@ uiStateMachine:RegisterGlobalCallback(function(fromState, toState, data)
 
 		if not table.find(stack, state) and table.find(lastUiStateStack, state) then -- Closed or removed
 			if callbacks.Shutdown then
-				local success, err = pcall(callbacks.Shutdown)
+				local success, err = pcall(callbacks.Shutdown :: any)
 				if not success then
 					warn(err)
 				end

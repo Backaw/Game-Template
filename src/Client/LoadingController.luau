@@ -113,7 +113,7 @@ function LoadingController.start()
 						),
 					}):andThen(function()
 						screen:Destroy()
-						LoadingController.Loaded.invokeResolve()
+						LoadingController.Loaded:InvokeResolve()
 					end)
 				end
 			end)

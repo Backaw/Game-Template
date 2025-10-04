@@ -4,7 +4,7 @@ local Players = game:GetService("Players")
 local MarketplaceService = game:GetService("MarketplaceService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
-local Promise = require(ReplicatedStorage.Shared.Packages.Promise)
+local Promise = require(ReplicatedStorage.Shared.Promise)
 local Signal = require(ReplicatedStorage.Shared.Signal)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local CurrencyConstants = require(ReplicatedStorage.Shared.Currency.CurrencyConstants)
@@ -71,7 +71,7 @@ local function updateRobuxPrices(updating: ProductConstants.ProductCategories)
 		end
 	end
 
-	if productsInitialized:getStatus() == Promise.Status.Started then
+	if productsInitialized:getState() == Promise.States.Pending then
 		Promise.all(promises)
 			:andThen(function()
 				productsInitialized:invokeResolve()

@@ -34,15 +34,7 @@
       "",
     ]
   },
-  "UIStateMachine": {
-    "prefix": ["ui-state"],
-    "body": [
-      "local UIController = require(Paths.Controllers.UI.UIController)",
-      "local UIConstants = require(Paths.Controllers.UI.UIConstants)",
-      "",
-      "local uiStateMachine = UIController.getStateMachine()"
-    ]
-  },
+
   "PathsClient": {
     "prefix": ["paths-client"],
     "body": [

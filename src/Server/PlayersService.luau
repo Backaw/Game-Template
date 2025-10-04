@@ -1,19 +1,24 @@
+--!strict
 local PlayersService = {}
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
-local Promise = require(ReplicatedStorage.Shared.Packages.Promise)
+local Promise = require(ReplicatedStorage.Shared.Promise)
 local Maid = require(ReplicatedStorage.Shared.Maid)
 local GameUtil = require(ReplicatedStorage.Shared.Game.GameUtil)
 local DebugUtil = require(ReplicatedStorage.Shared.Utils.DebugUtil)
+
+-------------------------------------------------------------------------------
+-- CONSTANTS
+-------------------------------------------------------------------------------
 
 local DEBUG = DebugUtil.isDebugging(false)
 local SERVICES = ServerStorage.Server
 
 local LOADERS = {
 	SERVICES.Data.PlayerDataService,
-	-- 	Services.GameAnalyticsService,
+	SERVICES.GameAnalyticsService,
 	SERVICES.Products.ProductService,
 	SERVICES.Data.LeaderstatService,
 	SERVICES.CharactersService,
@@ -25,17 +30,27 @@ local LOADERS = {
 }
 
 -------------------------------------------------------------------------------
+-- TYPES
+-------------------------------------------------------------------------------
+
+type Session = {
+	UnloadTasks: { any },
+	Loading: Promise.Promise,
+	Unloading: Promise.Promise?,
+}
+
+-------------------------------------------------------------------------------
 -- PRIVATE MEMBERS
 -------------------------------------------------------------------------------
 local id = 0
-local sessions: { [number]: { UnloadTasks: { Maid.Mess }, Loading: Promise.Promise, Unloading: Promise.Promise? }? } = {}
+local sessions: { [number]: Session? } = {}
 
 -------------------------------------------------------------------------------
 -- PUBLIC FUNCTIONS
 -------------------------------------------------------------------------------
 function PlayersService.isLoaded(player: Player)
 	local session = sessions[player.UserId]
-	return session and session.Loading:getStatus() == Promise.Status.Resolved
+	return session and session.Loading:getState() == Promise.States.Resolved
 end
 
 function PlayersService.getLoadedPlayers()
@@ -58,10 +73,6 @@ function PlayersService.onLoad(player: Player, callback)
 end
 
 function PlayersService.registerUnloadTask(player: Player, newTask: any)
-	if not newTask then
-		error("Task cannot be false or nil", 2)
-	end
-
 	local session = sessions[player.UserId]
 	if session then
 		table.insert(session.UnloadTasks, newTask)
@@ -69,7 +80,7 @@ function PlayersService.registerUnloadTask(player: Player, newTask: any)
 end
 
 function PlayersService.promisifyLoader(loader: (Player) -> (), message: string?)
-	return function(player)
+	return function(player: Player)
 		return Promise.new(function(resolve, reject)
 			local success, err = pcall(loader, player)
 			if success then
@@ -83,27 +94,27 @@ function PlayersService.promisifyLoader(loader: (Player) -> (), message: string?
 end
 
 function PlayersService.start()
-	local function loadPlayer(player)
+	local function loadPlayer(player: Player)
 		id += 1
 
 		if DEBUG then
-			warn(("(%s)(%s) started loading"):format(player.Name, id))
+			warn(("(%s)(%d) started loading"):format(player.Name, id))
 		end
 
 		local existingSession = sessions[player.UserId] -- Just to be safe
-		local load = (if existingSession and existingSession.Unloading then existingSession.Unloading else Promise.resolve())
+		local load = (if existingSession and existingSession.Unloading then existingSession.Unloading else Promise.resolved())
 
 		load:andThen(function()
-			local session = {
+			local session: Session = {
 				UnloadTasks = {},
 				Loading = load,
 			}
 			sessions[player.UserId] = session
 
-			local loaders = Promise.resolve()
+			local loaders = Promise.resolved()
 			for _, moduleScript in LOADERS do
 				local module = require(moduleScript) :: any
-				local loader = module.loadPlayer
+				local loader: (Player) -> () = assert(module.loadPlayer, "Loader doesn't have a load method")
 
 				-- ERROR: Loader doesn't have a load method
 				if not loader then
@@ -114,10 +125,8 @@ function PlayersService.start()
 					-- Track timing for each module
 					loaders = loaders:andThenCall(function(...)
 						local startTime = os.clock()
-						local result = loader(...)
-
+						loader(...)
 						print(("Player Loader (%s) took %.5f s"):format(moduleScript.Name, os.clock() - startTime))
-						return result
 					end, player)
 				else
 					loaders = loaders:andThenCall(loader, player)
@@ -126,7 +135,7 @@ function PlayersService.start()
 
 			session.Loading = loaders:andThen(function()
 				if DEBUG then
-					warn(("(%s)(%s) finished loading"):format(player.Name, id))
+					warn(("(%s)(%d) finished loading"):format(player.Name, id))
 				end
 			end)
 
@@ -147,7 +156,7 @@ function PlayersService.start()
 				end)
 				:finally(function()
 					if DEBUG then
-						warn(("(%s)(%s) left"):format(player.Name, id))
+						warn(("(%s)(%d) left"):format(player.Name, id))
 					end
 
 					local remainingSession = sessions[player.UserId]
@@ -164,7 +173,7 @@ function PlayersService.start()
 						sessions[player.UserId] = nil
 
 						if DEBUG then
-							warn(("(%s)(%s) unloaded"):format(player.Name, id))
+							warn(("(%s)(%d) unloaded"):format(player.Name, id))
 						end
 					end
 				end)

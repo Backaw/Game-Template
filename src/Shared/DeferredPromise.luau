@@ -1,37 +1,38 @@
 --!strict
 --[[
-    Promise wrappers
+    Promise wrappers that can be resolved/cancelled externally
 ]]
-
 local DeferredPromise = {}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Promise = require(ReplicatedStorage.Shared.Packages.Promise)
+local Promise = require(ReplicatedStorage.Shared.Promise)
 
-type Callback = () -> ()
+-------------------------------------------------------------------------------
+-- TYPES
+-------------------------------------------------------------------------------
+type Callback = (...any) -> ()
 
 export type DeferredPromise = Promise.Promise & { invokeResolve: Callback, invokeReject: Callback }
---[[
-    Creates a promise that can be resolved/resoved from the outside
-    must call resolve with : operator
-    Basically an event
-]]
 
-function DeferredPromise.new(handler: (Callback, Callback) -> ()?)
+-------------------------------------------------------------------------------
+-- PUBLIC FUNCTIONS
+-------------------------------------------------------------------------------
+
+function DeferredPromise.new(handler: (Callback, Callback) -> ()?, executionType: Promise.ExecutionType?)
 	local resolve: Callback, reject: Callback
 
 	local promise = Promise.new(function(_resolve, _reject)
-		resolve = function() -- Creating a seperate function with these allows us to use : or .
-			_resolve()
+		resolve = function(...)
+			_resolve(...)
 		end
-		reject = function() -- Creating a seperate function with these allows us to use : or .
-			_reject()
+		reject = function(...)
+			_reject(...)
 		end
 
 		if handler then
 			handler(_resolve :: Callback, _reject :: Callback)
 		end
-	end) :: Promise.Promise & { invokeResolve: Callback, invokeReject: Callback }
+	end, executionType) :: DeferredPromise
 
 	promise.invokeResolve = resolve
 	promise.invokeReject = reject

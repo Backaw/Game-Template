@@ -7,7 +7,7 @@ local ProductUtil = require(ReplicatedStorage.Shared.Products.ProductUtil)
 local ProductConstants = require(ReplicatedStorage.Shared.Products.ProductConstants)
 local CurrencyConstants = require(ReplicatedStorage.Shared.Currency.CurrencyConstants)
 local CurrencyUtil = require(ReplicatedStorage.Shared.Currency.CurrencyUtil)
-local Promise = require(ReplicatedStorage.Shared.Packages.Promise)
+local Promise = require(ReplicatedStorage.Shared.Promise)
 local Signal = require(ReplicatedStorage.Shared.Signal)
 local Sounds = require(ReplicatedStorage.Shared.Sounds)
 local DebugUtil = require(ReplicatedStorage.Shared.Utils.DebugUtil)
@@ -128,7 +128,7 @@ function ProductController.promptPurchase(
 
 	local success
 	if CurrencyUtil.isInGameCurrency(price.Currency) then
-		if CurrencyController.transact(price.Currency, -price.Amount) then
+		if CurrencyController.transact(price.Currency, -((price :: any).Amount :: number)) then
 			success = true
 			Sounds.play("Purchase")
 		else
@@ -195,7 +195,7 @@ Remotes.bindEvents({
 CurrencyController.Changed:Connect(function(currency: string, amount: number, lastAmount: number)
 	for _, tracker in ipairs(priceTrackers) do
 		if tracker.Price.Currency == currency then
-			local priceAmount = tracker.Price.Amount
+			local priceAmount = (tracker.Price :: any).Amount :: number
 			local couldAfford = lastAmount >= priceAmount
 			local canAfford = amount >= priceAmount
 			if couldAfford ~= canAfford then

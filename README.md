@@ -4,3 +4,7 @@
 - [StyLua](https://marketplace.visualstudio.com/items?itemName=JohnnyMorganz.stylua)
 - [Selene](https://marketplace.visualstudio.com/items?itemName=Kampfkarren.selene-vscode)
 - [Rojo - Roblox Studio Sync](https://marketplace.visualstudio.com/items?itemName=evaera.vscode-rojo)
+
+## Tools
+
+- [Fix wally types](https://github.com/JohnnyMorganz/wally-package-types)

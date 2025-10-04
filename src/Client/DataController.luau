@@ -3,7 +3,7 @@ local DataController = {}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Signal = require(ReplicatedStorage.Shared.Signal)
-local Promise = require(ReplicatedStorage.Shared.Packages.Promise)
+local Promise = require(ReplicatedStorage.Shared.Promise)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local DataFormatUtil = require(ReplicatedStorage.Shared.Data.DataFormatUtil)
 

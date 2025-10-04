@@ -5,16 +5,11 @@ registry = "test"
 [[package]]
 name = "backaw/game-template"
 version = "0.1.0"
-dependencies = [["Cmdr", "evaera/cmdr@1.12.0"], ["GameAnalytics", "gameanalytics/gameanalytics-sdk@2.2.6"], ["Promise", "lukadev-0/typed-promise@4.0.2"], ["ProfileStore", "lm-loleris/profilestore@1.0.1"]]
+dependencies = [["Cmdr", "evaera/cmdr@1.12.0"], ["GameAnalytics", "gameanalytics/gameanalytics-sdk@2.2.6"], ["ProfileStore", "lm-loleris/profilestore@1.0.1"]]
 
 [[package]]
 name = "evaera/cmdr"
 version = "1.12.0"
-dependencies = []
-
-[[package]]
-name = "evaera/promise"
-version = "4.0.0"
 dependencies = []
 
 [[package]]
@@ -26,8 +21,3 @@ dependencies = []
 name = "lm-loleris/profilestore"
 version = "1.0.1"
 dependencies = []
-
-[[package]]
-name = "lukadev-0/typed-promise"
-version = "4.0.2"
-dependencies = [["Promise", "evaera/promise@4.0.0"]]

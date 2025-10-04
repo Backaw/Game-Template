@@ -2,7 +2,7 @@
 local Maid = {}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Promise = require(ReplicatedStorage.Shared.Packages.Promise)
+local Promise = require(ReplicatedStorage.Shared.Promise)
 local TableUtil = require(ReplicatedStorage.Shared.Utils.TableUtil)
 
 export type Mess = () -> () | thread | RBXScriptConnection | Instance | (({ Destroy: (any) -> () } & { any }) & Promise.Promise)

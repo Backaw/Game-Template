@@ -64,8 +64,8 @@ task.defer(function()
 	require(ReplicatedStorage.Client.DataController)
 
 	local modules = {}
-	for _, moduleCONTROLLERS in INITIALIZING do
-		modules[moduleCONTROLLERS.Name] = require(moduleCONTROLLERS)
+	for _, moduleScript in INITIALIZING do
+		modules[moduleScript.Name] = require(moduleScript) :: any
 	end
 
 	for name, module in modules do
