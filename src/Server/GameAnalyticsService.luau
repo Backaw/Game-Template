@@ -20,7 +20,7 @@ local ProductConstants = require(Shared.Products.ProductConstants)
 
 local DEBUGGING = false
 local IS_LIVE = GameUtil.isLive()
-local IS_TRACKING = (RunService:IsStudio() or IS_LIVE)
+local IS_TRACKING = false and (RunService:IsStudio() or IS_LIVE)
 
 local RESOURCE_TYPES = {
 	Reward = "Reward",
@@ -77,15 +77,6 @@ function GameAnalyticsService.addEvent(eventType: EventType, playerId: number, o
 	end
 end
 
-GameAnalyticsService.loadPlayer = PlayersService.promisifyLoader(function(player: Player)
-	if IS_TRACKING then
-		GameAnalytics:PlayerJoined(player)
-		PlayersService.registerUnloadTask(player, function()
-			GameAnalytics:PlayerRemoved(player)
-		end)
-	end
-end, "GameAnalytics")
-
 function GameAnalyticsService.init()
 	if IS_TRACKING then
 		GameAnalytics:initialize({
@@ -110,5 +101,18 @@ function GameAnalyticsService.init()
 		})
 	end
 end
+
+-------------------------------------------------------------------------------
+-- LOGIC
+-------------------------------------------------------------------------------
+
+PlayersService.registerLoadHandler(PlayersService.LoadJobs.Analytics, function(player: Player)
+	if IS_TRACKING then
+		GameAnalytics:PlayerJoined(player)
+		PlayersService.registerUnloadTask(player, function()
+			GameAnalytics:PlayerRemoved(player)
+		end)
+	end
+end)
 
 return GameAnalyticsService

@@ -6,7 +6,7 @@ realm = "shared"
 
 [dependencies]
 GameAnalytics = "gameanalytics/gameanalytics-sdk@2.2.6"
-Cmdr = "evaera/cmdr@1.12.0"
 
 [server-dependencies]
 ProfileStore = "lm-loleris/profilestore@1.0.1"
+Cmdr = "evaera/cmdr@1.12.0"

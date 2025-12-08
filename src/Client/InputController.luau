@@ -1,7 +1,6 @@
 --!strict
 local InputController = {}
 
-local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Toggle = require(ReplicatedStorage.Shared.Toggle)
 local Maid = require(ReplicatedStorage.Shared.Maid)
@@ -10,7 +9,6 @@ local UIController = require(ReplicatedStorage.Client.UI.UIController)
 local UIConstants = require(ReplicatedStorage.Client.UI.UIConstants)
 local InputUtil = require(ReplicatedStorage.Client.Utils.InputUtil)
 local LoadingController = require(ReplicatedStorage.Client.LoadingController)
-local CharacterUtil = require(ReplicatedStorage.Shared.Character.CharacterUtil)
 local InputConstants = require(ReplicatedStorage.Shared.Constants.InputConstants)
 
 -------------------------------------------------------------------------------
@@ -36,14 +34,11 @@ local disableAllInputs = Toggle.new(false)
 
 local uiStateMachine = UIController.getStateMachine()
 
-local player = Players.LocalPlayer
-
 -------------------------------------------------------------------------------
 -- PUBLIC MEMBERS
 -------------------------------------------------------------------------------
 
 InputController.InputSunk = Signal.new() :: Signal.Signal<string, Enum.UserInputState>
-InputController.CooldownToggled = Signal.new() :: Signal.Signal<string, boolean, number?>
 InputController.InputRegistered = Signal.new() :: Signal.Signal<string, Input, Input, InputConstants.MobileInputButton?, Handler>
 InputController.InputUnregistered = Signal.new() :: Signal.Signal<string>
 
@@ -70,10 +65,6 @@ function InputController.registerInput(
 	LoadingController.Loaded:andThen(function()
 		local function _handler(inputState: Enum.UserInputState)
 			if uiStateMachine:GetState() ~= UI_STATE then
-				return
-			end
-
-			if not CharacterUtil.isAlive(player) then
 				return
 			end
 
@@ -113,9 +104,13 @@ function InputController.unregisterInputs(idList: { [string]: Id })
 end
 
 function InputController.toggleInput(id: Id, job: string, toggle: boolean?)
-	if enabledInputs[id] then
-		enabledInputs[id]:Set(job, toggle or not enabledInputs[id]:Get())
-	end
+	LoadingController.Loaded:andThen(function()
+		if enabledInputs[id] then
+			enabledInputs[id]:Set(job, toggle or not enabledInputs[id]:Get())
+		else
+			warn("INPUT NOT FOUND", id, job, toggle)
+		end
+	end)
 end
 
 function InputController.getInputToggledSignal(id: Id)

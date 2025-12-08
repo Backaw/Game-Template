@@ -28,7 +28,7 @@ end
 -------------------------------------------------------------------------------
 
 for _, group in GROUPS do
-	if group ~= CollisionConstants.Groups.Default then
+	if group ~= GROUPS.Default then
 		PhysicsService:RegisterCollisionGroup(group)
 	end
 end

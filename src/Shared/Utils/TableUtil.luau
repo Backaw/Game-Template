@@ -1,6 +1,6 @@
 local TableUtil = {}
 
-type Dict = { [any]: any }
+export type Dict = { [any]: any }
 export type Parent = { [any]: { [any]: any } }
 
 function TableUtil.deepClone<T>(tbl: T): T
@@ -39,6 +39,25 @@ function TableUtil.deepUnion<T>(tbl1: T, tbl2: T?)
 	end
 
 	return tbl1
+end
+
+function TableUtil.difference<T>(old: T, new: T): { [keyof<T>]: { Old: any?, New: any } }
+	local changedKeys = {} :: T
+
+	for k, oldValue in old do
+		local newValue = new[k]
+		if newValue ~= oldValue then
+			changedKeys[k] = { Old = oldValue, New = newValue }
+		end
+	end
+
+	for k, newValue in new do
+		if old[k] == nil then
+			changedKeys[k] = { Old = nil, New = newValue }
+		end
+	end
+
+	return changedKeys
 end
 
 function TableUtil.shallowUnion<T>(tbl1: T, tbl2: T?)
@@ -158,6 +177,21 @@ function TableUtil.shallowSubtract<T>(tbl1: T, tbl2: T?)
 end
 
 --[[
+    Maps a table from type T to type U.
+    If the callback returns two values, the first is the value and the second is the key.
+]]
+function TableUtil.map<K, V, I, U>(tbl: { [K]: V }, callback: (V, K) -> (U, I?)): { [I]: U }
+	local result: { [K]: U } = {}
+
+	for key, value in tbl do
+		local mappedValue, mappedKey = callback(value, key)
+		result[mappedKey or key] = mappedValue
+	end
+
+	return result
+end
+
+--[[
     Returns how many key value   are in a table
 ]]
 function TableUtil.length(tbl: Dict): number
@@ -186,10 +220,7 @@ function TableUtil.getRandom<K, V>(tbl: { [K]: V }): (K, V)
 	return nil, nil
 end
 
---[[
-    Returns an array of dictionary keys
-]]
-function TableUtil.getKeys<T>(tbl: T): { keyof<T> }
+function TableUtil.getKeys<T>(tbl: { [T]: any }): { T }
 	local returning = {}
 
 	for k in pairs(tbl) do
@@ -240,6 +271,8 @@ function TableUtil.deepFind<T>(tbl: T, searchingFor: any): keyof<T>
 			end
 		end
 	end
+
+	return nil
 end
 
 --[[
@@ -290,11 +323,21 @@ function TableUtil.getProperties<K, V, P>(tbl: { [K]: any }, property: V): { [K]
 	return returning
 end
 
-function TableUtil.toArray(tbl: Dict): { any }
+function TableUtil.toArray<T>(tbl: { [any]: T }): { T }
 	local returning = {}
 
 	for _, v in pairs(tbl) do
 		table.insert(returning, v)
+	end
+
+	return returning
+end
+
+function TableUtil.toArrayIndex<T>(tbl: { [T]: any }): { T }
+	local returning = {}
+
+	for i in tbl do
+		table.insert(returning, i)
 	end
 
 	return returning
@@ -360,6 +403,15 @@ function TableUtil.removeIfFound(tbl, value: any)
 	if index then
 		table.remove(tbl, value)
 	end
+end
+
+function TableUtil.forEach<V, K, R>(tbl: { [K]: V }, constructor: (V, K) -> R): { [K]: R }
+	local returning = {}
+	for k, v in pairs(tbl) do
+		returning[k] = constructor(v, k)
+	end
+
+	return returning
 end
 
 return TableUtil

@@ -106,15 +106,15 @@ function QuestService.completeQuest(player: Player, questName: string)
 	})
 end
 
-QuestService.loadPlayer = PlayersService.promisifyLoader(function(player)
-	for stat in QuestConstants.DefaultStats do
-		checkCompletion(player, stat)
-	end
-end, "Quests")
-
 -------------------------------------------------------------------------------
 -- LOGIC
 -------------------------------------------------------------------------------
+
+PlayersService.registerLoadHandler(PlayersService.LoadJobs.Quests, function(player)
+	for stat in QuestConstants.DefaultStats do
+		checkCompletion(player, stat)
+	end
+end)
 
 for _, quest in QuestConstants.Quests do
 	local stat = quest.Stat

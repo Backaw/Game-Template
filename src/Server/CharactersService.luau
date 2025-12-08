@@ -11,11 +11,13 @@ local CollisionConstants = require(ReplicatedStorage.Shared.Constants.CollisionC
 -------------------------------------------------------------------------------
 -- PUBLIC VARIABLES
 -------------------------------------------------------------------------------
+
 CharactersService.LoadPriorities = {}
 
 -------------------------------------------------------------------------------
 -- PRIVATE METHODS
 -------------------------------------------------------------------------------
+
 local function loadCharacter(character: Model?)
 	if not character then
 		return
@@ -60,9 +62,9 @@ end
 -------------------------------------------------------------------------------
 CharactersService.registerLoadCallback, CharactersService.registerUnloadCallback = CharacterLoadingUtil.getRegisteration()
 
-CharactersService.loadPlayer = PlayersService.promisifyLoader(function(player)
+PlayersService.registerLoadHandler("Character", function(player)
 	loadCharacter(player.Character)
 	player.CharacterAdded:Connect(loadCharacter)
-end, "character")
+end)
 
 return CharactersService

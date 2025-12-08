@@ -7,7 +7,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local InstanceUtil = require(ReplicatedStorage.Shared.Utils.InstanceUtil)
 local Maid = require(ReplicatedStorage.Shared.Maid)
 local InputUtil = require(ReplicatedStorage.Client.Utils.InputUtil)
-local KeybindSprites = require(ReplicatedStorage.Client.UI.KeybindSprites)
+local KeybindSprites = require(ReplicatedStorage.Client.UI.Components.KeybindSprites)
 local Button = require(ReplicatedStorage.Client.UI.Components.Button)
 
 -------------------------------------------------------------------------------

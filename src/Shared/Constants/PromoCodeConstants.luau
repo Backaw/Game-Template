@@ -8,7 +8,8 @@ local RewardConstants = require(ReplicatedStorage.Shared.Rewards.RewardConstants
 -- PUBLIC METHODS
 -------------------------------------------------------------------------------
 
-local codes: { [string]: { BestBy: number, Reward: RewardConstants.Reward } } = {}
+local codes: { [string]: { BestBy: number, Reward: RewardConstants.Reward } } =
+	{ Something = { BestBy = 1733289600, Reward = { Type = "Currency", Amount = 100, Currency = "Cash" } } }
 
 -------------------------------------------------------------------------------
 -- PRIVATE VARIABLES

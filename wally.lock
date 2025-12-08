@@ -5,7 +5,7 @@ registry = "test"
 [[package]]
 name = "backaw/game-template"
 version = "0.1.0"
-dependencies = [["Cmdr", "evaera/cmdr@1.12.0"], ["GameAnalytics", "gameanalytics/gameanalytics-sdk@2.2.6"], ["ProfileStore", "lm-loleris/profilestore@1.0.1"]]
+dependencies = [["GameAnalytics", "gameanalytics/gameanalytics-sdk@2.2.6"], ["Cmdr", "evaera/cmdr@1.12.0"], ["ProfileStore", "lm-loleris/profilestore@1.0.1"]]
 
 [[package]]
 name = "evaera/cmdr"

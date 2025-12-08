@@ -3,7 +3,6 @@ local TransitionsController = {}
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local CameraController = require(ReplicatedStorage.Client.Camera.CameraController)
 local Toggle = require(ReplicatedStorage.Shared.Toggle)
 local Limiter = require(ReplicatedStorage.Shared.Limiter)
 
@@ -23,7 +22,7 @@ local MAX_TRANSITION_TIME = 8
 -- TYPES
 -------------------------------------------------------------------------------
 
-type Transition = keyof<typeof(TransitionsController.Transitions)>
+type Transition = keyof<typeof(TRANSITIONS)>
 
 -------------------------------------------------------------------------------
 -- PRIVATE VARIABLES
@@ -41,7 +40,7 @@ local currentTransition: Transition
 -- PRIVATE VARIABLES
 -------------------------------------------------------------------------------
 
-TransitionsController.Transitions = TRANSITIONS :: { [Transition]: string }
+TransitionsController.Transitions = TRANSITIONS :: { [Transition]: Transition }
 
 -------------------------------------------------------------------------------
 -- PUBLC METHODS
@@ -85,7 +84,6 @@ function TransitionsController.play(scope: string, transition: Transition, onHal
 	TransitionsController.open(scope, transition, speedUp)
 
 	onHalfPoint()
-	CameraController.lookForward()
 
 	-- Tween Out
 	TransitionsController.close(scope, speedUp)

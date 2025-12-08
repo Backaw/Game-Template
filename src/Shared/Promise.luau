@@ -185,9 +185,7 @@ function Promise.new(executor: (resolve: (...any) -> (), reject: (...any) -> ())
 		for index = 1, #awaitingThreads do
 			local thread = awaitingThreads[index]
 			if thread ~= nil then
-				task.spawn(function()
-					coroutine.resume(thread)
-				end)
+				task.spawn(thread)
 				awaitingThreads[index] = nil
 			end
 		end
@@ -503,7 +501,7 @@ end
 Creates a promise that resolves when an event fires with a value satisfying the predicate.
 The connection is automatically disconnected once resolved.
 ]=]
-function Promise.fromEvent(event: RBXScriptSignal, predicate: (any) -> boolean): Promise
+function Promise.fromEvent<T...>(event: RBXScriptSignal<T...>, predicate: (T...) -> boolean): Promise
 	return Promise.new(function(resolve)
 		local connection: RBXScriptConnection
 		connection = event:Connect(function(...)
@@ -535,6 +533,39 @@ function Promise.is(value: any): boolean
 	end
 
 	return false
+end
+
+--[=[
+Repeatedly calls a Promise-returning function up to times number of times, until the returned Promise resolves.
+If the amount of retries is exceeded, the function will return the latest rejected Promise.
+
+]=]
+function Promise.retry(callback: (...any) -> any, times: number, ...: any): Promise
+	assert(times > 0, "Promise.retry expects times > 0")
+
+	local args = table.pack(...)
+
+	return Promise.new(function(resolve, reject)
+		local attempt = 0
+
+		local function tryAttempt()
+			attempt += 1
+			local result = callback(table.unpack(args, 1, args.n))
+			result
+				:andThen(function(...)
+					resolve(...)
+				end)
+				:catch(function(err)
+					if attempt < times then
+						tryAttempt()
+					else
+						reject(err)
+					end
+				end)
+		end
+
+		tryAttempt()
+	end)
 end
 
 return Promise

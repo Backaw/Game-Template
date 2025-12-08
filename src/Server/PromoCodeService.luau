@@ -21,7 +21,7 @@ end
 -------------------------------------------------------------------------------
 
 Remotes.bindFunctions({
-	RedeemCode = function(player: Player, code: string)
+	RedeemCode = function(player: Player, code: string): string
 		if isValidCode(code) then
 			local info = PromoCodeConstants.Codes[code]
 			local address = "RedeemedCodes." .. code

@@ -1,4 +1,3 @@
---!strict
 local CmdrController = {}
 
 local Players = game:GetService("Players")
@@ -9,7 +8,15 @@ local Button = require(ReplicatedStorage.Client.UI.Components.Button)
 
 local ACTIVATION_KEYS = { Enum.KeyCode.Semicolon }
 
+-------------------------------------------------------------------------------
+-- PRIVATE VARIABLES
+-------------------------------------------------------------------------------
+
 local toggleButton = Players.LocalPlayer.PlayerGui.TopBar.Cmdr
+
+-------------------------------------------------------------------------------
+-- PUBLIC FUNCTIONS
+-------------------------------------------------------------------------------
 
 function CmdrController.init()
 	if Permissions.canRunCommands(Players.LocalPlayer) then
@@ -27,11 +34,7 @@ function CmdrController.init()
 	end
 
 	Cmdr.Registry:RegisterHook("BeforeRun", function(context)
-		if not Permissions.canRunCommands(context.Executor) then
-			return "You do not have permission to run this command"
-		end
-
-		return ""
+		return if not Permissions.canRunCommands(context.Executor) then "You do not have permission to run this command" else nil
 	end)
 end
 

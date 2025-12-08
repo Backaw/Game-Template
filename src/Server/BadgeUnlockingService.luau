@@ -15,6 +15,7 @@ local DEBUGGING = false
 -------------------------------------------------------------------------------
 -- PUBLIC METHODS
 -------------------------------------------------------------------------------
+
 function BadgeUnlockingService.awardBadge(player: Player, badge: BadgeConstants.Badge)
 	local id = badge.Id
 
@@ -54,7 +55,8 @@ end
 -------------------------------------------------------------------------------
 -- LOGIC
 -------------------------------------------------------------------------------
-BadgeUnlockingService.loadPlayer = PlayersService.promisifyLoader(function(player)
+
+PlayersService.registerLoadHandler("Badges", function(player)
 	-- BadgeUnlockingService.awardBadge(player, BadgeConstants.Badges.Play)
 
 	for _, badge in BadgeConstants.Badges do
@@ -72,6 +74,7 @@ BadgeUnlockingService.loadPlayer = PlayersService.promisifyLoader(function(playe
 			if not checkCanAward(QuestUtil.getStat(criteria.Stat) :: number) then
 				local connection: typeof(PlayerDataService.Updated:Connect(function() end))
 				connection = PlayerDataService.Updated:Connect(function(event, otherPlayer, value, metadata)
+					assert(metadata, "metadata.Stat is nil")
 					if event == "QuestStatChanged" and otherPlayer == player and metadata.Stat == criteria.Stat then
 						checkCanAward(value)
 						connection:Disconnect()
@@ -82,6 +85,6 @@ BadgeUnlockingService.loadPlayer = PlayersService.promisifyLoader(function(playe
 			end
 		end
 	end
-end, "Badges")
+end)
 
 return BadgeUnlockingService

@@ -3,14 +3,13 @@ local LoginService = {}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
-
 local PlayerDataService = require(ServerStorage.Server.Data.PlayerDataService)
 local PlayersService = require(ServerStorage.Server.PlayersService)
 local QuestService = require(ServerStorage.Server.QuestService)
 local GameConstants = require(ReplicatedStorage.Shared.Game.GameConstants)
 local QuestConstants = require(ReplicatedStorage.Shared.Quests.QuestConstants)
 
-LoginService.loadPlayer = PlayersService.promisifyLoader(function(player)
+PlayersService.registerLoadHandler("Login", function(player)
 	local loginTime = os.time()
 
 	local countdown = task.spawn(function()
@@ -24,6 +23,6 @@ LoginService.loadPlayer = PlayersService.promisifyLoader(function(player)
 		PlayerDataService.set(player, "LastLogin", { Time = loginTime, Version = GameConstants.Version })
 		task.cancel(countdown)
 	end)
-end, "Login")
+end)
 
 return LoginService

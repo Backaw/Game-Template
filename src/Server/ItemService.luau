@@ -106,7 +106,7 @@ function ItemService.unequipItem(player: Player, itemType: ItemConstants.ItemTyp
 	return true
 end
 
-ItemService.loadPlayer = PlayersService.promisifyLoader(function(player)
+PlayersService.registerLoadHandler(PlayersService.LoadJobs.Items, function(player)
 	for _, item in freeItems do
 		ItemService.giveItem(player, item.Type, item.Name)
 	end
@@ -118,7 +118,7 @@ ItemService.loadPlayer = PlayersService.promisifyLoader(function(player)
 			end
 		end
 	end
-end, "Items")
+end)
 
 -------------------------------------------------------------------------------
 -- LOGIC

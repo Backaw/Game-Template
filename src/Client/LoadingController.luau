@@ -16,7 +16,7 @@ local FULL_LOAD_LENGTH = 1
 
 local LOGO_ROTATION_BOUNDS = 2
 
-local DEBUG = DebugUtil.isDebugging(false)
+local DEBUG = true --  DebugUtil.isDebugging(true)
 
 -------------------------------------------------------------------------------
 -- PRIVATE MEMBERS
@@ -74,6 +74,10 @@ function LoadingController.start()
 			end
 
 			task()
+
+			if DEBUG then
+				print(("Task completed %s at %s"):format(taskIds[i], i))
+			end
 
 			if tween then
 				tween:Cancel()
@@ -134,6 +138,8 @@ do
 		local loaded
 		while not loaded do
 			loaded = true
+
+			warn("HELLO WORLD")
 
 			for _, screenGui in interfaces:GetChildren() do
 				if screenGui.Name == "Cmdr" then

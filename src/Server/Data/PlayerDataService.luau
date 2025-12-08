@@ -32,7 +32,7 @@ local RECONCILIATION_TYPES = {
 }
 
 local clientsReadyForData: { [Player]: true? } = {}
-local clientReadyForData = Signal.new()
+local clientReadyForData = Signal.new() :: Signal.Signal<Player>
 local reconcilers: { [keyof<typeof(RECONCILIATION_TYPES)>]: { (DataFormatUtil.Store) -> () } } = {
 	[RECONCILIATION_TYPES.Pre] = {},
 	[RECONCILIATION_TYPES.Post] = {},
@@ -165,7 +165,21 @@ function PlayerDataService.init()
 	playerStore = ProfileStore.New(DataFormatUtil.getDataKey(), ProfileTemplate.get())
 end
 
-function PlayerDataService.loadPlayer(player: Player)
+-------------------------------------------------------------------------------
+-- EVENT HANDLERS
+-------------------------------------------------------------------------------
+
+Remotes.declareEvent("DataUpdated")
+Remotes.declareEvent("DataInitialized")
+
+Remotes.bindEvents({
+	ClientReadyForData = function(client)
+		clientReadyForData:Fire(client)
+		clientsReadyForData[client] = true
+	end,
+})
+
+PlayersService.registerLoader(PlayersService.LoadJobs.PlayerData, function(player: Player)
 	return Promise.new(function(resolve, reject)
 		local cancelled = false
 
@@ -235,20 +249,6 @@ function PlayerDataService.loadPlayer(player: Player)
 			reject("Data profile does not exist - Please rejoin")
 		end
 	end)
-end
-
--------------------------------------------------------------------------------
--- LOGIC
--------------------------------------------------------------------------------
-
-Remotes.declareEvent("DataUpdated")
-Remotes.declareEvent("DataInitialized")
-
-Remotes.bindEvents({
-	ClientReadyForData = function(client)
-		clientReadyForData:Fire(client)
-		clientsReadyForData[client] = true
-	end,
-})
+end)
 
 return PlayerDataService
