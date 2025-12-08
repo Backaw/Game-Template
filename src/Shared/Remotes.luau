@@ -1,218 +1,192 @@
---[[
-    Client/Server Networking
-]]
+--!strict
 local Remotes = {}
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local InstanceUtil = require(ReplicatedStorage.Shared.Utils.InstanceUtil)
 
-type FunctionCallback = (...any) -> ()
-type FunctionHandler = {
-	Remote: RemoteFunction,
-	registerCallback: (callback: FunctionCallback) -> (),
-}
-type EventCallback = (...any) -> ()
-type EventHandler = {
-	Remote: RemoteEvent,
-	registerCallback: (callback: EventCallback, dontCascade: boolean?) -> () -> (),
-}
+-------------------------------------------------------------------------------
+-- CONSTANTS
+-------------------------------------------------------------------------------
 
-local IS_STUDIO = RunService:IsStudio()
 local IS_SERVER = RunService:IsServer()
+local _IS_STUDIO = RunService:IsStudio()
 
-local eventHandlers: { [string]: EventHandler } = {}
-local functionHandlers: { [string]: FunctionHandler } = {}
-local communicationFolder: Folder, functionFolder: Folder, eventFolder: Folder
+-------------------------------------------------------------------------------
+-- TYPES
+-------------------------------------------------------------------------------
 
-local function getFunctionHandler(name: string): FunctionHandler
-	assert(typeof(name) == "string", "Remote name is not a string -> " .. name)
+export type Event<T...> = {
+	Type: "Event",
+	GetEvent: (Event<T...>) -> RemoteEvent,
+	OnServerEvent: (Event<T...>, handler: (Player, T...) -> ()) -> RBXScriptConnection,
+	OnClientEvent: (Event<T...>, handler: (T...) -> ()) -> RBXScriptConnection,
+	FireServer: (Event<T...>, T...) -> (),
+	FireClient: (Event<T...>, Player, T...) -> (),
+}
 
-	local handler = functionHandlers[name]
-	if handler then
-		return handler
-	end
+export type Function<T..., R...> = {
+	Type: "Function",
+	InvokeServer: (Function<T..., R...>, T...) -> R...,
+	OnServerInvoked: (Function<T..., R...>, handler: (Player, T...) -> R...) -> (),
+}
 
-	handler = {}
-	handler.Remote = IS_SERVER and InstanceUtil.newNameParent("RemoteFunction", tostring(name), functionFolder)
-		or functionFolder:WaitForChild(name)
-	if not IS_STUDIO and not IS_SERVER then -- anti hack
-		handler.Remote.Name = "Gibberish"
-	end
+export type UnreliableEvent<T...> = {
+	Type: "UnreliableEvent",
+	GetEvent: (UnreliableEvent<T...>) -> UnreliableRemoteEvent,
+	OnServerEvent: (UnreliableEvent<T...>, handler: (Player, T...) -> any?) -> RBXScriptConnection,
+	OnClientEvent: (UnreliableEvent<T...>, handler: (T...) -> any?) -> RBXScriptConnection,
+	FireServer: (UnreliableEvent<T...>, T...) -> (),
+	FireClient: (UnreliableEvent<T...>, Player, T...) -> (),
+}
 
-	local callbackIsSet = false
-	function handler.registerCallback(callback: FunctionCallback)
-		if callbackIsSet then
-			error(string.format("Attempt to overwrite callback: %s", name))
-		end
+-------------------------------------------------------------------------------
+-- PRIVATE VARIABLES
+-------------------------------------------------------------------------------
 
-		callbackIsSet = true
-		handler.Remote[IS_SERVER and "OnServerInvoke" or "OnClientInvoke"] = callback
-	end
+local networkFolder: Folder
+local eventFolder: Folder
+local functionFolder: Folder
+local unreliableEventFolder: Folder
 
-	functionHandlers[name] = handler
-	return handler
-end
+-------------------------------------------------------------------------------
+-- PRIVATE FUNCTIONS
+-------------------------------------------------------------------------------
 
-local function getEventHandler(name: string): EventHandler
-	assert(typeof(name) == "string", "Remote name is not a string -> " .. name)
+function Remotes.defineEvent<T...>(name: string)
+	local definition = {} :: Event<T...>
 
-	local handler = eventHandlers[name]
-	if handler then
-		return handler
-	end
+	definition.Type = "Event"
 
-	handler = {}
-	handler.Remote = IS_SERVER and InstanceUtil.newNameParent("RemoteEvent", name, eventFolder) or eventFolder:WaitForChild(name)
-	if not IS_STUDIO and not IS_SERVER then -- anti hack
-		handler.Remote.Name = "Gibberish"
-	end
-
-	local callbacks: { EventCallback } = {}
-	local history = {}
-
-	--[[
-        - dontCascade: Whenever an event is fired, we record it. If we connect a callback after the event has been fired, it will call that
-        callback with the previous firings. This will *not* be the case if `dontCascade=true`.
-        - Returns a function that will internally remove the passed callback when invoked
-    --]]
-	function handler.registerCallback(callback: EventCallback, dontCascade: boolean?)
-		dontCascade = dontCascade and true or false
-
-		if not dontCascade then
-			for _, fire in history do
-				task.spawn(callback, table.unpack(fire))
-			end
-		end
-
-		table.insert(callbacks, callback)
-
-		return function()
-			local index = table.find(callbacks, callback)
-			if index then
-				table.remove(callbacks, index)
-			end
-		end
-	end
-
-	handler.Remote[IS_SERVER and "OnServerEvent" or "OnClientEvent"]:Connect(function(...)
-		table.insert(history, table.pack(...))
-		for _, callback in callbacks do
-			task.spawn(callback, ...)
-		end
-	end)
-
-	eventHandlers[name] = handler
-	return handler
-end
-
--- Bindings, pass a dictionary of remotes to create / connect to
-function Remotes.bindFunctions(callbacks: { [string]: FunctionCallback })
-	for name, callback in callbacks do
-		assert(callback and typeof(callback) == "function", ("%s has no valid callback function assigned"):format(name))
-
-		task.spawn(function()
-			local handler = getFunctionHandler(name)
-			handler.registerCallback(callback)
-		end)
-	end
-end
-
-function Remotes.bindEvents(callbacks: { [string]: EventCallback })
-	for name, callback in callbacks do
-		assert(callback and typeof(callback) == "function", ("%s has no valid callback function assigned"):format(name))
-
-		task.spawn(function()
-			local handler = getEventHandler(name)
-			handler.registerCallback(callback)
-		end)
-	end
-end
-
--- Returns a function that when invoked will remove the passed callback from existence
-function Remotes.bindEventTemp(name: string, callback: EventCallback)
-	local handler = getEventHandler(name)
-	return handler.registerCallback(callback, true)
-end
-
-function Remotes.declareEvent(name: string)
-	getEventHandler(name)
-end
-
-function Remotes.bindEventWithActions(eventName: string, actions: { [string]: EventCallback })
 	if IS_SERVER then
-		Remotes.bindEvents({
-			[eventName] = function(player: Player, action: string, ...)
-				local handler = assert(actions[action], `{eventName} has no valid handler for {action}`)
-				handler(player, ...)
-			end,
-		})
+		local event = Instance.new("RemoteEvent")
+		event.Name = name
+		event.Parent = eventFolder
+
+		function definition:FireClient(player: Player, ...: T...)
+			event:FireClient(player, ...)
+		end
+
+		function definition:OnServerEvent(handler: (Player, T...) -> ())
+			return event.OnServerEvent:Connect(handler)
+		end
 	else
-		Remotes.bindEvents({
-			[eventName] = function(action: string, ...)
-				local handler = assert(actions[action], `{eventName} has no valid handler for {action}`)
-				handler(...)
-			end,
-		})
+		local event = eventFolder:WaitForChild(name) :: RemoteEvent
+
+		function definition:FireServer(...: T...)
+			event:FireServer(...)
+		end
+
+		function definition:OnClientEvent(handler: (T...) -> ())
+			return event.OnClientEvent:Connect(handler)
+		end
 	end
+
+	return definition
 end
+
+function Remotes.defineUnreliableEvent<T...>(name: string)
+	local definition = {} :: UnreliableEvent<T...>
+
+	definition.Type = "UnreliableEvent"
+
+	if IS_SERVER then
+		local event = Instance.new("UnreliableRemoteEvent")
+		event.Name = name
+		event.Parent = unreliableEventFolder
+
+		function definition:FireClient(player: Player, ...: T...)
+			event:FireClient(player, ...)
+		end
+
+		function definition:OnServerEvent(handler: (Player, T...) -> ())
+			return event.OnServerEvent:Connect(handler)
+		end
+	else
+		local event = unreliableEventFolder:WaitForChild(name) :: UnreliableRemoteEvent
+
+		function definition:FireServer(...: T...)
+			event:FireServer(...)
+		end
+
+		function definition:OnClientEvent(handler: (T...) -> ())
+			return event.OnClientEvent:Connect(handler)
+		end
+	end
+
+	return definition
+end
+
+function Remotes.defineFunction<T..., R...>(name: string)
+	local definition = {} :: Function<T..., R...>
+
+	definition.Type = "Function"
+
+	if IS_SERVER then
+		-- Create RemoteFunction on server (client will invoke it)
+		local remoteFunction = InstanceUtil.newNameParent("RemoteFunction", name, functionFolder) :: RemoteFunction
+
+		function definition:OnServerInvoked(handler: (Player, T...) -> R...)
+			remoteFunction.OnServerInvoke = handler
+		end
+	else
+		local remoteFunction = functionFolder:WaitForChild(name) :: RemoteFunction
+
+		function definition:InvokeServer(...: T...): R...
+			return remoteFunction:InvokeServer(...)
+		end
+	end
+
+	return definition
+end
+
+-------------------------------------------------------------------------------
+-- UTILITY FUNCTIONS
+-------------------------------------------------------------------------------
 
 if IS_SERVER then
-	communicationFolder = InstanceUtil.newNameParent("Folder", "Communication", ReplicatedStorage)
-	functionFolder = InstanceUtil.newNameParent("Folder", "Functions", communicationFolder)
-	eventFolder = InstanceUtil.newNameParent("Folder", "Events", communicationFolder)
-
-	function Remotes.fireClient(client: Player, eventName: string, ...: any?)
-		task.spawn(function(...)
-			if not client or client.Parent ~= Players then
-				warn(("Can't fire to non-existent player %q"):format(tostring(client.Name)))
-				return
-			end
-
-			getEventHandler(eventName).Remote:FireClient(client, ...)
-		end, ...)
-	end
-
-	function Remotes.fireClients(clients: { Player }, eventName: string, ...: any)
+	function Remotes.fireClients<T...>(definition: Event<T...> | UnreliableEvent<T...>, clients: { Player }, ...: T...)
 		for _, player in clients do
-			Remotes.fireClient(player, eventName, ...)
-		end
-	end
-
-	function Remotes.fireAllClients(eventName: string, ...: any)
-		Remotes.fireClients(Players:GetPlayers() :: { Player }, eventName, ...)
-	end
-
-	function Remotes.fireAllClientsFiltered(eventName: string, filter: (client: Player) -> boolean, ...)
-		for _, player in Players:GetPlayers() do
-			if filter(player) then
-				Remotes.fireClient(player, eventName, ...)
+			if definition.Type == "Event" then
+				(definition :: Event<T...>):FireClient(player, ...)
+			elseif definition.Type == "UnreliableEvent" then
+				(definition :: UnreliableEvent<T...>):FireClient(player, ...)
 			end
 		end
 	end
 
-	function Remotes.fireAllOtherClients(ignoreClient: Player, eventName: string, ...: any)
-		for _, player in Players:GetPlayers() do
-			if player ~= ignoreClient then
-				Remotes.fireClient(player, eventName, ...)
-			end
-		end
+	function Remotes.fireAllClients<T...>(definition: Event<T...> | UnreliableEvent<T...>, ...: T...)
+		Remotes.fireClients(definition, Players:GetPlayers(), ...)
 	end
+
+	function Remotes.fireAllOtherClients<T...>(definition: Event<T...> | UnreliableEvent<T...>, ignoreClient: Player, ...: T...)
+		local players = Players:GetPlayers()
+
+		local index = table.find(players, ignoreClient)
+		if index then
+			table.remove(players, index)
+		end
+
+		Remotes.fireClients(definition, players, ...)
+	end
+end
+
+-------------------------------------------------------------------------------
+-- LOGIC
+-------------------------------------------------------------------------------
+
+-- Initialize folder structure
+if IS_SERVER then
+	networkFolder = InstanceUtil.newNameParent("Folder", "Network", ReplicatedStorage) :: Folder
+	eventFolder = InstanceUtil.newNameParent("Folder", "Remotes", networkFolder) :: Folder
+	functionFolder = InstanceUtil.newNameParent("Folder", "RemoteFunction", networkFolder) :: Folder
+	unreliableEventFolder = InstanceUtil.newNameParent("Folder", "UnreliableRemotes", networkFolder) :: Folder
 else
-	communicationFolder = ReplicatedStorage:WaitForChild("Communication")
-	functionFolder = communicationFolder:WaitForChild("Functions")
-	eventFolder = communicationFolder:WaitForChild("Events")
-
-	function Remotes.fireServer(eventName: string, ...: any?)
-		task.spawn(function(...)
-			getEventHandler(eventName).Remote:FireServer(...)
-		end, ...)
-	end
-
-	function Remotes.invokeServer(functionName: string, ...: any)
-		return getFunctionHandler(functionName).Remote:InvokeServer(...)
-	end
+	networkFolder = ReplicatedStorage:WaitForChild("Network") :: Folder
+	eventFolder = networkFolder:WaitForChild("Remotes") :: Folder
+	functionFolder = networkFolder:WaitForChild("RemoteFunction") :: Folder
+	unreliableEventFolder = networkFolder:WaitForChild("UnreliableRemotes") :: Folder
 end
 
 return Remotes

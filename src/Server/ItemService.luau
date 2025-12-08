@@ -12,11 +12,7 @@ local ItemConstants = require(ReplicatedStorage.Shared.Items.ItemConstants)
 local ProductConstants = require(ReplicatedStorage.Shared.Products.ProductConstants)
 local ProductUtil = require(ReplicatedStorage.Shared.Products.ProductUtil)
 local Signal = require(ReplicatedStorage.Shared.Signal)
-local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local CurrencyUtil = require(ReplicatedStorage.Shared.Currency.CurrencyUtil)
-
-local EVENT_NAME = "ItemHandling"
-local EVENT_ACTIONS = { Equip = "Equip", Unequip = "Unequip" }
 
 type Validator = (Player) -> boolean
 
@@ -132,15 +128,8 @@ ProductService.ProductPurchased:Connect(function(player: Player, product: Produc
 	end
 end)
 
-Remotes.bindEventWithActions(EVENT_NAME, {
-	[EVENT_ACTIONS.Equip] = function(player: Player, itemType: ItemConstants.ItemType, itemName: string)
-		ItemService.equipItem(player, itemType, itemName)
-	end,
-
-	[EVENT_ACTIONS.Unequip] = function(player: Player, itemType: ItemConstants.ItemType)
-		ItemService.unequipItem(player, itemType)
-	end,
-})
+ItemConstants.Remotes.ItemEquipped:OnServerEvent(ItemService.equipItem :: any)
+ItemConstants.Remotes.ItemUnequipped:OnServerEvent(ItemService.unequipItem :: any)
 
 -- FREE ITEMS
 for _, items in pairs(ItemUtil.getItems()) do

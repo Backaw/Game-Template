@@ -19,9 +19,19 @@ local GameAnalyticsService = require(ServerStorage.Server.GameAnalyticsService)
 local CurrencyService = require(ServerStorage.Server.CurrencyService)
 local RewardService
 
+-------------------------------------------------------------------------------
+-- CONSTANTS
+-------------------------------------------------------------------------------
+
 local MAX_PRICE_LOAD_ATTEMPTS = 5
 
-type Validator = (Player, number) -> boolean
+local REMOTES = ProductConstants.Remotes
+
+-------------------------------------------------------------------------------
+-- TYPES
+-------------------------------------------------------------------------------
+
+type Validator = (Player) -> boolean
 
 -------------------------------------------------------------------------------
 --  PRIVATE MEMBERS
@@ -118,21 +128,18 @@ function ProductService.giveGamepass(player: Player, id: number, verified: boole
 	end
 end
 
-function ProductService.giveProduct(player: Player, product: ProductConstants.Product, count: number?)
+function ProductService.giveProduct(player: Player, product: ProductConstants.Product)
 	ProductService.ProductPurchased:Fire(player, product)
-	Remotes.fireClient(player, "ProductGiven", product.Type, product.Name, count or 1)
+	REMOTES.ProductGiven:FireClient(player, product.Type, product.Name)
 end
 
 function ProductService.purchaseProduct(
 	player: Player,
 	productType: string,
 	productName: string,
-	count: number?,
 	attribution: ProductConstants.PurchaseAttribution
 )
 	local success = false
-
-	count = count or 1
 
 	-- RETURN: Product doesn't exist
 	local product = ProductConstants.Products[productType][productName]
@@ -143,7 +150,7 @@ function ProductService.purchaseProduct(
 	-- RETURN: Purchase isn't available atm
 	local validator = validators[product]
 	if validator then
-		if not validator(player, count) then
+		if not validator(player) then
 			return false
 		end
 	end
@@ -152,10 +159,8 @@ function ProductService.purchaseProduct(
 	if price.Currency == "Free" then
 		success = true
 	elseif CurrencyUtil.isInGameCurrency(price.Currency) then
-		success = CurrencyService.transact(player, price.Currency, -(price :: any).Amount * count, productType, productName, true)
+		success = CurrencyService.transact(player, price.Currency, -(price :: any).Amount, productType, productName, true)
 	else
-		count = 1
-
 		local id = (price :: any).Id :: number
 		if price.Currency == "DevProduct" then
 			MarketplaceService:PromptProductPurchase(player, id)
@@ -194,7 +199,7 @@ function ProductService.purchaseProduct(
 			local itemId
 			if typeof(attribution) == "table" then
 				source = attribution.Source
-				local item = attribution.Item
+				local item = assert(attribution.Item, "Item is required")
 				itemId = item.Type .. item.Name
 			else
 				source = attribution
@@ -208,7 +213,7 @@ function ProductService.purchaseProduct(
 	end
 
 	if success then
-		ProductService.ProductPurchased:Fire(player, product, count)
+		ProductService.ProductPurchased:Fire(player, product)
 	end
 
 	return success
@@ -232,7 +237,7 @@ function ProductService.updateProducts(
 	end
 
 	updateRobuxPrices(registering)
-	Remotes.fireAllClients("ProductsUpdated", registering, unregistering)
+	Remotes.fireAllClients(REMOTES.ProductsUpdated, registering, unregistering)
 end
 
 function ProductService.init()
@@ -309,15 +314,10 @@ MarketplaceService.ProcessReceipt = function(info)
 	return Enum.ProductPurchaseDecision.PurchaseGranted
 end
 
-Remotes.bindFunctions({
-	PromptProductPurchase = ProductService.purchaseProduct,
-	GetProducts = function()
-		productsInitialized:await()
-		return ProductConstants.Products
-	end,
-})
-
-Remotes.declareEvent("ProductsUpdated")
-Remotes.declareEvent("ProductGiven")
+REMOTES.PromptProductPurchase:OnServerInvoked(ProductService.purchaseProduct)
+REMOTES.GetProducts:OnServerInvoked(function(_player: Player)
+	productsInitialized:await()
+	return ProductConstants.Products
+end)
 
 return ProductService

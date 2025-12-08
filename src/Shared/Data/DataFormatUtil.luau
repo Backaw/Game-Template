@@ -12,10 +12,11 @@ local DataConstants = require(ReplicatedStorage.Shared.Data.DataConstants)
 local GameUtil = require(ReplicatedStorage.Shared.Game.GameUtil)
 local TableUtil = require(ReplicatedStorage.Shared.Utils.TableUtil)
 local Signal = require(ReplicatedStorage.Shared.Signal)
+local DataTypes = require(ReplicatedStorage.Shared.Data.DataTypes)
 
 -- export type Data = string & number & boolean & Store -- | string | number | boolean | Store
-export type Data = string | number | boolean | Store
-export type Store = { [string]: Data }
+export type Data = DataTypes.Data
+export type Store = DataTypes.Store
 
 export type UpdatedEvent = Signal.Signal<string, any, { [string]: any }>
 

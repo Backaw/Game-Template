@@ -3,6 +3,7 @@ local PromoCodeConstants = {}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RewardConstants = require(ReplicatedStorage.Shared.Rewards.RewardConstants)
+local Remotes = require(ReplicatedStorage.Shared.Remotes)
 
 -------------------------------------------------------------------------------
 -- PUBLIC METHODS
@@ -23,5 +24,8 @@ PromoCodeConstants.State = {
 }
 
 PromoCodeConstants.Codes = codes
+PromoCodeConstants.Remotes = {
+	RedeemCode = Remotes.defineFunction("RedeemCode") :: Remotes.Function<(string), (string)>,
+}
 
 return PromoCodeConstants

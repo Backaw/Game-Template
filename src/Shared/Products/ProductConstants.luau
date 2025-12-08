@@ -2,6 +2,7 @@
 local ProductConstants = {}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local CurrencyConstants = require(ReplicatedStorage.Shared.Currency.CurrencyConstants)
 local ItemConstants = require(ReplicatedStorage.Shared.Items.ItemConstants)
 local RewardConstants = require(ReplicatedStorage.Shared.Rewards.RewardConstants)
@@ -66,6 +67,13 @@ local bundles: { [string]: _Bundle } = {}
 ProductConstants.Types = types
 ProductConstants.Bundles = bundles :: { [string]: Bundle }
 ProductConstants.Products = products :: { [string]: { [string]: Product } }
+
+ProductConstants.Remotes = {
+	ProductsUpdated = Remotes.defineEvent("ProductsUpdated") :: Remotes.Event<ProductCategories, ProductCategories?>,
+	ProductGiven = Remotes.defineEvent("ProductGiven") :: Remotes.Event<string, string, number?>,
+	PromptProductPurchase = Remotes.defineFunction("PromptProductPurchase") :: Remotes.Function<(string, string, PurchaseAttribution), (boolean)>,
+	GetProducts = Remotes.defineFunction("GetProducts") :: Remotes.Function<(), (ProductCategories)>,
+}
 
 -------------------------------------------------------------------------------
 -- INIT

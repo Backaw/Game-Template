@@ -1,11 +1,8 @@
 --!strict
 local SettingsConstants = {}
 
-export type Option = {
-	Name: string,
-	Order: number,
-	Default: boolean,
-}
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Remotes = require(ReplicatedStorage.Shared.Remotes)
 
 local options: { [string]: Option } = {
 	Music = { Name = "Music", Order = 1, Default = true },
@@ -13,5 +10,18 @@ local options: { [string]: Option } = {
 }
 
 SettingsConstants.Options = options
+SettingsConstants.Remotes = {
+	SettingOptionToggled = Remotes.defineEvent("SettingOptionToggled") :: Remotes.Event<string, boolean>,
+}
+
+-------------------------------------------------------------------------------
+-- TYPES
+-------------------------------------------------------------------------------
+
+export type Option = {
+	Name: string,
+	Order: number,
+	Default: boolean,
+}
 
 return SettingsConstants

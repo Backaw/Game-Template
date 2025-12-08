@@ -16,16 +16,16 @@ local FULL_LOAD_LENGTH = 1
 
 local LOGO_ROTATION_BOUNDS = 2
 
-local DEBUG = true --  DebugUtil.isDebugging(true)
+local DEBUG = DebugUtil.isDebugging(false)
 
 -------------------------------------------------------------------------------
 -- PRIVATE MEMBERS
 -------------------------------------------------------------------------------
+
 local tasks: { () -> () } = {}
 local taskIds: { string } = {}
 
 local player = Players.LocalPlayer
-local controls = require(player.PlayerScripts:WaitForChild("PlayerModule")):GetControls() :: any
 
 local playerGui = player.PlayerGui
 local screen = playerGui:WaitForChild("LoadingScreen")
@@ -38,11 +38,13 @@ local tween: Tween
 -------------------------------------------------------------------------------
 -- PUBLIC MEMEBERS
 -------------------------------------------------------------------------------
+
 LoadingController.Loaded = DeferredPromise.new()
 
 -------------------------------------------------------------------------------
 -- PUBLIC METHODS
 -------------------------------------------------------------------------------
+
 function LoadingController.addTask(taskId: string, task: () -> ())
 	table.insert(tasks, task)
 	table.insert(taskIds, taskId)
@@ -75,10 +77,6 @@ function LoadingController.start()
 
 			task()
 
-			if DEBUG then
-				print(("Task completed %s at %s"):format(taskIds[i], i))
-			end
-
 			if tween then
 				tween:Cancel()
 			end
@@ -92,8 +90,6 @@ function LoadingController.start()
 			tween.Completed:Connect(function()
 				-- Close screen
 				if i == taskCount then
-					controls:Enable()
-
 					TweenUtil.batch({
 						TweenService:Create(
 							container,
@@ -117,7 +113,7 @@ function LoadingController.start()
 						),
 					}):andThen(function()
 						screen:Destroy()
-						LoadingController.Loaded:InvokeResolve()
+						LoadingController.Loaded.invokeResolve()
 					end)
 				end
 			end)
@@ -138,8 +134,6 @@ do
 		local loaded
 		while not loaded do
 			loaded = true
-
-			warn("HELLO WORLD")
 
 			for _, screenGui in interfaces:GetChildren() do
 				if screenGui.Name == "Cmdr" then
@@ -162,7 +156,5 @@ do
 		end
 	end)
 end
-
-controls:Disable()
 
 return LoadingController

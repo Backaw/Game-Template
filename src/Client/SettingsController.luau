@@ -4,9 +4,14 @@ local SettingsController = {}
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local DataController = require(ReplicatedStorage.Client.DataController)
 local SettingsConstants = require(ReplicatedStorage.Shared.Constants.SettingsConstants)
-local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Signal = require(ReplicatedStorage.Shared.Signal)
 local Limiter = require(ReplicatedStorage.Shared.Limiter)
+
+-------------------------------------------------------------------------------
+-- CONSTANTS
+-------------------------------------------------------------------------------
+
+local REMOTES = SettingsConstants.Remotes
 
 -------------------------------------------------------------------------------
 -- PRIVATE VARIABLES
@@ -42,7 +47,7 @@ function SettingsController.set(option: SettingsConstants.Option, value: boolean
 	SettingsController.OptionToggled:Fire(option, cache[option.Name])
 
 	Limiter.indecisive("ServerSettingToggling", option.Name, 0.2, function()
-		Remotes.fireServer("SettingOptionToggled", option.Name, value)
+		REMOTES.SettingOptionToggled:FireServer(option.Name, value)
 	end)
 end
 

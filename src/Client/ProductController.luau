@@ -2,7 +2,6 @@
 local ProductController = {}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local ProductUtil = require(ReplicatedStorage.Shared.Products.ProductUtil)
 local ProductConstants = require(ReplicatedStorage.Shared.Products.ProductConstants)
 local CurrencyConstants = require(ReplicatedStorage.Shared.Currency.CurrencyConstants)
@@ -16,14 +15,24 @@ local Snackbar = require(ReplicatedStorage.Client.UI.Components.Snackbar)
 local CurrencyController = require(ReplicatedStorage.Client.CurrencyController)
 local Confetti = require(ReplicatedStorage.Client.UI.Particles.Confetti)
 
+-------------------------------------------------------------------------------
+-- CONSTANTS
+-------------------------------------------------------------------------------
+
+local DEBUG = DebugUtil.isDebugging(false)
+
+local REMOTES = ProductConstants.Remotes
+
+-------------------------------------------------------------------------------
+-- TYPES
+-------------------------------------------------------------------------------
+
 export type Product = ProductConstants.Product
 type PriceTracker = { Price: CurrencyConstants.Price, Handler: (boolean) -> () }
 
 -------------------------------------------------------------------------------
 -- PRIVATE MEMBERS
 -------------------------------------------------------------------------------
-
-local DEBUG = DebugUtil.isDebugging(false)
 
 local debounces: { [ProductConstants.Product]: boolean? } = {}
 local marketplacePromptOpen = false
@@ -149,7 +158,7 @@ function ProductController.promptPurchase(
 	debounces[product] = true
 
 	local serverValidation = Promise.new(function(resolve)
-		success = Remotes.invokeServer("PromptProductPurchase", product.Type, product.Name, 1, source)
+		success = REMOTES.PromptProductPurchase:InvokeServer(product.Type, product.Name, source)
 
 		if not success then
 			if DEBUG then
@@ -180,17 +189,16 @@ end
 -- EVENT HANDLERS
 -------------------------------------------------------------------------------
 
-ProductConstants.Products = Remotes.invokeServer("GetProducts")
+ProductConstants.Products = REMOTES.GetProducts:InvokeServer()
 
-Remotes.bindEvents({
-	ProductsUpdated = function(registering, unregistering)
-		ProductUtil.updateProducts(registering, unregistering)
-		ProductController.ProductsUpdated:Fire()
-	end,
-	ProductGiven = function(productType: string, productName: string)
-		onProductPurchased(ProductUtil.getProduct(productType, productName))
-	end,
-})
+REMOTES.ProductsUpdated:OnClientEvent(function(registering, unregistering)
+	ProductUtil.updateProducts(registering, unregistering)
+	ProductController.ProductsUpdated:Fire()
+end)
+
+REMOTES.ProductGiven:OnClientEvent(function(productType: string, productName: string)
+	onProductPurchased(ProductUtil.getProduct(productType, productName))
+end)
 
 CurrencyController.Changed:Connect(function(currency: string, amount: number, lastAmount: number)
 	for _, tracker in ipairs(priceTrackers) do

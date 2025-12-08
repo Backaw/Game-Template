@@ -2,10 +2,11 @@
 local DataController = {}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
 local Signal = require(ReplicatedStorage.Shared.Signal)
 local Promise = require(ReplicatedStorage.Shared.Promise)
-local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local DataFormatUtil = require(ReplicatedStorage.Shared.Data.DataFormatUtil)
+local DataConstants = require(ReplicatedStorage.Shared.Data.DataConstants)
 
 -------------------------------------------------------------------------------
 -- PRIVATE VARIABLES
@@ -13,11 +14,21 @@ local DataFormatUtil = require(ReplicatedStorage.Shared.Data.DataFormatUtil)
 
 local bank: DataFormatUtil.Store = {}
 
+local loader = Promise.new(function(resolve)
+	DataConstants.Remotes.DataInitialized:OnClientEvent(function(data)
+		bank = data
+		resolve()
+	end)
+
+	DataConstants.Remotes.ClientReadyForData:FireServer()
+end)
+
 -------------------------------------------------------------------------------
 -- PUBLIC VARIABLES
 -------------------------------------------------------------------------------
 
 DataController.Updated = Signal.new() :: DataFormatUtil.UpdatedEvent
+DataController.Ready = loader -- Promise that resolves when data is initialized
 
 -------------------------------------------------------------------------------
 -- PUBLIC FUNCTIONS
@@ -29,30 +40,19 @@ function DataController.get(address: string)
 	return value
 end
 
-local loader = Promise.new(function(resolve)
-	local cleanup: () -> ()
-	cleanup = Remotes.bindEventTemp("DataInitialized", function(data)
-		bank = data
+-------------------------------------------------------------------------------
+-- LOGIC
+-------------------------------------------------------------------------------
 
-		cleanup()
-		resolve()
+DataConstants.Remotes.DataUpdated:OnClientEvent(function(address, newValue, event, eventMeta)
+	loader:andThen(function() --- Ensures data has loaded before any changes are made, just in case
+		DataFormatUtil.setFromAddress(bank, address, newValue)
+		if event then
+			DataController.Updated:Fire(event, newValue, eventMeta or {})
+		end
 	end)
-
-	Remotes.fireServer("ClientReadyForData")
 end)
 
-Remotes.bindEvents({
-	DataUpdated = function(address: string, newValue: any, event: string?, eventMeta: { [string]: any }?)
-		loader:andThen(function() --- Ensures data has loaded before any changes are made, just in case
-			DataFormatUtil.setFromAddress(bank, address, newValue)
-			if event then
-				DataController.Updated:Fire(event, newValue, eventMeta or {})
-			end
-		end)
-	end,
-})
-
--- Yield initialization of other modules
 loader:await()
 
 return DataController

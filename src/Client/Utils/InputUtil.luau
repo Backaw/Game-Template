@@ -4,8 +4,6 @@ local InputUtil = {}
 local GuiService = game:GetService("GuiService")
 local UserInputService = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
-local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Signal = require(ReplicatedStorage.Shared.Signal)
 local Maid = require(ReplicatedStorage.Shared.Maid)
 
@@ -198,9 +196,6 @@ do
 		end
 	end
 end
-
-local screenSize = (Players.LocalPlayer.PlayerGui.HUD).AbsoluteSize
-Remotes.fireServer("DeviceDetermined", ("%s (%dx%d)"):format(InputUtil.getDeviceType(), screenSize.X, screenSize.Y))
 
 -------------------------------------------------------------------------------
 -- TYPE EXPORTS
