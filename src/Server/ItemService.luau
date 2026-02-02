@@ -13,6 +13,17 @@ local ProductConstants = require(ReplicatedStorage.Shared.Products.ProductConsta
 local ProductUtil = require(ReplicatedStorage.Shared.Products.ProductUtil)
 local Signal = require(ReplicatedStorage.Shared.Signal)
 local CurrencyUtil = require(ReplicatedStorage.Shared.Currency.CurrencyUtil)
+local TableUtil = require(ReplicatedStorage.Shared.Utils.TableUtil)
+
+-------------------------------------------------------------------------------
+-- CONSTANTS
+-------------------------------------------------------------------------------
+
+local DATA_EVENTS = ItemConstants.DataEvents
+
+-------------------------------------------------------------------------------
+-- TYPES
+-------------------------------------------------------------------------------
 
 type Validator = (Player) -> boolean
 
@@ -28,9 +39,9 @@ local validators: { [ItemConstants.Item]: Validator } = {}
 -- PUBLIC MEMBERS
 -------------------------------------------------------------------------------
 
-ItemService.ItemAcquired = Signal.new("Deferred") :: Signal.Signal<Player, string, string>
-ItemService.ItemEquipped = Signal.new("Deferred") :: Signal.Signal<Player, string, string>
-ItemService.ItemUnequipped = Signal.new("Deferred") :: Signal.Signal<Player, string>
+ItemService.ItemAcquired = Signal.new("Deferred") :: Signal.Signal<Player, ItemConstants.ItemType, string>
+ItemService.ItemEquipped = Signal.new("Deferred") :: Signal.Signal<Player, ItemConstants.ItemType, string, string>
+ItemService.ItemUnequipped = Signal.new("Deferred") :: Signal.Signal<Player, ItemConstants.ItemType, string>
 
 -------------------------------------------------------------------------------
 -- PUBLIC METHODS
@@ -40,65 +51,76 @@ function ItemService.registerValidator(item: ItemConstants.Item, validator: Vali
 	validators[item] = validator
 end
 
-function ItemService.giveItem(player: Player, itemType: ItemConstants.ItemType, itemName: string, loaned: boolean?)
+function ItemService.giveItem(player: Player, itemType: ItemConstants.ItemType, itemName: string): boolean
 	-- RETURN: Item is already owned
 	if ItemUtil.hasItem(itemType, itemName, player) then
-		return
+		return false
 	end
 
 	-- RETURN: Item doesn't exist
 	local item = ItemUtil.getItem(itemType, itemName)
 	if not item then
-		return
+		return false
 	end
 
 	-- RETURN: Cannot award item at this time
 	if validators[item] and not validators[item](player) then
-		return
+		return false
 	end
 
-	local address = ItemUtil.getOwnedItemsAddressFromType(itemType)
-	PlayerDataService.set(player, address .. "." .. itemName, loaned or false, "ItemAcquired", {
+	local address = ItemUtil.getOwnedItemsAddress(itemType)
+	PlayerDataService.set(player, address .. "." .. itemName, true, DATA_EVENTS.ItemAcquired, {
 		Type = itemType,
 		Name = itemName,
 	})
 
 	ItemService.ItemAcquired:Fire(player, itemType, itemName)
-	if not loaned then
-		GameAnalyticsService.addEvent("DesignEvent", player.UserId, {
-			eventId = ("%s:%s:%s"):format("ItemUnlocked", itemType, itemName),
-		})
-	end
+	GameAnalyticsService.addEvent("DesignEvent", player.UserId, {
+		eventId = ("%s:%s:%s"):format("ItemUnlocked", itemType, itemName),
+	})
+
+	return true
 end
 
-function ItemService.equipItem(player: Player, itemType: ItemConstants.ItemType, itemName: string)
+function ItemService.equipItem(player: Player, itemType: ItemConstants.ItemType, itemName: string, slot: string)
 	if not ItemUtil.hasItem(itemType, itemName, player) then
 		return false
 	end
 
-	local address = ItemUtil.getEquippedItemAddressFromType(itemType)
-	PlayerDataService.set(player, address, itemName, "EquippedItemChanged", {
-		Type = itemType,
-		Previous = ItemUtil.getEquippedItem(itemType, player),
-	})
-
-	ItemService.ItemEquipped:Fire(player, itemType, itemName)
-	return true
-end
-
-function ItemService.unequipItem(player: Player, itemType: ItemConstants.ItemType)
-	-- Cannot unequip to nil
-	if ItemUtil.getDefaultItem(itemType) then
+	if slot and assert(tonumber(slot)) > ItemConstants.EquipSlots[itemType] then
+		warn(`Cannot equip item of type {itemType} into slot {slot}: Not enough slots`)
 		return false
 	end
 
-	local address = ItemUtil.getEquippedItemAddressFromType(itemType)
-	PlayerDataService.set(player, address, nil, "EquippedItemChanged", {
+	local address = ItemUtil.getEquippedItemsAddress(itemType)
+	PlayerDataService.set(player, `{address}.{slot}`, itemName, DATA_EVENTS.EquippedChanged, {
 		Type = itemType,
-		Previous = ItemUtil.getEquippedItem(itemType, player),
+		Previous = ItemUtil.getEquippedItem(itemType, slot, player),
 	})
 
-	ItemService.ItemUnequipped:Fire(player, itemType)
+	ItemService.ItemEquipped:Fire(player, itemType, itemName, slot)
+	return true
+end
+
+function ItemService.unequipItem(player: Player, itemType: ItemConstants.ItemType, slot: string)
+	local equippedCount = TableUtil.length(ItemUtil.getEquippedItems(itemType, player))
+	if equippedCount - 1 < ItemConstants.EquippedItemsRequirement[itemType] then
+		warn(`Cannot unequip item of type {itemType} from slot {slot}: Not enough equipped items`)
+		return false
+	end
+
+	if not tonumber(slot) then
+		warn(`Cannot unequip item of type {itemType} from slot {slot}: Slot is not a number`)
+		return false
+	end
+
+	local address = ItemUtil.getEquippedItemAddress(itemType, slot)
+	PlayerDataService.set(player, address, nil, DATA_EVENTS.EquippedChanged, {
+		Type = itemType,
+		Previous = ItemUtil.getEquippedItem(itemType, slot, player),
+	})
+
+	ItemService.ItemUnequipped:Fire(player, itemType, slot)
 	return true
 end
 
@@ -150,16 +172,5 @@ for _, items in pairs(ItemUtil.getItems()) do
 		end
 	end
 end
-
--- LOADNED ITEMS
-PlayerDataService.registerReconciler(function(data)
-	for _, items in data.OwnedItems do
-		for itemName, loaned in items do
-			if loaned then
-				items[itemName] = nil
-			end
-		end
-	end
-end)
 
 return ItemService

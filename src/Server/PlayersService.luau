@@ -22,6 +22,7 @@ local IMPORTANT_LOAD_JOBS = {
 	Items = "Items",
 	Products = "Products",
 	Quests = "Quests",
+	Character = "Character",
 }
 
 local LOAD_ORDER = {
@@ -30,6 +31,7 @@ local LOAD_ORDER = {
 	IMPORTANT_LOAD_JOBS.Items,
 	IMPORTANT_LOAD_JOBS.Products,
 	IMPORTANT_LOAD_JOBS.Quests,
+	IMPORTANT_LOAD_JOBS.Character,
 }
 
 -------------------------------------------------------------------------------

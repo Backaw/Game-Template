@@ -2,35 +2,43 @@
 local ItemController = {}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local DataController = require(ReplicatedStorage.Client.DataController)
-local Signal = require(ReplicatedStorage.Shared.Signal)
-local ItemConstants = require(ReplicatedStorage.Shared.Items.ItemConstants)
+
+local Shared = ReplicatedStorage.Shared
+local Client = ReplicatedStorage.Client
+local ItemConstants = require(Shared.Items.ItemConstants)
+local AtomicTable = require(Shared.AtomicTable)
+local AtomicValue = require(Shared.AtomicValue)
+local Signal = require(Shared.Signal)
+local DataController = require(Client.DataController)
+
+-------------------------------------------------------------------------------
+-- PRIVATE FUNCTIONS
+-------------------------------------------------------------------------------
+
+local function getEquippedItems<T>(itemType: ItemConstants.ItemType, equipped: T): T
+	local returning = {}
+
+	for i = 1, ItemConstants.EquipSlots[itemType] do
+		local id = tostring(i)
+		returning[id] = (equipped :: any)[id] or false
+	end
+
+	return returning
+end
 
 -------------------------------------------------------------------------------
 -- PUBLIC VARIABLES
 -------------------------------------------------------------------------------
 
-ItemController.EquippedItemChanged = Signal.new("Deferred") :: Signal.Signal<ItemConstants.ItemType, string?, string?>
-
--------------------------------------------------------------------------------
--- PUBLIC FUNCTIONS
--------------------------------------------------------------------------------
-
-function ItemController.equipItem(itemType: ItemConstants.ItemType, itemName: string)
-	ItemConstants.Remotes.ItemEquipped:FireServer(itemType, itemName)
-end
-
-function ItemController.unequipItem(itemType: ItemConstants.ItemType)
-	ItemConstants.Remotes.ItemUnequipped:FireServer(itemType)
-end
+ItemController.ItemAcquired = Signal.new() :: Signal.Signal<ItemConstants.ItemType, string>
 
 -------------------------------------------------------------------------------
 -- LOGIC
 -------------------------------------------------------------------------------
 
-DataController.Updated:Connect(function(event: string, new: any, metadata: { Type: ItemConstants.ItemType, Previous: string? })
-	if event == "EquippedItemChanged" and metadata.Type then
-		ItemController.EquippedItemChanged:Fire(metadata.Type, new, metadata.Previous)
+DataController.Updated:Connect(function(event, _, eventMeta)
+	if event == ItemConstants.DataEvents.ItemAcquired then
+		ItemController.ItemAcquired:Fire(eventMeta.Type, eventMeta.Name)
 	end
 end)
 

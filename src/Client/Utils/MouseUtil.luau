@@ -4,9 +4,13 @@ local MouseUtil = {}
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
-local InputUtil = require(ReplicatedStorage.Client.Utils.InputUtil)
 local RayUtil = require(ReplicatedStorage.Shared.Utils.RayUtil)
+
+-------------------------------------------------------------------------------
+-- CONSTANTS
+-------------------------------------------------------------------------------
+
+local LOCK_CENTER_POSITION = Vector2.new(0.5, 0.35)
 
 -------------------------------------------------------------------------------
 -- PRIVATE MEMBERS
@@ -18,12 +22,14 @@ local behavior: Enum.MouseBehavior = UserInputService.MouseBehavior
 -- PUBLIC METHODS
 -------------------------------------------------------------------------------
 function MouseUtil.setMouseBehavior(newBehavior: Enum.MouseBehavior?)
-	UserInputService.MouseBehavior = newBehavior or Enum.MouseBehavior.Default
+	newBehavior = newBehavior or Enum.MouseBehavior.Default
+	UserInputService.MouseBehavior = newBehavior
+	behavior = newBehavior
 end
 
 function MouseUtil.getMouseScreenPosition()
-	if InputUtil.isMobile() and behavior == Enum.MouseBehavior.LockCenter then
-		return Workspace.CurrentCamera.ViewportSize / 2
+	if behavior == Enum.MouseBehavior.LockCenter then
+		return Workspace.CurrentCamera.ViewportSize * LOCK_CENTER_POSITION
 	else
 		return UserInputService:GetMouseLocation()
 	end
@@ -40,7 +46,8 @@ function MouseUtil.castUnitRay(distance: number?, raycastParams: RaycastParams?)
 end
 
 function MouseUtil.getMouseWorldPosition(distance: number?, raycastParams: RaycastParams?)
-	return MouseUtil.castUnitRay(distance, raycastParams).Position
+	local raycastResult = MouseUtil.castUnitRay(distance, raycastParams)
+	return raycastResult.Position, raycastResult.Instance
 end
 
 return MouseUtil

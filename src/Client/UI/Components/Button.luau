@@ -15,7 +15,7 @@ local UIController = require(ReplicatedStorage.Client.UI.UIController)
 
 local CLICK_COOLDOWN = 0.05
 
-local playerGui = Players.LocalPlayer.PlayerGui
+local playerGui = Players.LocalPlayer:FindFirstChild("PlayerGui")
 local uiStateMachine = UIController.getStateMachine()
 
 export type Button = Component.Component & {

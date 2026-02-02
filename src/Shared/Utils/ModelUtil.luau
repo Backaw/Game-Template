@@ -48,7 +48,7 @@ function ModelUtil.sizeToPart(model: Model, part: BasePart)
 end
 
 -- No rotation
-function ModelUtil.getGlobalExtentsSize(model: Model | { Instance }, offset: CFrame?, descendantChecker: ((BasePart) -> boolean)?)
+function ModelUtil.getGlobalExtentsSize(model: Model | { BasePart }, offset: CFrame?, descendantChecker: ((BasePart) -> boolean)?)
 	offset = if offset then offset.Rotation else CFrame.new()
 
 	local minPosition = {}
@@ -107,10 +107,8 @@ end
 function ModelUtil.getAssemblyMass(model: Model)
 	local assemblyMass = 0
 
-	for _, basePart: BasePart in model:GetDescendants() do
-		if basePart:IsA("BasePart") and not basePart.Massless then
-			assemblyMass += basePart:GetMass()
-		end
+	for _, basePart in next, model:QueryDescendants("BasePart") :: { BasePart } do
+		assemblyMass += basePart:GetMass()
 	end
 
 	return if assemblyMass == 0 then 1 else assemblyMass
@@ -122,6 +120,20 @@ function ModelUtil.anchor(model: Model)
 			basePart.Anchored = true
 		end
 	end
+end
+
+function ModelUtil.groupChildren(replacing: Instance)
+	local group = Instance.new("Model")
+	group.Name = replacing.Name
+	group.Parent = replacing.Parent
+
+	for _, child in pairs(replacing:GetChildren()) do
+		child.Parent = group
+	end
+
+	replacing:Destroy()
+
+	return group
 end
 
 return ModelUtil

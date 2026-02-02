@@ -47,7 +47,7 @@ TransitionsController.Transitions = TRANSITIONS :: { [Transition]: Transition }
 -------------------------------------------------------------------------------
 
 -- Yields
-function TransitionsController.open(scope: string, transition: Transition, speedUp: number?)
+function TransitionsController.open(scope: string, transition: Transition, length: number?)
 	-- RETURN: Already opening
 	if isOpen:Get() then
 		return false
@@ -55,10 +55,10 @@ function TransitionsController.open(scope: string, transition: Transition, speed
 
 	if isOpen:Set(scope, true) then
 		currentTransition = transition
-		handlers[currentTransition].open(speedUp)
+		handlers[currentTransition].open(length)
 
 		Limiter.indecisive("TransitionsController", scope, MAX_TRANSITION_TIME, function()
-			TransitionsController.close(scope, speedUp)
+			TransitionsController.close(scope, length)
 		end)
 	end
 
@@ -66,27 +66,31 @@ function TransitionsController.open(scope: string, transition: Transition, speed
 end
 
 -- Yields
-function TransitionsController.close(scope: string, speedUp: number?)
+function TransitionsController.close(scope: string, length: number?)
 	-- RETURN: Blink is already closed
 	if not isOpen:Get() then
 		return false
 	end
 
 	if isOpen:Set(scope, false) then
-		handlers[currentTransition].close(speedUp)
+		handlers[currentTransition].close(length)
 	end
 
 	return true
 end
 
 -- Yields
-function TransitionsController.play(scope: string, transition: Transition, onHalfPoint: () -> (), speedUp: number?)
-	TransitionsController.open(scope, transition, speedUp)
+function TransitionsController.play(scope: string, transition: Transition, onHalfPoint: () -> (), length: number?)
+	if length then
+		length = length * 0.5
+	end
+
+	TransitionsController.open(scope, transition, length)
 
 	onHalfPoint()
 
 	-- Tween Out
-	TransitionsController.close(scope, speedUp)
+	TransitionsController.close(scope, length)
 end
 
 -------------------------------------------------------------------------------

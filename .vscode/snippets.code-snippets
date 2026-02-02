@@ -20,6 +20,7 @@
   "Module": {
     "prefix": ["module"],
     "body": [
+      "--!strict",
       "local ${0:$TM_FILENAME_BASE} = {}",
       "",
       "return ${0:$TM_FILENAME_BASE}"
@@ -41,7 +42,7 @@
       "local ReplicatedStorage = game:GetService(\"ReplicatedStorage\")",
       "",
       "local Shared = ReplicatedStorage.Shared",
-      "local Controllers = ReplicatedStorage.Client"
+      "local Client = ReplicatedStorage.Client"
     ]
   },
   "PathsServer": {
@@ -49,7 +50,7 @@
     "body": [
       "local ServerStorage = game:GetService(\"ServerStorage\")",
       "local ReplicatedStorage = game:GetService(\"ReplicatedStorage\")",
-      "local Services = ServerStorage.Server",
+      "local Server = ServerStorage.Server",
       "local Shared = ReplicatedStorage.Shared"
     ]
   }

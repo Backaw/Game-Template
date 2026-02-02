@@ -94,7 +94,7 @@ function GameAnalyticsService.init()
 			automaticSendBusinessEvents = true,
 			reportErrors = true,
 
-			availableResourceCurrencies = CurrencyConstants.IngameCurrencies,
+			availableResourceCurrencies = TableUtil.getKeys(CurrencyConstants.IngameCurrencies),
 			availableResourceItemTypes = TableUtil.toArray(mergedResources),
 
 			availableGamepasses = TableUtil.getKeys(ProductUtil.getRobuxProducts()[Enum.InfoType.GamePass]),

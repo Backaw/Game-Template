@@ -2,9 +2,8 @@
 local TemplateUtil = {}
 
 export type Constructor<T> = () -> T
---[[
-    This returns a constructor for templates that are within UI, makes for quick editing
-]]
+
+-- This returns a constructor for templates that are within UI, makes for quick editing
 function TemplateUtil.constructor<T>(template: T, doNotRemove: boolean?): Constructor<T>
 	assert(typeof(template) == "Instance" and (template :: Instance):IsA("GuiObject"), "Template is not a GuiObject")
 

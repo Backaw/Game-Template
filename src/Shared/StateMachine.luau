@@ -5,19 +5,12 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Signal = require(ReplicatedStorage.Shared.Signal)
 local TableUtil = require(ReplicatedStorage.Shared.Utils.TableUtil)
 
-type Data = { [any]: any }?
-
 export type StateMachine<T> = {
-	RegisterGlobalCallback: (StateMachine<T>, callback: (fromState: T, toState: T, data: Data) -> ()) -> Signal.Connection<T, T, Data>,
-	RegisterStateCallbacks: (
-		StateMachine<T>,
-		state: T,
-		onOpen: (Data) -> ()?,
-		onClose: (Data) -> ()?
-	) -> Signal.Connection<T, T, Data>,
+	RegisterGlobalCallback: (StateMachine<T>, callback: (fromState: T, toState: T) -> ()) -> Signal.Connection<T, T>,
+	RegisterStateCallbacks: (StateMachine<T>, state: T, onOpen: (() -> ())?, onClose: (() -> ())?) -> Signal.Connection<T, T>,
 	GetState: (StateMachine<T>) -> T,
-	Push: (StateMachine<T>, state: T, data: Data?) -> (),
-	ReplaceUpTill: (StateMachine<T>, replacee: T, to: T, data: Data) -> (),
+	Push: (StateMachine<T>, state: T) -> (),
+	ReplaceUpTill: (StateMachine<T>, replacee: T, to: T) -> (),
 	Pop: (StateMachine<T>) -> (),
 	PopIfOnTop: (StateMachine<T>, state: T) -> (),
 	PopIfNotOnTop: (StateMachine<T>, state: T) -> (),
@@ -25,7 +18,6 @@ export type StateMachine<T> = {
 	PopUpToInclusive: (StateMachine<T>, state: T, exceptions: { T }?) -> (),
 	PopUpToExclusive: (StateMachine<T>, state: T, exceptions: { T }?) -> (),
 	Remove: (StateMachine<T>, state: T) -> (),
-	GetData: (StateMachine<T>) -> Data,
 	GetStack: (StateMachine<T>) -> { T },
 	Clear: (StateMachine<T>) -> (),
 	Destroy: (StateMachine<T>) -> (),
@@ -41,8 +33,7 @@ function StateMachine.new<T>(states: { T }, initialState: T)
 		initialState,
 	}
 
-	local currentData: Data
-	local changed = Signal.new() :: Signal.Signal<T, T, Data>
+	local changed = Signal.new() :: Signal.Signal<T, T>
 
 	-------------------------------------------------------------------------------
 	-- PRIVATE METHODS
@@ -63,11 +54,11 @@ function StateMachine.new<T>(states: { T }, initialState: T)
 	function stateMachine:RegisterStateCallbacks(state, onOpen, onClose)
 		doesStateExist(state)
 
-		return stateMachine:RegisterGlobalCallback(function(fromState: string, toState: string, data: Data)
+		return stateMachine:RegisterGlobalCallback(function(fromState: string, toState: string)
 			if toState == state and onOpen then
-				onOpen(data)
+				onOpen()
 			elseif fromState == state and onClose then
-				onClose(data)
+				onClose()
 			end
 		end)
 	end
@@ -82,7 +73,7 @@ function StateMachine.new<T>(states: { T }, initialState: T)
 	--[[
 		Puts a state at the top of a stack
 	]]
-	function stateMachine:Push(state, data)
+	function stateMachine:Push(state)
 		doesStateExist(state)
 
 		-- ERROR: State already in stack
@@ -93,17 +84,16 @@ function StateMachine.new<T>(states: { T }, initialState: T)
 		local lastState = stack[#stack]
 
 		table.insert(stack, state)
-		currentData = data or {}
 
 		if changed then
-			changed:Fire(lastState, state, currentData)
+			changed:Fire(lastState, state)
 		end
 	end
 
 	--[[
 		Pops up till to is reached but not popped and then pushes state in one operation; so callbacks run once
 	]]
-	function stateMachine:ReplaceUpTill(replacee, to, data)
+	function stateMachine:ReplaceUpTill(replacee, to)
 		doesStateExist(replacee)
 
 		-- ERROR: State already in stack
@@ -128,10 +118,9 @@ function StateMachine.new<T>(states: { T }, initialState: T)
 		end
 
 		stack[newLength] = replacee
-		currentData = data or {}
 
 		if changed then
-			changed:Fire(lastState, replacee, currentData)
+			changed:Fire(lastState, replacee)
 		end
 	end
 
@@ -143,8 +132,6 @@ function StateMachine.new<T>(states: { T }, initialState: T)
 		if #stack == 1 then
 			error("Stack is empty, can't pop the nothing state")
 		end
-
-		currentData = {}
 
 		local fromState = stack[#stack]
 		table.remove(stack, #stack)
@@ -234,10 +221,6 @@ function StateMachine.new<T>(states: { T }, initialState: T)
 		else
 			table.remove(stack, index)
 		end
-	end
-
-	function stateMachine:GetData()
-		return currentData
 	end
 
 	function stateMachine:GetStack()

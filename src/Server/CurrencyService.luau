@@ -79,7 +79,7 @@ end
 function CurrencyService.init()
 	ProductService = require(ServerStorage.Server.Products.ProductService) :: any
 
-	for _, currency in CurrencyConstants.IngameCurrencies do
+	for currency in CurrencyConstants.IngameCurrencies do
 		-- CONTINUE: Currency isn't purchaseable
 		if not ProductConstants.Types[currency] then
 			continue

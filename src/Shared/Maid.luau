@@ -52,7 +52,7 @@ function Maid.new()
 		end
 
 		if id and tasks[id] then
-			error("Task id already used")
+			error(`Task id ({id}) already used` .. debug.traceback())
 		end
 
 		local taskId = id or tostring(TableUtil.maxIndex(tasks) + 1)

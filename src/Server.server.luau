@@ -1,13 +1,16 @@
+--!strict
 local Server = {}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 local StarterGui = game:GetService("StarterGui")
+local Workspace = game:GetService("Workspace")
 
 local DeferredPromise = require(ReplicatedStorage.Shared.DeferredPromise)
-local GameConstants = require(ReplicatedStorage.Shared.Game.GameConstants)
+local UIConstants = require(ReplicatedStorage.Client.UI.UIConstants)
 local DebugUtil = require(ReplicatedStorage.Shared.Utils.DebugUtil)
-local PathsUtil = require(ReplicatedStorage.Shared.Utils.PathsUtil)
+local ModuleUtil = require(ReplicatedStorage.Shared.Utils.ModuleUtil)
+require(ReplicatedStorage.Shared.Remotes)
 
 local SERVICES = ServerStorage.Server
 local DEBUG = DebugUtil.isDebugging(false)
@@ -15,6 +18,7 @@ local DEBUG = DebugUtil.isDebugging(false)
 -------------------------------------------------------------------------------
 -- PUBLIC VARIABLES
 -------------------------------------------------------------------------------
+
 Server.Initialized = DeferredPromise.new()
 
 -------------------------------------------------------------------------------
@@ -23,7 +27,7 @@ Server.Initialized = DeferredPromise.new()
 
 local function prepareInterfacesFolder()
 	local folder = Instance.new("Folder")
-	folder.Name = GameConstants.InterfacesName
+	folder.Name = UIConstants.InterfacesName
 
 	for _, v in StarterGui:GetChildren() do
 		v.Parent = folder
@@ -47,14 +51,15 @@ local function moveToStorage(moving: Folder, destination: Instance)
 end
 
 local function loadModule(moduleScript)
-	return PathsUtil.timeRequire(moduleScript)
+	return ModuleUtil.timeRequire(moduleScript)
 end
 
 -------------------------------------------------------------------------------
 -- LOGIC
 -------------------------------------------------------------------------------
-moveToStorage(workspace.Assets.ReplicatedStorage, ReplicatedStorage)
-moveToStorage(workspace.Assets.ServerStorage, ServerStorage)
+
+moveToStorage(Workspace.Assets.ReplicatedStorage, ReplicatedStorage.Assets)
+moveToStorage(Workspace.Assets.ServerStorage, ServerStorage)
 
 task.delay(0, function()
 	local ping = os.clock()
@@ -74,15 +79,12 @@ task.delay(0, function()
 		loadModule(SERVICES.Cmdr.CmdrService),
 		loadModule(SERVICES.PromoCodeService),
 		loadModule(SERVICES.ItemService),
-
-		loadModule(SERVICES.RewardService),
-		loadModule(SERVICES.FriendsService),
 	}
 
 	for _, module in initializing do
 		local method = module.init
 		if method then
-			method()
+			(method :: any)()
 		end
 	end
 
@@ -90,18 +92,18 @@ task.delay(0, function()
 		task.spawn(function()
 			local method = module.start
 			if method then
-				method()
+				(method :: any)()
 			end
 		end)
 	end
 
 	Server.Initialized:invokeResolve()
 
-	print("Welcome to NEW_GAME")
+	print("Welcome to Crash")
 	print(string.format("✅ Server loaded in %.6f seconds", os.clock() - ping))
 
 	if DEBUG then
-		PathsUtil.printLoadTimes()
+		ModuleUtil.printLoadTimes()
 	end
 end)
 

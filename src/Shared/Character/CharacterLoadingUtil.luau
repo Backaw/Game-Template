@@ -5,8 +5,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local DebugUtil = require(ReplicatedStorage.Shared.Utils.DebugUtil)
 
-type Handler = (newCharacter: Model) -> ()
-type Callback = { Handler: Handler, Priority: number, Traceback: string? }
+type Handler<T...> = (newCharacter: Model, T...) -> ()
+type Callback<T...> = { Handler: Handler<T...>, Priority: number, Traceback: string? }
+export type Registration<T...> = (Handler<T...>, number?) -> () -> ()
 
 -------------------------------------------------------------------------------
 -- PRIVATE VARIABLES
@@ -17,14 +18,14 @@ local IS_STUDIO = RunService:IsStudio()
 
 local DEFAULT_PRIORITY = 0
 
-local loadCallbacks: { Callback } = {}
-local unloadCallbacks: { Callback } = {}
+local loadCallbacks: { Callback<> } = {}
+local unloadCallbacks: { Callback<> } = {}
 
 -------------------------------------------------------------------------------
 -- PRIVATE FUNCTIONS
 -------------------------------------------------------------------------------
 
-local function sortByPriority(a: Callback, b: Callback)
+local function sortByPriority(a: Callback<>, b: Callback<>)
 	return a.Priority > b.Priority
 end
 
@@ -43,35 +44,35 @@ function CharacterLoadingUtil.safeInvokeHandler(handler: (any, any) -> any, ...)
 	end
 end
 
-function CharacterLoadingUtil.getRegisteration()
-	return function(handler: Handler, priority: number?)
-		local callback: Callback = { Handler = handler, Priority = priority or DEFAULT_PRIORITY }
+function CharacterLoadingUtil.getRegistration<T..., U...>(): (Registration<T...>, Registration<U...>)
+	return function(handler: Handler<T...>, priority: number?)
+		local callback: Callback<T...> = { Handler = handler, Priority = priority or DEFAULT_PRIORITY }
 
 		if DEBUG then
 			callback.Traceback = debug.traceback()
 		end
 
-		table.insert(loadCallbacks, callback)
+		table.insert(loadCallbacks, callback :: Callback<>)
 		table.sort(loadCallbacks, sortByPriority)
 
 		return function()
-			local index = table.find(loadCallbacks, callback)
+			local index = table.find(loadCallbacks, callback :: Callback<>)
 			if index then
 				table.remove(loadCallbacks, index)
 			end
 		end
-	end, function(handler: Handler, priority: number?)
-		local callback: Callback = { Handler = handler, Priority = priority or DEFAULT_PRIORITY }
+	end, function<T...>(handler: Handler<T...>, priority: number?)
+		local callback: Callback<T...> = { Handler = handler, Priority = priority or DEFAULT_PRIORITY }
 
 		if DEBUG then
 			callback.Traceback = debug.traceback()
 		end
 
-		table.insert(unloadCallbacks, callback)
+		table.insert(unloadCallbacks, callback :: Callback<>)
 		table.sort(unloadCallbacks, sortByPriority)
 
 		return function()
-			local index = table.find(unloadCallbacks, callback)
+			local index = table.find(unloadCallbacks, callback :: Callback<>)
 			if index then
 				table.remove(unloadCallbacks, index)
 			end

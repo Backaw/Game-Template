@@ -323,7 +323,7 @@ function TableUtil.getProperties<K, V, P>(tbl: { [K]: any }, property: V): { [K]
 	return returning
 end
 
-function TableUtil.toArray<T>(tbl: { [any]: T }): { T }
+function TableUtil.toArray<T, L>(tbl: { [L]: T }): { T }
 	local returning = {}
 
 	for _, v in pairs(tbl) do

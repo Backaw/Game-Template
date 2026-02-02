@@ -4,20 +4,20 @@ local SquishyButton = {}
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 local Button = require(script.Parent.Button)
-local TweenUtil = require(ReplicatedStorage.Shared.Utils.TweenUtil)
-local UDim2Util = require(ReplicatedStorage.Shared.Utils.UDim2Util)
+local UDimUtil = require(ReplicatedStorage.Shared.Utils.UDimUtil)
+local Binder = require(ReplicatedStorage.Shared.Binder)
 
 export type SquishyButton = Button.Button & {
-	Anchor: (SquishyButton, parent: { GuiObject }, isParentAContainer: boolean?) -> GuiObject,
+	Anchor: (SquishyButton, parent: GuiObject, isParentAContainer: boolean?) -> GuiObject,
 	GetContainer: (SquishyButton) -> GuiObject,
-	SetHoverScalable: (SquishyButton, scaleable: GuiObject?, hoverScale: number?) -> (),
+	SetHoverScalable: (SquishyButton, hoverScaleable: GuiObject?, hoverScale: number?) -> (),
 }
 
 -------------------------------------------------------------------------------
 -- CONSTANTS
 -------------------------------------------------------------------------------
 
-local DEFAULT_PRESSED_SCALE = UDim2.fromScale(0.9, 0.8)
+local DEFAULT_PRESSED_SCALE = Vector2.new(0.9, 0.8)
 local DEFAULT_HOVER_SCALE = 1.1
 local ANIMATION_LENGTH = 0.05
 local TWEEN_INFO = TweenInfo.new(ANIMATION_LENGTH, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
@@ -26,26 +26,16 @@ local TWEEN_INFO = TweenInfo.new(ANIMATION_LENGTH, Enum.EasingStyle.Sine, Enum.E
 -- PUBLIC
 -------------------------------------------------------------------------------
 
-function SquishyButton.new(guiObject: GuiButton, objectToScale: GuiObject | nil, pressedScale: UDim2?, anchorPoint: Vector2?)
+function SquishyButton.new(guiObject: GuiButton, scaleOnClick: GuiObject?, squishScale: Vector2?, anchorPoint: Vector2?)
 	local squishyButton = Button.new(guiObject) :: SquishyButton
 
 	-------------------------------------------------------------------------------
 	-- PRIVATE MEMBERS
 	-------------------------------------------------------------------------------
-	objectToScale = objectToScale or guiObject
-	pressedScale = (pressedScale or DEFAULT_PRESSED_SCALE)
+
 	anchorPoint = (anchorPoint or Vector2.new(0.5, 0.5))
 
-	local initSize = objectToScale.Size
 	local container: GuiObject
-
-	-------------------------------------------------------------------------------
-	-- PRIVATE METHODS
-	-------------------------------------------------------------------------------
-
-	local function tweenPressedScale(scale: UDim2)
-		TweenUtil.bind(objectToScale :: GuiObject, "Squish", TweenService:Create(objectToScale :: GuiObject, TWEEN_INFO, { Size = scale }))
-	end
 
 	-------------------------------------------------------------------------------
 	-- PUBLIC METHODS
@@ -78,10 +68,6 @@ function SquishyButton.new(guiObject: GuiButton, objectToScale: GuiObject | nil,
 		guiObject.Position = UDim2.fromScale(0.5, 0.5) -- TODO: Should be multiplied by anchor point or something
 		guiObject.AnchorPoint = assert(anchorPoint, "Anchor point is required") :: Vector2
 
-		if objectToScale == guiObject then
-			initSize = guiObject.Size
-		end
-
 		return container
 	end
 
@@ -89,15 +75,15 @@ function SquishyButton.new(guiObject: GuiButton, objectToScale: GuiObject | nil,
 		return container or guiObject
 	end
 
-	function squishyButton:SetHoverScalable(scaleable, hoverScale)
-		scaleable = scaleable or squishyButton:GetGuiObject()
+	function squishyButton:SetHoverScalable(hoverScaleable, hoverScale)
+		hoverScaleable = hoverScaleable or squishyButton:GetGuiObject()
 		hoverScale = hoverScale or DEFAULT_HOVER_SCALE
 
 		local uiScale = Instance.new("UIScale")
-		uiScale.Parent = scaleable
+		uiScale.Parent = hoverScaleable
 
 		local function tweenHoverScale(scale: number)
-			TweenUtil.bind(uiScale, "Squish", TweenService:Create(uiScale, TWEEN_INFO, { Scale = scale }))
+			TweenService:Create(uiScale, TWEEN_INFO, { Scale = scale }):Play()
 		end
 
 		squishyButton.HoverStarted:Connect(function()
@@ -113,14 +99,23 @@ function SquishyButton.new(guiObject: GuiButton, objectToScale: GuiObject | nil,
 	-- Animations
 	-------------------------------------------------------------------------------
 
-	squishyButton.Pressed:Connect(function()
-		tweenPressedScale(UDim2Util.uDim2Multiply(initSize, pressedScale :: UDim2))
-	end)
+	do
+		local clickScaleable = scaleOnClick or guiObject
+		local clickScale = (squishScale or DEFAULT_PRESSED_SCALE)
 
-	squishyButton.Released:Connect(function()
-		tweenPressedScale(initSize)
-	end)
+		local function tweenPressedScale(scale: Vector2)
+			local initSize = Binder.bindFirst(clickScaleable, "InitSize", clickScaleable.Size)
+			TweenService:Create(clickScaleable :: GuiObject, TWEEN_INFO, { Size = UDimUtil.vectorMultiply(initSize, scale) }):Play()
+		end
 
+		squishyButton.Pressed:Connect(function()
+			tweenPressedScale(clickScale)
+		end)
+
+		squishyButton.Released:Connect(function()
+			tweenPressedScale(Vector2.one)
+		end)
+	end
 	return squishyButton
 end
 

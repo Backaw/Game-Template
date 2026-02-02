@@ -8,7 +8,7 @@ local currencies = {
 	Free = "Free",
 }
 
-local ingameCurrencies: { Currency } = { currencies.Cash }
+local ingameCurrencies: { [Currency]: true } = { [currencies.Cash] = true }
 
 -------------------------------------------------------------------------------
 -- PRIVATE VARIABLES

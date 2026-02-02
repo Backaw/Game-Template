@@ -1,19 +1,21 @@
 --!strict
 local InputConstants = {}
 
-export type MobileInputButton = {
-	ButtonReference: GuiButton,
-	InstantiationProps: {
+export type UIParams = {
+	Keybind: boolean?,
+	Mobile: GuiButton | {
 		Size: number,
 		Position: Vector2,
 		Icon: string,
 		AnchorPoint: AnchorPoint,
-	}?,
+	},
 	IsToggle: boolean?,
+	PassThrough: boolean?,
 }
-type AnchorPoint = keyof<typeof(InputConstants.MobileInputButtonAnchors)>
 
-InputConstants.MobileInputButtonAnchors = {
+type AnchorPoint = keyof<typeof(InputConstants.MobileButtonAnchorTypes)>
+
+InputConstants.MobileButtonAnchorTypes = {
 	Left = "Left",
 	Right = "Right",
 	Jump = "Jump",

@@ -3,15 +3,22 @@ local UIController = {}
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local StateMachine = require(ReplicatedStorage.Shared.StateMachine)
-local UIConstants = require(ReplicatedStorage.Client.UI.UIConstants)
-local StringUtil = require(ReplicatedStorage.Shared.Utils.StringUtil)
-local TableUtil = require(ReplicatedStorage.Shared.Utils.TableUtil)
-local DeferredPromise = require(ReplicatedStorage.Shared.DeferredPromise)
-local Promise = require(ReplicatedStorage.Shared.Promise)
-local UIUtil = require(ReplicatedStorage.Client.UI.Utils.UIUtil)
 
-type ScreenStateCallback = (({ any }?) -> any)?
+local Shared = ReplicatedStorage.Shared
+local Client = ReplicatedStorage.Client
+local DeferredPromise = require(Shared.DeferredPromise)
+local StringUtil = require(Shared.Utils.StringUtil)
+local UIConstants = require(Client.UI.UIConstants)
+local StateMachine = require(Shared.StateMachine)
+local TableUtil = require(Shared.Utils.TableUtil)
+local Promise = require(Shared.Promise)
+local UIUtil = require(Client.UI.Utils.UIUtil)
+
+-------------------------------------------------------------------------------
+-- TYPES
+-------------------------------------------------------------------------------
+
+type ScreenStateCallback = (({ any }?) -> ())?
 type ScreenStateCallbacks = {
 	Boot: ScreenStateCallback,
 	Shutdown: ScreenStateCallback,
@@ -22,20 +29,23 @@ type ScreenStateCallbacks = {
 -------------------------------------------------------------------------------
 -- PRIVATE MEMBERS
 -------------------------------------------------------------------------------
+
 local uiStateMachine =
 	StateMachine.new(TableUtil.toArray(UIConstants.States), UIConstants.InitialState :: UIConstants.State) :: StateMachine.StateMachine<UIConstants.State>
 local lastUiStateStack = uiStateMachine:GetStack()
 
-local screenStateCallbacks: { [string]: ScreenStateCallbacks } = {}
+local screenStateCallbacks: { [UIConstants.State]: ScreenStateCallbacks } = {}
 
 -------------------------------------------------------------------------------
 -- PUBLIC MEMBERS
 -------------------------------------------------------------------------------
+
 UIController.ScreenStateTransition = Promise.resolved() :: DeferredPromise.DeferredPromise
 
 -------------------------------------------------------------------------------
 -- PUBLIC FUNCTIONS
 -------------------------------------------------------------------------------
+
 function UIController.getStateMachine()
 	return uiStateMachine
 end
@@ -48,9 +58,11 @@ function UIController.registerScreenStateCallbacks(state: UIConstants.State, cal
 end
 
 function UIController.init()
-	for _, descendant in (ReplicatedStorage.Client.UI:GetDescendants()) do
-		if descendant:IsA("ModuleScript") and StringUtil.endsWith(descendant.Name, "Screen") then
-			local _ = require(descendant) :: any
+	for _, parent in { ReplicatedStorage.Client.UI, ReplicatedStorage.Client.UI } do
+		for _, descendant in parent:GetDescendants() do
+			if descendant:IsA("ModuleScript") and StringUtil.endsWith(descendant.Name, "Screen") then
+				local _ = require(descendant) :: any
+			end
 		end
 	end
 end
@@ -75,13 +87,17 @@ function UIController.openScreenState(state: UIConstants.State)
 	end
 end
 
-function UIController.resetToHUD()
+function UIController.resetToHUD(exceptions: { UIConstants.State }?)
+	if exceptions and table.find(exceptions, uiStateMachine:GetState()) then
+		return
+	end
+
 	if UIUtil.isStackHUDPermissive(uiStateMachine:GetStack()) then
 		uiStateMachine:PopUpToExclusive(UIConstants.States.HUD)
 	end
 end
 
-uiStateMachine:RegisterGlobalCallback(function(fromState, toState, data)
+uiStateMachine:RegisterGlobalCallback(function(fromState, toState)
 	local stack = uiStateMachine:GetStack()
 	UIController.ScreenStateTransition = DeferredPromise.new()
 
@@ -89,14 +105,14 @@ uiStateMachine:RegisterGlobalCallback(function(fromState, toState, data)
 	for state, callbacks in screenStateCallbacks do
 		if state == toState then
 			if not table.find(lastUiStateStack, state) and callbacks.Boot then
-				local success, err = pcall(callbacks.Boot :: any, data)
+				local success, err = pcall(callbacks.Boot :: any)
 				if not success then
 					warn(err)
 				end
 			end
 
 			if callbacks.Maximize then
-				local success, err = pcall(callbacks.Maximize :: any, data)
+				local success, err = pcall(callbacks.Maximize :: any)
 				if not success then
 					warn(err)
 				end
@@ -129,7 +145,11 @@ uiStateMachine:RegisterGlobalCallback(function(fromState, toState, data)
 end)
 
 do
-	Players.LocalPlayer.PlayerGui.Components.Enabled = false
+	-- 	require(ReplicatedStorage.Client.UI.Screens.DebugScreen).write("Version", game.PlaceVersion)
+	local playerGui = Players.LocalPlayer:FindFirstChild("PlayerGui")
+	if playerGui then
+		playerGui.Components.Enabled = false
+	end
 end
 
 return UIController

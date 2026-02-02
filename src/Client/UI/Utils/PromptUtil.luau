@@ -1,20 +1,29 @@
 --!strict
 local PromptUtil = {}
 
-local Lighting = game:GetService("Lighting")
-local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
-local Toggle = require(ReplicatedStorage.Shared.Toggle)
-local TweenUtil = require(ReplicatedStorage.Shared.Utils.TweenUtil)
-local Binder = require(ReplicatedStorage.Shared.Binder)
+local Workspace = game:GetService("Workspace")
+local Lighting = game:GetService("Lighting")
+local Players = game:GetService("Players")
+
+local Client = ReplicatedStorage.Client
+local Shared = ReplicatedStorage.Shared
+local UDimUtil = require(Shared.Utils.UDimUtil)
+local Toggle = require(Shared.Toggle)
+local Binder = require(Shared.Binder)
+local CameraController = require(Client.CameraController)
+
+-------------------------------------------------------------------------------
+-- CONSTANTS
+-------------------------------------------------------------------------------
 
 local ANIMATION_LENGTH = 0.2
 local PROMPT_ANIMATION_LENGTH = ANIMATION_LENGTH / 2
 
-local BINDING_KEY = "PromptToggle"
 local OPEN_BLUR_SIZE = 0
-local DEFAULT_BACKGROUND_TRANSPARENCY = 0.835
+local OPEN_FOV_MULTI = 1 -- 0.9
+local DEFAULT_BACKGROUND_TRANSPARENCY = 0.95
 
 -------------------------------------------------------------------------------
 -- PRIVATE VARIABLES
@@ -29,6 +38,16 @@ local backgroundScreen = Players.LocalPlayer.PlayerGui.Background
 local backgroundFrame = backgroundScreen.Frame
 
 local cosmeticsEnabled = Toggle.new(false)
+
+local camera = Workspace.CurrentCamera
+
+-------------------------------------------------------------------------------
+-- PRIVATE FUNCTIONS
+-------------------------------------------------------------------------------
+
+local getInitialSize = function(prompt: GuiObject)
+	return Binder.bindFirst(prompt, "InitialSize", prompt.Size)
+end
 
 -------------------------------------------------------------------------------
 -- PUBLIC FUNCTIONS
@@ -60,15 +79,14 @@ function PromptUtil.openBackground(frame: Frame?)
 		screen.Enabled = true
 	end
 
-	TweenUtil.bind(
+	local tween = TweenService:Create(
 		frame,
-		BINDING_KEY,
-		TweenService:Create(
-			frame,
-			TweenInfo.new(PROMPT_ANIMATION_LENGTH, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
-			{ BackgroundTransparency = initialTransparency }
-		)
+		TweenInfo.new(PROMPT_ANIMATION_LENGTH, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
+		{ BackgroundTransparency = initialTransparency }
 	)
+	tween:Play()
+
+	return tween
 end
 
 function PromptUtil.open(prompt: GuiObject, cosmetics: boolean?)
@@ -86,19 +104,19 @@ function PromptUtil.scaleOpen(prompt: GuiObject, cosmetics: boolean?, direction:
 		cosmeticsEnabled:Set(prompt, true)
 	end
 
-	local initialSize = Binder.bindFirst(prompt, "InitialSize", prompt.Size)
+	local initialSize = getInitialSize(prompt)
 	prompt.Size = UDim2.fromScale(0, 0)
 
 	prompt.Visible = true
-	TweenUtil.bind(
+
+	local tween = TweenService:Create(
 		prompt,
-		BINDING_KEY,
-		TweenService:Create(
-			prompt,
-			TweenInfo.new(PROMPT_ANIMATION_LENGTH, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-			{ Size = initialSize }
-		)
+		TweenInfo.new(PROMPT_ANIMATION_LENGTH, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+		{ Size = initialSize }
 	)
+	tween:Play()
+
+	return tween
 end
 
 function PromptUtil.slideOpen(prompt: GuiObject, cosmetics: boolean?, direction: UDim2?)
@@ -111,16 +129,19 @@ function PromptUtil.slideOpen(prompt: GuiObject, cosmetics: boolean?, direction:
 	local initialPosition = Binder.bindFirst(prompt, "InitialPosition", prompt.Position)
 	prompt.Position = initialPosition + direction
 
+	local initialSize = getInitialSize(prompt)
+	prompt.Size = UDimUtil.scalarMultiply(initialSize, 0.8)
+
 	prompt.Visible = true
-	TweenUtil.bind(
+
+	local tween = TweenService:Create(
 		prompt,
-		BINDING_KEY,
-		TweenService:Create(
-			prompt,
-			TweenInfo.new(PROMPT_ANIMATION_LENGTH, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
-			{ Position = initialPosition }
-		)
+		TweenInfo.new(PROMPT_ANIMATION_LENGTH, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
+		{ Position = initialPosition, Size = initialSize }
 	)
+	tween:Play()
+
+	return tween
 end
 
 function PromptUtil.slideClose(prompt: GuiObject, cosmetics: boolean?, direction: UDim2?)
@@ -133,19 +154,21 @@ function PromptUtil.slideClose(prompt: GuiObject, cosmetics: boolean?, direction
 	local initialPosition = Binder.bindFirst(prompt, "InitialPosition", prompt.Position)
 
 	prompt.Visible = true
-	TweenUtil.bind(
+
+	local tween = TweenService:Create(
 		prompt,
-		BINDING_KEY,
-		TweenService:Create(
-			prompt,
-			TweenInfo.new(PROMPT_ANIMATION_LENGTH, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-			{ Position = prompt.Position - direction }
-		),
-		function()
+		TweenInfo.new(PROMPT_ANIMATION_LENGTH, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+		{ Position = prompt.Position - direction }
+	)
+	tween:Play()
+	tween.Completed:Connect(function(playbackState)
+		if playbackState == Enum.PlaybackState.Completed then
 			prompt.Visible = false
 			prompt.Position = initialPosition
 		end
-	)
+	end)
+
+	return tween
 end
 
 function PromptUtil.close(prompt: GuiObject, cosmetics: boolean?)
@@ -164,27 +187,30 @@ backgroundScreen.Frame.BackgroundTransparency = DEFAULT_BACKGROUND_TRANSPARENCY
 
 cosmeticsEnabled.Changed:Connect(function(toggle)
 	if toggle then
-		TweenUtil.bind(
-			blurEffect,
-			BINDING_KEY,
-			TweenService:Create(
+		TweenService
+			:Create(
 				blurEffect,
 				TweenInfo.new(ANIMATION_LENGTH, Enum.EasingStyle.Linear, Enum.EasingDirection.Out),
 				{ Size = OPEN_BLUR_SIZE }
 			)
-		)
+			:Play()
+
+		TweenService:Create(
+			camera,
+			TweenInfo.new(ANIMATION_LENGTH, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+			{ FieldOfView = CameraController.DefaultFOV * OPEN_FOV_MULTI }
+		):Play()
 
 		PromptUtil.openBackground()
 	else
-		TweenUtil.bind(
-			blurEffect,
-			BINDING_KEY,
-			TweenService:Create(
-				blurEffect,
-				TweenInfo.new(ANIMATION_LENGTH, Enum.EasingStyle.Linear, Enum.EasingDirection.Out),
-				{ Size = 0 }
-			)
-		)
+		TweenService:Create(blurEffect, TweenInfo.new(ANIMATION_LENGTH, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), { Size = 0 })
+			:Play()
+
+		TweenService:Create(
+			camera,
+			TweenInfo.new(ANIMATION_LENGTH, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+			{ FieldOfView = CameraController.DefaultFOV }
+		):Play()
 
 		backgroundScreen.Enabled = false
 	end

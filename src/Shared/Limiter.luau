@@ -63,7 +63,7 @@ function Limiter.confirmToggle(scope: string, confirmationValue: any, value: any
 		confirmations[scope] = { Value = value, SetTime = os.clock() }
 	end
 
-	return true
+	return false
 end
 
 return Limiter

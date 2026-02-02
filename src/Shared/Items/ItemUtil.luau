@@ -12,12 +12,14 @@ local DataUtil = require(Shared.Data.DataUtil)
 local InstanceUtil = require(Shared.Utils.InstanceUtil)
 local RarityUtil = require(Shared.Rarity.RarityUtil)
 local CurrencyUtil = require(Shared.Currency.CurrencyUtil)
+local TableUtil = require(Shared.Utils.TableUtil)
+local DebugUtil = require(Shared.Utils.DebugUtil)
 
 -------------------------------------------------------------------------------
 -- PRIVATE VARIABLES
 -------------------------------------------------------------------------------
 
-local TESTING = false
+local TESTING = DebugUtil.isDebugging(false)
 
 local items: { [ItemConstants.ItemType]: { [string]: ItemConstants.Item } } = {}
 local defaultItems: { [ItemConstants.ItemType]: string } = {}
@@ -26,7 +28,7 @@ local defaultItems: { [ItemConstants.ItemType]: string } = {}
 -- PUBLIC VARIABLES
 -------------------------------------------------------------------------------
 
-function ItemUtil.getOwnedItemsAddressFromType(itemType: ItemConstants.ItemType)
+function ItemUtil.getOwnedItemsAddress(itemType: ItemConstants.ItemType)
 	-- ERROR: Invalid item type
 	if not ItemConstants.Types[itemType] then
 		error(("%s is an invalid item type"):format(itemType))
@@ -35,16 +37,47 @@ function ItemUtil.getOwnedItemsAddressFromType(itemType: ItemConstants.ItemType)
 	return "OwnedItems." .. itemType
 end
 
-function ItemUtil.getEquippedItemAddressFromType(itemType: ItemConstants.ItemType)
-	return assert(ItemConstants.Types[itemType] ~= nil, `{itemType} is an invalid item type`) and `EquippedItems.{itemType}`
+function ItemUtil.getOwnedItemAddress(itemType: ItemConstants.ItemType, itemName: string)
+	return `{ItemUtil.getOwnedItemsAddress(itemType)}.{itemName}`
 end
 
-function ItemUtil.getEquippedItem(itemType: ItemConstants.ItemType, player: Player?)
-	return DataUtil.get(player :: Player, ItemUtil.getEquippedItemAddressFromType(itemType))
+function ItemUtil.getOwnedItems(itemType: ItemConstants.ItemType, player: Player?): { string }
+	local store = DataUtil.get(player :: Player, ItemUtil.getOwnedItemsAddress(itemType))
+	return (if store then TableUtil.getKeys(store) else {}) :: { string }
+end
+
+function ItemUtil.getItemStore(itemType: ItemConstants.ItemType, itemName: string, player: Player?)
+	return DataUtil.get(player :: Player, ItemUtil.getOwnedItemAddress(itemType, itemName))
+end
+
+function ItemUtil.getItemStores(itemType: ItemConstants.ItemType, player: Player?)
+	return DataUtil.get(player :: Player, ItemUtil.getOwnedItemsAddress(itemType))
+end
+
+function ItemUtil.hasItem(itemType: ItemConstants.ItemType, itemName: string, player: Player?)
+	return ItemUtil.getItemStore(itemType, itemName, player) ~= nil
+end
+
+function ItemUtil.getEquippedItemsAddress(itemType: ItemConstants.ItemType)
+	assert(ItemConstants.Types[itemType] ~= nil, `{itemType} is an invalid item type`)
+	return `EquippedItems.{itemType}`
+end
+
+function ItemUtil.getEquippedItemAddress(itemType: ItemConstants.ItemType, slot: string)
+	return `{ItemUtil.getEquippedItemsAddress(itemType)}.{slot}`
+end
+
+function ItemUtil.getEquippedItems(itemType: ItemConstants.ItemType, player: Player?)
+	return DataUtil.get(player :: Player, ItemUtil.getEquippedItemsAddress(itemType))
+end
+
+function ItemUtil.getEquippedItem(itemType: ItemConstants.ItemType, slot: string, player: Player?)
+	return DataUtil.get(player :: Player, `{ItemUtil.getEquippedItemsAddress(itemType)}.{slot}`)
 end
 
 function ItemUtil.isItemEquipped(itemType: ItemConstants.ItemType, itemName: string, player: Player?)
-	return ItemUtil.getEquippedItem(itemType, player) == itemName
+	local equipped = ItemUtil.getEquippedItems(itemType, player)
+	return table.find(equipped, itemName)
 end
 
 function ItemUtil.getProductFromItem(item: ItemConstants.Item): ProductConstants.Product | nil
@@ -75,10 +108,6 @@ end
 
 function ItemUtil.getItems()
 	return items
-end
-
-function ItemUtil.hasItem(itemType: ItemConstants.ItemType, itemName: string, player: Player?)
-	return DataUtil.get(player :: Player, ("OwnedItems.%s.%s"):format(itemType, itemName)) ~= nil
 end
 
 function ItemUtil.getItem(itemType: ItemConstants.ItemType, itemName: string): ItemConstants.Item?
@@ -140,12 +169,13 @@ end
 function ItemUtil.getDefaultItem(itemType: ItemConstants.ItemType)
 	return defaultItems[itemType]
 end
+
 -------------------------------------------------------------------------------
 -- LOGIC
 -------------------------------------------------------------------------------
 
 for itemType in pairs(ItemConstants.Types) do
-	local moduleScript = InstanceUtil.findFirstDescendant(script.Parent, itemType .. "Items")
+	local moduleScript = InstanceUtil.findFirstDescendant(script.Parent, `#{itemType}Items`)
 	if not moduleScript then
 		if RunService:IsServer() then
 			warn(("%s items module not found"):format(itemType))

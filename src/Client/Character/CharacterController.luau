@@ -3,11 +3,21 @@ local CharacterController = {}
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local CharacterUtil = require(ReplicatedStorage.Shared.Character.CharacterUtil)
-local CharacterLoadingUtil = require(ReplicatedStorage.Shared.Character.CharacterLoadingUtil)
-local TransitionController = require(ReplicatedStorage.Client.UI.Transitions.TransitionController)
-local CameraController = require(ReplicatedStorage.Client.Camera.CameraController)
-local UIController = require(ReplicatedStorage.Client.UI.UIController)
+
+local Shared = ReplicatedStorage.Shared
+local Client = ReplicatedStorage.Client
+local CharacterLoadingUtil = require(Shared.Character.CharacterLoadingUtil)
+local CharacterUtil = require(Shared.Character.CharacterUtil)
+local Maid = require(Shared.Maid)
+local TransitionController = require(Client.UI.Transitions.TransitionController)
+local CameraController = require(Client.CameraController)
+local UIController = require(Client.UI.UIController)
+
+-------------------------------------------------------------------------------
+-- CONSTANTS
+-------------------------------------------------------------------------------
+
+local RESPAWN_TIME = Players.RespawnTime
 
 -------------------------------------------------------------------------------
 -- TYPES
@@ -20,12 +30,12 @@ type Callback = { Handler: Handler, Priority: number, Traceback: string? }
 -- PRIVATE VARIABLES
 -------------------------------------------------------------------------------
 
-local RESPAWN_TIME = Players.RespawnTime
-
 local player = Players.LocalPlayer
+local session = Maid.new()
 
 -------------------------------------------------------------------------------
 -- PUBLIC VARIABLES
+-------------------------------------------------------------------------------
 
 CharacterController.LoadPriorities = {}
 
@@ -37,7 +47,7 @@ local function loadCharacter(character: Model?)
 	if character then
 		local humanoid = character:WaitForChild("Humanoid") :: Humanoid
 
-		UIController.resetToHUD()
+		UIController.resetToHUD({})
 
 		CharacterLoadingUtil.invokeLoadCallbacks(character)
 
@@ -46,6 +56,8 @@ local function loadCharacter(character: Model?)
 			if not alive then
 				return
 			end
+
+			session:Cleanup()
 
 			alive = false
 			player.Character = nil
@@ -66,7 +78,12 @@ end
 -------------------------------------------------------------------------------
 -- PUBLIC METHODS
 -------------------------------------------------------------------------------
-CharacterController.registerLoadCallback, CharacterController.registerUnloadCallback = CharacterLoadingUtil.getRegisteration()
+
+CharacterController.registerLoadCallback, CharacterController.registerUnloadCallback = CharacterLoadingUtil.getRegistration()
+
+function CharacterController.getMaid()
+	return session
+end
 
 -- Not for spawning standing on something
 function CharacterController.teleportTo(spawnPoint: CFrame)

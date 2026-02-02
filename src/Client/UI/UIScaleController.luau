@@ -8,16 +8,21 @@ local DescendantLooper = require(ReplicatedStorage.Shared.DescendantLooper)
 local Limiter = require(ReplicatedStorage.Shared.Limiter)
 local Signal = require(ReplicatedStorage.Shared.Signal)
 
+-------------------------------------------------------------------------------
+-- CONSTANTS
+-------------------------------------------------------------------------------
+
 local BASE_RESOLUTION = Vector2.new(1920, 1080)
 
 local LIMITER_SCOPE = script.Name
 local UPDATE_COOLDOWN = 0.3
 
-local SCALE_MULT = 1
+local SCALE_MULT = 0.9
 
 -------------------------------------------------------------------------------
 -- PRIVATE MEMBERS
 -------------------------------------------------------------------------------
+
 local playerGui = Players.LocalPlayer.PlayerGui
 
 local camera = Workspace.Camera
@@ -29,12 +34,14 @@ local registeredInitProps: { [Instance]: { [string]: any } } = {}
 -------------------------------------------------------------------------------
 -- PUBLIC MEMBERS
 -------------------------------------------------------------------------------
+
 UIScaleController.IGNORE_ATTRIBUTE = "DoNotScale"
 UIScaleController.ScaleChanged = Signal.new() :: Signal.Signal<number>
 
 -------------------------------------------------------------------------------
 -- PRIVATE METHODS
 -------------------------------------------------------------------------------
+
 local function scaleInstance(instance: Instance)
 	local initProps = registeredInitProps[instance]
 
@@ -42,8 +49,10 @@ local function scaleInstance(instance: Instance)
 		local initParentSize = initProps.ParentSize
 
 		local parent = instance.Parent :: GuiObject
-		parent.Size =
-			UDim2.new(initParentSize.X.Scale / scale, initParentSize.X.Offset, initParentSize.Y.Scale / scale, initParentSize.Y.Offset)
+		if parent then
+			parent.Size =
+				UDim2.new(initParentSize.X.Scale / scale, initParentSize.X.Offset, initParentSize.Y.Scale / scale, initParentSize.Y.Offset)
+		end
 
 		instance.Scale = initProps.Scale * scale
 	end
@@ -56,14 +65,17 @@ local function registerInstance(instance: Instance)
 		return
 	end
 
-	local parent = instance.Parent
+	local parent = instance.Parent :: GuiObject
+	if not parent then
+		return
+	end
 
 	if instance:IsA("UICorner") then
 		initProps = { CornerRadius = instance.CornerRadius }
 	elseif instance:IsA("UIScale") and not UIScaleController.isObjectScaled(parent) then
-		if parent and parent:IsA("GuiObject") then
+		if parent:IsA("GuiObject") then
 			initProps = {
-				ParentSize = parent.Size,
+				ParentSize = (parent :: GuiObject).Size,
 				Scale = instance.Scale,
 			}
 		end

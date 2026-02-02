@@ -4,6 +4,7 @@ local DataConstants = {}
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local DataTypes = require(ReplicatedStorage.Shared.Data.DataTypes)
+local DebugUtil = require(ReplicatedStorage.Shared.Utils.DebugUtil)
 
 -------------------------------------------------------------------------------
 -- PRIVATE VARIABLES
@@ -27,7 +28,7 @@ DataConstants.Remotes = {
 	ClientReadyForData = Remotes.defineEvent("ClientReadyForData"),
 }
 
-DataConstants.SaveData = true
+DataConstants.DoNotSaveData = DebugUtil.isDebugging(false)
 DataConstants.Version = versions
 DataConstants.Leaderboards = leaderboards
 DataConstants.Leaderstats = leaderstats

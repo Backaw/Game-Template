@@ -38,6 +38,14 @@ function MathUtil.lerpNumber(a: number, b: number, alpha: number)
 	return a + (b - a) * alpha
 end
 
+function MathUtil.sigmoid(x: number, factor: number, clamp: boolean?)
+	local y = 1 / (1 + math.exp((-x + 0.5) * factor))
+	if clamp then
+		return math.clamp(y, 0, 1)
+	end
+	return y
+end
+
 function MathUtil.positiveOrNegative(): number
 	return math.random(1, 2) == 1 and 1 or -1
 end

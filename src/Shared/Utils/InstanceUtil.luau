@@ -1,10 +1,12 @@
 --!strict
 local InstanceUtil = {}
 
-function InstanceUtil.newNameParent(class: string, name: string, parent: Instance?): Instance
-	local instance = Instance.new(class)
-	instance.Name = name
-	instance.Parent = parent
+local CollectionService = game:GetService("CollectionService")
+
+function InstanceUtil.newNameParent<T>(instance: T, name: string, parent: Instance?)
+	local x = instance :: Instance
+	x.Name = name
+	x.Parent = parent
 
 	return instance
 end
@@ -25,53 +27,52 @@ function InstanceUtil.newProperties(class: string, props: { [string]: any }, chi
 end
 
 function InstanceUtil.onDestroyed(instance: Instance, callback: () -> ())
-	return instance.AncestryChanged:Connect(function(_, parent)
+	local connection1: RBXScriptConnection?
+	local connection2: RBXScriptConnection?
+
+	local function disconnect()
+		if connection1 and connection1.Connected then
+			connection1:Disconnect()
+		end
+		if connection2 and connection2.Connected then
+			connection2:Disconnect()
+		end
+	end
+
+	local function wrappedCallback()
+		callback()
+		disconnect()
+	end
+
+	-- Listen to both Destroying (fires when :Destroy() is called) and AncestryChanged (fires when Parent = nil)
+	connection1 = instance.Destroying:Once(wrappedCallback)
+	connection2 = instance.AncestryChanged:Connect(function(_, parent)
 		if not parent then
-			callback()
+			wrappedCallback()
 		end
 	end)
+
+	return disconnect
 end
 
-function InstanceUtil.findFirstDescendant(instance: Instance, searchingFor: string): Instance?
-	for _, descendant in (instance:GetDescendants()) do
-		if descendant.Name == searchingFor then
-			return descendant
-		end
+function InstanceUtil.findFirstDescendant(instance: Instance, selector: string): Instance?
+	for _, descendant in (instance:QueryDescendants(selector)) do
+		return descendant
 	end
-	return nil
+	return nil :: Instance?
 end
 
-function InstanceUtil.findFirstDescendantWhichIsA(instance: Instance, className: string): Instance?
-	for _, descendant in (instance:GetDescendants()) do
-		if descendant:IsA(className) then
-			return descendant
-		end
-	end
-	return nil
-end
+function InstanceUtil.waitForDescendant(instance, selector: string, timeout: number?): Instance?
+	local et = 0
+	timeout = timeout or 10
 
-function InstanceUtil.waitForDescendant(instance, searchingFor: string): Instance
 	local descendant
 	repeat
-		task.wait()
-		descendant = InstanceUtil.findFirstDescendant(instance, searchingFor)
-	until descendant
+		et += task.wait(0.1)
+		descendant = InstanceUtil.findFirstDescendant(instance, selector)
+	until descendant or et > timeout
 
-	return descendant :: Instance
-end
-
-function InstanceUtil.waitForFirstChildOfClass(instance: Instance, className: string)
-	local child = instance:FindFirstChildOfClass(className)
-	if child then
-		return child
-	end
-
-	repeat
-		instance.ChildAdded:Wait()
-		child = instance:FindFirstChildOfClass(className)
-	until child
-
-	return child :: Instance
+	return descendant
 end
 
 function InstanceUtil.getChildrenOfClass(parent: Instance, class: string, filterMethod: ((child: Instance) -> boolean)?)
@@ -108,12 +109,42 @@ function InstanceUtil.connectAttributeChangedSignal(instance: Instance, attribut
 	end)
 end
 
+function InstanceUtil.connectInstanceAddedByTag<T>(tag: string, handler: (instance: T) -> ()): RBXScriptConnection
+	for _, v: T in CollectionService:GetTagged(tag) do
+		task.spawn(handler, v)
+	end
+
+	return CollectionService:GetInstanceAddedSignal(tag):Connect(handler)
+end
+
+function InstanceUtil.connectChildAdded(instance: Instance, handler: (child: Instance) -> ()): RBXScriptConnection
+	for _, v in instance:GetChildren() do
+		task.spawn(handler, v)
+	end
+
+	return instance.ChildAdded:Connect(handler)
+end
+
+function InstanceUtil.connectInstanceRemovedByTag<T>(tag: string, handler: (instance: T) -> ()): RBXScriptConnection
+	return CollectionService:GetInstanceRemovedSignal(tag):Connect(handler)
+end
+
 function InstanceUtil.clearAttributes(instance: Instance, ignore: { string }?)
 	for i in instance:GetAttributes() do
 		if not ignore or not table.find(ignore, i) then
 			instance:SetAttribute(i, nil)
 		end
 	end
+end
+
+function InstanceUtil.setAttributesWithPrefix(instance: Instance, attributes: { [string]: any }, prefix: string)
+	for i, v in attributes do
+		instance:SetAttribute(`{prefix}_{i}`, v)
+	end
+end
+
+function InstanceUtil.getAttributeWithPrefix(instance: Instance, attribute: string, prefix: string)
+	return instance:GetAttribute(`{prefix}_{attribute}`)
 end
 
 return InstanceUtil

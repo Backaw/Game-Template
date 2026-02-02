@@ -11,7 +11,7 @@ local TemplateUtil = require(ReplicatedStorage.Shared.Utils.TemplateUtil)
 local CameraController = require(ReplicatedStorage.Client.Camera.CameraController)
 local BasePartUtil = require(ReplicatedStorage.Shared.Utils.BasePartUtil)
 local MathUtil = require(ReplicatedStorage.Shared.Utils.MathUtil)
-local UDim2Util = require(ReplicatedStorage.Shared.Utils.UDim2Util)
+local UDimUtil = require(ReplicatedStorage.Shared.Utils.UDimUtil)
 local DebugUtil = require(ReplicatedStorage.Shared.Utils.DebugUtil)
 
 local AXES = { "X", "Y" }
@@ -171,10 +171,10 @@ task.spawn(function()
 			-- The more zoomed in your are, the more centered the character bounds is
 			local position = camera:WorldToViewportPoint(characterCFrame.Position)
 			local fovWeight = 0.5 * CameraController.getThirdPersonZoomOutFactor()
-			characterBounds.Position = UDim2Util.scalarMultiply(
+			characterBounds.Position = UDimUtil.scalarMultiply(
 				UDim2.fromScale(position.X / viewportSize.X, position.Y / viewportSize.Y),
 				fovWeight
-			) + UDim2Util.scalarMultiply(UDim2.fromScale(0.5, 0.5), 1 - fovWeight)
+			) + UDimUtil.scalarMultiply(UDim2.fromScale(0.5, 0.5), 1 - fovWeight)
 
 			initalized = true
 		end

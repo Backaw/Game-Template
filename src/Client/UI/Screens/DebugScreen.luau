@@ -12,7 +12,6 @@ local DebugUtil = require(ReplicatedStorage.Shared.Utils.DebugUtil)
 local DISABLED = false
 
 local playerGui = Players.LocalPlayer.PlayerGui
-local HUD = playerGui.HUD
 local screen = playerGui.Debug
 local labels = screen.States
 local itemConstructor = TemplateUtil.constructor(labels.TEMP_STATE)
@@ -20,10 +19,7 @@ local itemConstructor = TemplateUtil.constructor(labels.TEMP_STATE)
 -- Register state
 do
 	if not DISABLED then
-		screen.Enabled = HUD.Enabled
-		HUD:GetPropertyChangedSignal("Enabled"):Connect(function()
-			screen.Enabled = HUD.Enabled
-		end)
+		screen.Enabled = true
 	else
 		screen.Enabled = false
 	end

@@ -13,7 +13,7 @@ local DebugUtil = require(ReplicatedStorage.Shared.Utils.DebugUtil)
 local TableUtil = require(ReplicatedStorage.Shared.Utils.TableUtil)
 local Snackbar = require(ReplicatedStorage.Client.UI.Components.Snackbar)
 local CurrencyController = require(ReplicatedStorage.Client.CurrencyController)
-local Confetti = require(ReplicatedStorage.Client.UI.Particles.Confetti)
+-- local Confetti = require(ReplicatedStorage.Client.UI.Particles.Confetti)
 
 -------------------------------------------------------------------------------
 -- CONSTANTS
@@ -36,8 +36,6 @@ type PriceTracker = { Price: CurrencyConstants.Price, Handler: (boolean) -> () }
 
 local debounces: { [ProductConstants.Product]: boolean? } = {}
 local marketplacePromptOpen = false
-
-local priceTrackers: { PriceTracker } = {}
 
 local orderedCashTiers = TableUtil.getKeys(ProductConstants.Products.Cash)
 table.sort(orderedCashTiers, function(yield1, yield2)
@@ -62,7 +60,7 @@ ProductController.ProductsUpdated = Signal.new() :: Signal.Signal<>
 
 local function onProductPurchased(product: ProductConstants.Product)
 	if ProductUtil.isPremium(product) then
-		Confetti.play(40, Confetti.Colors.Party, 2)
+		-- Confetti.play(40, Confetti.Colors.Party, 2)
 		Sounds.play("PremiumReward")
 	end
 
@@ -81,7 +79,7 @@ function ProductController.promptNeededCashTier(product: ProductConstants.Produc
 		for i = 2, #orderedCashTiers do
 			local yield = orderedCashTiers[i]
 			local yieldNumber = tonumber(yield)
-			if yieldNumber and yieldNumber >= price.Amount - CurrencyController.get(CurrencyConstants.Currencies.Cash) then
+			if yieldNumber and yieldNumber >= price.Amount - CurrencyController.Currencies["Cash"]:Get() then
 				cheapestTier = yield
 				break
 			end
@@ -110,18 +108,10 @@ function ProductController.hasGamePass(product: ProductConstants.Product)
 	return ProductUtil.hasGamePass(product)
 end
 
-function ProductController.trackAffordability(price: CurrencyConstants.Price, handler: (boolean) -> ()): (() -> ())?
-	if price.Currency == "Cash" then
-		handler(CurrencyController.get(price.Currency) >= price.Amount :: number)
-		local tracker: PriceTracker = { Price = price, Handler = handler }
-
-		table.insert(priceTrackers, tracker)
-		return function()
-			table.remove(priceTrackers, table.find(priceTrackers, tracker))
-		end
-	end
-
-	return nil
+function ProductController.trackAffordability(price: CurrencyConstants.Price, handler: (boolean) -> ())
+	return CurrencyController.Currencies[price.Currency]:Subscribe(function(amount)
+		handler(amount >= (price :: any).Amount)
+	end)
 end
 
 function ProductController.promptPurchase(
@@ -198,19 +188,6 @@ end)
 
 REMOTES.ProductGiven:OnClientEvent(function(productType: string, productName: string)
 	onProductPurchased(ProductUtil.getProduct(productType, productName))
-end)
-
-CurrencyController.Changed:Connect(function(currency: string, amount: number, lastAmount: number)
-	for _, tracker in ipairs(priceTrackers) do
-		if tracker.Price.Currency == currency then
-			local priceAmount = (tracker.Price :: any).Amount :: number
-			local couldAfford = lastAmount >= priceAmount
-			local canAfford = amount >= priceAmount
-			if couldAfford ~= canAfford then
-				tracker.Handler(canAfford)
-			end
-		end
-	end
 end)
 
 return ProductController

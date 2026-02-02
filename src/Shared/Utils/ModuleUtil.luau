@@ -1,5 +1,5 @@
 --!strict
-local PathsUtil = {}
+local ModuleUtil = {}
 
 local IS_SERVER = game:GetService("RunService"):IsServer()
 
@@ -7,23 +7,23 @@ type LoadTime = { Module: ModuleScript, Length: number }
 
 local loadTimes: { LoadTime } = {}
 
-function PathsUtil.initModules(initializing: { any })
+function ModuleUtil.initModules(initializing: { any })
 	for _, module in initializing do
-		local method = module.init
+		local method = module.init :: () -> ()
 		if method then
 			method()
 		end
 	end
 
 	for _, module in initializing do
-		local method = module.start
+		local method = module.start :: () -> ()
 		if method then
 			method()
 		end
 	end
 end
 
-function PathsUtil.timeRequire(moduleScript: ModuleScript)
+function ModuleUtil.timeRequire(moduleScript: ModuleScript)
 	local since = os.clock()
 
 	local module = require(moduleScript) :: any
@@ -32,7 +32,7 @@ function PathsUtil.timeRequire(moduleScript: ModuleScript)
 	return module
 end
 
-function PathsUtil.printLoadTimes()
+function ModuleUtil.printLoadTimes()
 	table.sort(loadTimes, function(a: LoadTime, b: LoadTime)
 		return a.Length > b.Length
 	end)
@@ -51,4 +51,4 @@ function PathsUtil.printLoadTimes()
 	warn("===")
 end
 
-return PathsUtil
+return ModuleUtil

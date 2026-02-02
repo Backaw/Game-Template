@@ -21,6 +21,7 @@ export type Signal<T...> = {
 	Fire: (self: Signal<T...>, T...) -> (),
 	Connect: (self: Signal<T...>, callback: (T...) -> ()) -> Connection<T...>,
 	Once: (self: Signal<T...>, callback: (T...) -> ()) -> Connection<T...>,
+	Subscribe: (self: Signal<T...>, callback: (T...) -> (), T...) -> Connection<T...>,
 	Wait: (self: Signal<T...>) -> thread,
 	Destroy: (self: Signal<T...>) -> (),
 }
@@ -88,6 +89,11 @@ function Signal.new<T...>(behaviourType: BehaviourType?): Signal<T...>
 	end
 
 	local function disconnect(connection: Connection<T...>)
+		if not connection.Connected then
+			warn("Attemping to disconnect a disconnected connection")
+			return
+		end
+
 		connection.Connected = false
 		local swappedConnection = ArrayUtil.swapbackRemove(connections, connection.Index)
 		swappedConnection.Index = connection.Index
@@ -124,6 +130,11 @@ function Signal.new<T...>(behaviourType: BehaviourType?): Signal<T...>
 		end)
 
 		return connection
+	end
+
+	function signal:Subscribe(callback: (T...) -> (), ...: T...)
+		task.spawn(callback, ...)
+		return signal:Connect(callback)
 	end
 
 	function signal:Wait()

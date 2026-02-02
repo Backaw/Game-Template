@@ -12,7 +12,6 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local DataFormatUtil = require(ReplicatedStorage.Shared.Data.DataFormatUtil)
 local Signal = require(ReplicatedStorage.Shared.Signal)
--- local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local TableUtil = require(ReplicatedStorage.Shared.Utils.TableUtil)
 local Promise = require(ReplicatedStorage.Shared.Promise)
 local GameUtil = require(ReplicatedStorage.Shared.Game.GameUtil)
@@ -25,6 +24,7 @@ local DataTypes = require(ReplicatedStorage.Shared.Data.DataTypes)
 -------------------------------------------------------------------------------
 -- PRIVATE MEMBERS
 -------------------------------------------------------------------------------
+
 local RECONCILIATION_TYPES = {
 	Pre = "Pre",
 	Post = "Post",
@@ -205,6 +205,7 @@ PlayersService.registerLoader(PlayersService.LoadJobs.PlayerData, function(playe
 			local function closeInitialization()
 				if clientReadyConnection then
 					clientReadyConnection:Disconnect()
+					clientReadyConnection = nil
 				end
 
 				clientsReadyForData[player] = nil
@@ -214,6 +215,8 @@ PlayersService.registerLoader(PlayersService.LoadJobs.PlayerData, function(playe
 				if profile then
 					DataConstants.Remotes.DataInitialized:FireClient(player, profile.Data)
 					profiles[player] = profile
+
+					-- print(profile.Data)
 
 					resolve()
 					closeInitialization()

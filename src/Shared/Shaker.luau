@@ -29,8 +29,8 @@ function Shaker.new(rotationConfig: Config?, positionConfig: Config?)
 	-- PRIVATE MEMBERS
 	-------------------------------------------------------------------------------
 
-	positionConfig = positionConfig or {} :: Config
-	rotationConfig = rotationConfig or {} :: Config
+	local finalPositionConfig: Config = positionConfig or {} :: Config
+	local finalRotationConfig: Config = rotationConfig or {} :: Config
 
 	local positionSpring: Spring.Spring
 	local rotationSpring: Spring.Spring
@@ -40,19 +40,51 @@ function Shaker.new(rotationConfig: Config?, positionConfig: Config?)
 	-------------------------------------------------------------------------------
 
 	function shaker:Update(dt: number): CFrame
-		local position = positionSpring:Update(Vector3.zero, dt)
-		local rotation = rotationSpring:Update(Vector3.zero, dt)
+		-- If force is zero, immediately reset and return identity
+		local posForce = if typeof(finalPositionConfig.Force) == "Vector3"
+			then finalPositionConfig.Force.Magnitude
+			else finalPositionConfig.Force
+		local rotForce = if typeof(finalRotationConfig.Force) == "Vector3"
+			then finalRotationConfig.Force.Magnitude
+			else finalRotationConfig.Force
+
+		if posForce == 0 and rotForce == 0 then
+			positionSpring:Reset(Vector3.zero)
+			rotationSpring:Reset(Vector3.zero)
+			return CFrame.identity
+		end
+
+		local position = if posForce == 0 then Vector3.zero else positionSpring:Update(Vector3.zero, dt)
+		local rotation = if rotForce == 0 then Vector3.zero else rotationSpring:Update(Vector3.zero, dt)
 
 		return CFrame.Angles((rotation :: any).X, (rotation :: any).Y, (rotation :: any).Z) + (position :: any)
 	end
 
 	function shaker:Impulse(rotImpulse: NumVect?, posImpulse: NumVect?, dontRandomize: boolean?)
 		if posImpulse then
-			positionSpring:Impulse(posImpulse * (dontRandomize and 1 or random:NextUnitVector()) :: any)
+			local impulse: Vector3
+			if typeof(posImpulse) == "Vector3" then
+				-- Preserve magnitude but randomize direction
+				local magnitude = posImpulse.Magnitude
+				impulse = if dontRandomize then posImpulse else random:NextUnitVector() * magnitude
+			else
+				-- Number: scale by random unit vector
+				impulse = if dontRandomize then Vector3.new(posImpulse, posImpulse, posImpulse) else random:NextUnitVector() * posImpulse
+			end
+			positionSpring:Impulse(impulse)
 		end
 
 		if rotImpulse then
-			rotationSpring:Impulse(rotImpulse * (dontRandomize and 1 or random:NextUnitVector()) :: any)
+			local impulse: Vector3
+			if typeof(rotImpulse) == "Vector3" then
+				-- Preserve magnitude but randomize direction
+				local magnitude = rotImpulse.Magnitude
+				impulse = if dontRandomize then rotImpulse else random:NextUnitVector() * magnitude
+			else
+				-- Number: scale by random unit vector
+				impulse = if dontRandomize then Vector3.new(rotImpulse, rotImpulse, rotImpulse) else random:NextUnitVector() * rotImpulse
+			end
+			rotationSpring:Impulse(impulse)
 		end
 	end
 
@@ -73,15 +105,15 @@ function Shaker.new(rotationConfig: Config?, positionConfig: Config?)
 	-- LOGIC
 	-------------------------------------------------------------------------------
 	for key, value in pairs(Shaker.Defaults :: { [string]: any }) do
-		for _, config in { positionConfig, rotationConfig } do
+		for _, config in { finalPositionConfig, finalRotationConfig } do
 			if (config :: any)[key] == nil then
 				(config :: any)[key] = value
 			end
 		end
 	end
 
-	rotationSpring = Spring.new(Vector3.zero, MASS, rotationConfig.Force, rotationConfig.Damping, rotationConfig.Speed)
-	positionSpring = Spring.new(Vector3.zero, MASS, positionConfig.Force, positionConfig.Damping, positionConfig.Speed)
+	rotationSpring = Spring.new(Vector3.zero, MASS, finalRotationConfig.Force, finalRotationConfig.Damping, finalRotationConfig.Speed)
+	positionSpring = Spring.new(Vector3.zero, MASS, finalPositionConfig.Force, finalPositionConfig.Damping, finalPositionConfig.Speed)
 
 	return shaker
 end

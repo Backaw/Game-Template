@@ -8,6 +8,7 @@ export type EmitterContainer = {
 	Emit: (EmitterContainer, attachmentCFrame: CFrame?) -> (),
 	GetContainer: (EmitterContainer) -> Instance,
 	GetAttachment: (EmitterContainer) -> Attachment,
+	Toggle: (EmitterContainer, toggle: boolean) -> (),
 	Destroy: (EmitterContainer) -> (),
 }
 export type Emitters = { [ParticleEmitter]: (number | NumberRange)? }
@@ -29,29 +30,32 @@ local sharedContainer: BasePart
 -------------------------------------------------------------------------------
 -- PUBLIC FUNCTIONS
 -------------------------------------------------------------------------------
-function EmitterContainer.getEmitterTemplatesFromAttributes(ancestor: Instance, ignore: { string }?, amountOverides: { [string]: number }?)
+
+function EmitterContainer.getEmitterTemplate(particles: { ParticleEmitter }, ignore: { string }?, amountOverides: { [string]: number }?)
 	local emitters: Emitters = {}
 
-	for _, emitter in pairs(ancestor:GetDescendants()) do
-		if emitter:IsA("ParticleEmitter") then
-			local name = emitter.Name
-			if ignore and table.find(ignore, name) then
-				continue
-			end
-
-			if amountOverides and amountOverides[name] then
-				emitters[emitter] = amountOverides[name]
-				continue
-			end
-
-			local emitCount = emitter:GetAttribute("EmitCount") :: number?
-			assert(typeof(emitCount) == "number", "EmitCount is not a number")
-
-			emitters[emitter] = emitCount or 0
+	for _, emitter in pairs(particles) do
+		local name = emitter.Name
+		if ignore and table.find(ignore, name) then
+			continue
 		end
+
+		if amountOverides and amountOverides[name] then
+			emitters[emitter] = amountOverides[name]
+			continue
+		end
+
+		local emitCount = emitter:GetAttribute("EmitCount") :: number?
+		assert(typeof(emitCount) == "number", "EmitCount is not a number")
+
+		emitters[emitter] = emitCount or 0
 	end
 
 	return emitters
+end
+
+function EmitterContainer.getEmitterTemplatesFromDescendants(ancestor: Instance, ignore: { string }?, amountOverides: { [string]: number }?)
+	return EmitterContainer.getEmitterTemplate(ancestor:QueryDescendants("ParticleEmitter") :: { ParticleEmitter }, ignore, amountOverides)
 end
 
 function EmitterContainer.scaleEmitter(emitter: ParticleEmitter, scale: number, speedScale: number?)
@@ -83,7 +87,7 @@ function EmitterContainer.scaleEmitter(emitter: ParticleEmitter, scale: number, 
 end
 
 function EmitterContainer.new(emitterTemplates: Emitters, container: Instance?, attachment: Attachment?, options: EmitterOptions?)
-	local emitterContainer = EmitterContainer :: EmitterContainer
+	local emitterContainer = {} :: EmitterContainer
 
 	-------------------------------------------------------------------------------
 	-- PRIVATE MEMBERS
@@ -138,6 +142,12 @@ function EmitterContainer.new(emitterTemplates: Emitters, container: Instance?, 
 		end
 
 		emitterContainer = nil
+	end
+
+	function emitterContainer:Toggle(toggle: boolean)
+		for emitter in emitters do
+			emitter.Enabled = toggle
+		end
 	end
 
 	-------------------------------------------------------------------------------

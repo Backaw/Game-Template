@@ -7,7 +7,6 @@ local UIConstants = {}
 
 local states = {
 	HUD = "HUD",
-	Settings = "Settings",
 }
 
 local hudPermissiveStates: { State } = {}
@@ -20,6 +19,7 @@ local interactionPermissiveStates: { State } = {
 -- PUBLIC VARIABLES
 -------------------------------------------------------------------------------
 
+UIConstants.InterfacesName = "__INTERFACES"
 UIConstants.InitialState = "Nothing"
 UIConstants.States = states :: { [State]: State }
 UIConstants.HUDPermissiveStates = hudPermissiveStates

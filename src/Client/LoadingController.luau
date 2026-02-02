@@ -4,8 +4,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
 
+local UIConstants = require(ReplicatedStorage.Client.UI.UIConstants)
 local DeferredPromise = require(ReplicatedStorage.Shared.DeferredPromise)
-local GameConstants = require(ReplicatedStorage.Shared.Game.GameConstants)
 local MathUtil = require(ReplicatedStorage.Shared.Utils.MathUtil)
 local TweenUtil = require(ReplicatedStorage.Shared.Utils.TweenUtil)
 local DebugUtil = require(ReplicatedStorage.Shared.Utils.DebugUtil)
@@ -17,6 +17,11 @@ local FULL_LOAD_LENGTH = 1
 local LOGO_ROTATION_BOUNDS = 2
 
 local DEBUG = DebugUtil.isDebugging(false)
+local DEBUG_FLAGS = DebugUtil.isDebuggingFlags({
+	PrintInitiatedTasks = false,
+	PrintGUI = true,
+	PrintCompletedTasks = false,
+}, DEBUG)
 
 -------------------------------------------------------------------------------
 -- PRIVATE MEMBERS
@@ -71,11 +76,15 @@ function LoadingController.start()
 		logoGradient.Offset = Vector2.new(0, EASE)
 
 		for i, task in tasks do
-			if DEBUG then
+			if DEBUG_FLAGS.PrintInitiatedTasks then
 				print(("Loading %s at %s"):format(taskIds[i], i))
 			end
 
 			task()
+
+			if DEBUG_FLAGS.PrintCompletedTasks then
+				print(("Loaded %s"):format(taskIds[i]))
+			end
 
 			if tween then
 				tween:Cancel()
@@ -128,7 +137,7 @@ end
 -------------------------------------------------------------------------------
 -- Let all UI load
 do
-	local interfaces = ReplicatedStorage:WaitForChild(GameConstants.InterfacesName)
+	local interfaces = ReplicatedStorage:WaitForChild(UIConstants.InterfacesName)
 
 	LoadingController.addTask("Waiting for GUI", function()
 		local loaded
@@ -142,14 +151,24 @@ do
 
 				local playerCounterpart = playerGui:FindFirstChild(screenGui.Name)
 				if not playerCounterpart then
+					if DEBUG_FLAGS.PrintGUI then
+						print("Missing ScreenGui: " .. screenGui.Name)
+					end
+
 					loaded = false
 					break
 				end
 
-				if #screenGui:GetDescendants() < #playerCounterpart:GetDescendants() then
+				--[[
+				if #screenGui:GetDescendants() > #playerCounterpart:GetDescendants() then
+					if DEBUG_FLAGS.PrintGUI then
+						print("ScreenGui has less descendants than expected: " .. screenGui.Name)
+					end
+
 					loaded = false
 					break
 				end
+				]]
 			end
 
 			task.wait(0.2)

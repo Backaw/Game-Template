@@ -6,6 +6,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local LoadingController = require(ReplicatedStorage.Client.LoadingController)
 local GameConstants = require(ReplicatedStorage.Shared.Game.GameConstants)
+local UIConstants = require(ReplicatedStorage.Client.UI.UIConstants)
+require(ReplicatedStorage.Shared.Remotes)
 
 local CONTROLLERS = ReplicatedStorage.Client
 
@@ -19,7 +21,7 @@ local INITIALIZING = {
 	CONTROLLERS.ItemController,
 	CONTROLLERS.InteractionController,
 	CONTROLLERS.Character.CharacterController,
-	CONTROLLERS.Camera.CameraController,
+	CONTROLLERS.CameraController,
 
 	-- UI
 	CONTROLLERS.UI.UIScaleController,
@@ -45,7 +47,7 @@ Client.Initialized = LoadingController.Loaded
 -------------------------------------------------------------------------------
 
 local function cloneInterfaces()
-	local interfacesFolder = ReplicatedStorage:WaitForChild(GameConstants.InterfacesName)
+	local interfacesFolder = ReplicatedStorage:WaitForChild(UIConstants.InterfacesName)
 
 	for _, v in interfacesFolder:GetChildren() do
 		v:Clone().Parent = player.PlayerGui

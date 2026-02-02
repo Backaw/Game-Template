@@ -69,15 +69,11 @@ function Vector3Util.manhattanDistance(a: Vector3, b: Vector3, distance: number?
 end
 
 --- Distance is optional. No distance = number result only.
-function Vector3Util.squaredDistance(a: Vector3, b: Vector3, distance: number?)
+function Vector3Util.squaredDistance(a: Vector3, b: Vector3)
 	local dist = a - b
 	local distSqrd = (dist.X * dist.X) + (dist.Y * dist.Y) + (dist.Z * dist.Z)
 
-	if distance then
-		return distSqrd <= distance * distance
-	else
-		return math.sqrt(distSqrd)
-	end
+	return math.sqrt(distSqrd)
 end
 
 function Vector3Util.isPointInBounds(point: Vector3, boundsPosiiton: Vector3, boundsSize: Vector3): boolean

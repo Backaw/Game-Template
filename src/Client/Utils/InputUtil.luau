@@ -4,38 +4,48 @@ local InputUtil = {}
 local GuiService = game:GetService("GuiService")
 local UserInputService = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Signal = require(ReplicatedStorage.Shared.Signal)
 local Maid = require(ReplicatedStorage.Shared.Maid)
-
-export type Input = Enum.KeyCode | Enum.UserInputType | nil
+local AtomicValue = require(ReplicatedStorage.Shared.AtomicValue)
 
 -------------------------------------------------------------------------------
--- PRIVATE VARIABLES
+-- CONSTANTS
 -------------------------------------------------------------------------------
 
-local devices = {
+local DEVICES = {
 	Console = "Console",
 	Mobile = "Mobile",
 	Desktop = "Desktop",
 }
 
-local inputTypes = {
+local INPUT_TYPES = {
 	Keyboard = "Keyboard",
 	Gamepad = "Gamepad",
 	Touch = "Touch",
 	Unknown = "Unknown",
 }
 
-local currentInputType: InputType = inputTypes.Unknown
+-------------------------------------------------------------------------------
+-- TYPE EXPORTS
+-------------------------------------------------------------------------------
+
+export type Input = Enum.KeyCode | Enum.UserInputType | nil
+export type InputType = keyof<typeof(INPUT_TYPES)>
+export type Device = keyof<typeof(DEVICES)>
+
+-------------------------------------------------------------------------------
+-- PRIVATE VARIABLES
+-------------------------------------------------------------------------------
+
+local currentInputType = AtomicValue.new(INPUT_TYPES.Unknown)
 
 -------------------------------------------------------------------------------
 -- PUBLIC VARIABLES
 -------------------------------------------------------------------------------
 
-InputUtil.Devices = devices :: { [Device]: Device }
-InputUtil.InputTypes = inputTypes :: { [InputType]: InputType }
+InputUtil.Devices = DEVICES :: { [Device]: Device }
+InputUtil.InputTypes = INPUT_TYPES :: { [InputType]: InputType }
 
-InputUtil.InputTypeChanged = Signal.new() :: Signal.Signal<InputType, InputType>
+InputUtil.CurrentInputType = currentInputType:RestrictedAccess()
 
 -------------------------------------------------------------------------------
 -- PRIVATE FUNCTIONS
@@ -87,15 +97,6 @@ end
 function InputUtil.isPrimaryClickInput()
 	local lastInputType = UserInputService:GetLastInputType()
 	return lastInputType == Enum.UserInputType.MouseButton1 or lastInputType == Enum.UserInputType.Touch
-end
-
-function InputUtil.getInputType()
-	return currentInputType
-end
-
-function InputUtil.onInputTypeChanged(handler: (InputType, InputType) -> ())
-	handler(currentInputType)
-	return InputUtil.InputTypeChanged:Connect(handler)
 end
 
 function InputUtil.listenToKeyInput(
@@ -168,40 +169,35 @@ end
 -- LOGIC
 -------------------------------------------------------------------------------
 do
+	do
+		-- Determine a default input category based on the current peripherals
+		local lastInputType = UserInputService:GetLastInputType()
+		local lastInputCategory = getCategoryOfInputType(lastInputType)
+		local newInputType: InputType
+		if lastInputCategory ~= InputUtil.InputTypes.Unknown then
+			newInputType = lastInputCategory
+		else
+			if UserInputService.KeyboardEnabled and UserInputService.MouseEnabled then
+				newInputType = InputUtil.InputTypes.Keyboard
+			elseif UserInputService.TouchEnabled then
+				newInputType = InputUtil.InputTypes.Touch
+			elseif UserInputService.GamepadEnabled then
+				newInputType = InputUtil.InputTypes.Gamepad
+			else
+				warn("No input devices detected!")
+				newInputType = "Unknown"
+			end
+		end
+
+		currentInputType:Set(newInputType)
+	end
+
 	UserInputService.LastInputTypeChanged:Connect(function(inputType: Enum.UserInputType)
 		local inputCategory = getCategoryOfInputType(inputType)
-		if inputCategory ~= InputUtil.InputTypes.Unknown and inputCategory ~= currentInputType then
-			local lastInputType = currentInputType
-			currentInputType = inputCategory
-			InputUtil.InputTypeChanged:Fire(currentInputType :: InputType, lastInputType :: InputType)
+		if inputCategory ~= InputUtil.InputTypes.Unknown then
+			currentInputType:Set(inputCategory)
 		end
 	end)
-
-	-- Determine a default input category based on the current peripherals
-	local lastInputType = UserInputService:GetLastInputType()
-	local lastInputCategory = getCategoryOfInputType(lastInputType)
-
-	if lastInputCategory ~= InputUtil.InputTypes.Unknown then
-		currentInputType = lastInputCategory
-	else
-		if UserInputService.KeyboardEnabled and UserInputService.MouseEnabled then
-			currentInputType = InputUtil.InputTypes.Keyboard
-		elseif UserInputService.TouchEnabled then
-			currentInputType = InputUtil.InputTypes.Touch
-		elseif UserInputService.GamepadEnabled then
-			currentInputType = InputUtil.InputTypes.Gamepad
-		else
-			warn("No input devices detected!")
-			currentInputType = "Unknown"
-		end
-	end
 end
-
--------------------------------------------------------------------------------
--- TYPE EXPORTS
--------------------------------------------------------------------------------
-
-export type InputType = keyof<typeof(inputTypes)>
-export type Device = keyof<typeof(devices)>
 
 return InputUtil

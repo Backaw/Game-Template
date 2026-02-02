@@ -1,14 +1,39 @@
 --!strict
 local DebugUtil = {}
 
+local Debris = game:GetService("Debris")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
+local UserInputService = game:GetService("UserInputService")
+
 local GameUtil = require(ReplicatedStorage.Shared.Game.GameUtil)
 local MathUtil = require(ReplicatedStorage.Shared.Utils.MathUtil)
 local TemplateUtil = require(ReplicatedStorage.Shared.Utils.TemplateUtil)
 
+-------------------------------------------------------------------------------
+-- PRIVATE VARIABLES
+-------------------------------------------------------------------------------
+
+local keyBinds: { [Enum.KeyCode]: true } = {}
+
+-------------------------------------------------------------------------------
+-- PRIVATE FUNCTIONS
+-------------------------------------------------------------------------------
+
 function DebugUtil.isDebugging(toggle: boolean, secondaryFactor: boolean?)
 	return if GameUtil.isLive() then false else (toggle and (if secondaryFactor ~= nil then secondaryFactor else true))
+end
+
+function DebugUtil.isDebuggingFlags<T>(flags: T, secondaryFactor: boolean?): { [keyof<T>]: boolean }
+	for flag, value in flags :: { [string]: boolean } do
+		(flags :: { [string]: boolean })[flag] = DebugUtil.isDebugging(value, secondaryFactor)
+	end
+
+	return flags
+end
+
+function DebugUtil.canThrowDebugErrors()
+	return not GameUtil.isLive()
 end
 
 function DebugUtil.previewCFrame(cframe: CFrame, size: Vector3?, color: Color3?, shape: Enum.PartType?)
@@ -37,6 +62,10 @@ function DebugUtil.pointerGizmo(parent: BasePart, color: Color3?, length: number
 	gizmo.Visible = true
 
 	return gizmo
+end
+
+function DebugUtil.debris(instance: Instance, time: number)
+	Debris:AddItem(instance, time)
 end
 
 function DebugUtil.truncateVector3(vector: Vector3, precision: number)
@@ -105,9 +134,30 @@ function DebugUtil.stateDisplay(constructor: TemplateUtil.Constructor<TextLabel>
 	return display
 end
 
+function DebugUtil.onKeyDown(key: Enum.KeyCode, callback: () -> ())
+	if keyBinds[key] then
+		warn("Key already bound: ", key)
+		return
+	end
+
+	keyBinds[key] = true
+
+	if not GameUtil.isLive() then
+		UserInputService.InputBegan:Connect(function(input, gameProcessed)
+			if gameProcessed then
+				return
+			end
+
+			if input.KeyCode == key then
+				callback()
+			end
+		end)
+	end
+end
 -------------------------------------------------------------------------------
--- COMMENT
+-- EXPORT TYPES
 -------------------------------------------------------------------------------
+
 export type StateDisplay = {
 	write: (label: string, value: any, highlight: Color3?) -> (),
 	writeNumber: (label: string, value: number?, highlight: Color3?) -> (),

@@ -1,6 +1,5 @@
 local GameConstants = {}
 
-GameConstants.InterfacesName = "__INTERFACES"
 GameConstants.Places = {
 	QA = 0,
 	Live = 0,

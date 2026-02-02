@@ -4,62 +4,69 @@ local Signal = require(ReplicatedStorage.Shared.Signal)
 
 local StateMachine = {}
 
-type State = {
-	Name: string,
-	Run: (State) -> (),
-	Stop: (State) -> (),
+type State<S> = {
+	Name: S,
+	Run: (State<S>, string?) -> (),
+	Stop: (State<S>) -> (),
 }
-type Condition = {
-	TransitionState: string,
+type Condition<S> = {
+	TransitionState: S,
 	Evaluate: (number) -> boolean,
+}
+
+export type StateMachine<S, C> = {
+	Changed: Signal.Signal<S?, S?>,
+	BindState: (StateMachine<S, C>, S, { C }, (S?) -> ()?, (number) -> ()?, Handler) -> (),
+	RegisterCondition: (StateMachine<S, C>, C, S, (number) -> boolean) -> (),
+	SwitchState: (StateMachine<S, C>, S) -> (),
+	Start: (StateMachine<S, C>, S) -> (),
+	Stop: (StateMachine<S, C>) -> (),
+	Update: (StateMachine<S, C>, number) -> S?,
+	GetState: (StateMachine<S, C>) -> S?,
 }
 
 export type Handler = ((number?) -> ()) | nil
 
-function StateMachine.new(stateNames: { string }, conditionNames: { string }, doDebug: boolean?)
-	local stateMachine = {}
+function StateMachine.new<S, C>(stateNames: { S }, conditionNames: { C }, doDebug: boolean?)
+	local stateMachine = {} :: StateMachine<S, C>
 
 	-------------------------------------------------------------------------------
 	-- PRIVATE VARIABLES
 	-------------------------------------------------------------------------------
-	local states: { [string]: State } = {}
-	local conditions: { [string]: Condition } = {}
+	local states: { [S]: State<S> } = {}
+	local conditions: { [C]: Condition<S> } = {}
 
-	local stateToConditions: { [string]: { string } } = {}
-	local conditionsToTransitionState: { [string]: string } = {}
+	local stateToConditions: { [S]: { C } } = {}
+	local conditionsToTransitionState: { [C]: S } = {}
 
-	local activeState: State?, onUpdate: ((number) -> ()) | nil
+	local activeState: State<S>?, onUpdate: ((number) -> ()) | nil
 
 	-------------------------------------------------------------------------------
 	-- PUBLIC VARIABLES
 	-------------------------------------------------------------------------------
-	stateMachine.Changed = Signal.new() :: Signal.Signal<string?, string?>
+	stateMachine.Changed = Signal.new() :: Signal.Signal<S?, S?>
 
 	-------------------------------------------------------------------------------
 	-- PRIVATE FUNCTIONS
 	-------------------------------------------------------------------------------
-	local function verifyStateValidity(name: string)
+
+	local function verifyStateValidity(name: S)
 		if not table.find(stateNames, name) then
-			error(("%s is not a valid state"):format(name))
+			error(("%s is not a valid state"):format(tostring(name)))
 		end
 	end
 
-	local function verifyConditionValidity(name: string)
+	local function verifyConditionValidity(name: C)
 		if not table.find(conditionNames, name) then
-			error(("%s is not a valid condition"):format(name))
+			error(("%s is not a valid condition"):format(tostring(name)))
 		end
 	end
 
 	-------------------------------------------------------------------------------
 	-- PUBLIC FUNCTIONS
 	-------------------------------------------------------------------------------
-	function stateMachine:BindState(
-		name: string,
-		linkedConditions: { string },
-		initHandler: Handler,
-		actionHandler: Handler,
-		closeHandler: Handler
-	)
+
+	function stateMachine:BindState(name, linkedConditions, initHandler, actionHandler, closeHandler)
 		verifyStateValidity(name)
 
 		stateToConditions[name] = linkedConditions
@@ -68,10 +75,11 @@ function StateMachine.new(stateNames: { string }, conditionNames: { string }, do
 			--check conditions
 			for _, conditionName in pairs(linkedConditions) do
 				local condition = conditions[conditionName]
-				--print("Checking " .. condition.Name)
+				-- ("Checking " .. tostring(conditionName))
+
 				if condition.Evaluate(dt) then
 					if doDebug then
-						warn(("%s is true. Switching state to %s "):format(conditionName, condition.TransitionState))
+						warn(("%s is true. Switching state to %s "):format(tostring(conditionName), tostring(condition.TransitionState)))
 					end
 
 					stateMachine:SwitchState(condition.TransitionState)
@@ -87,7 +95,7 @@ function StateMachine.new(stateNames: { string }, conditionNames: { string }, do
 
 		states[name] = {
 			Name = name,
-			Run = function()
+			Run = function(_, lastStateName: string?)
 				if onUpdate == run then
 					error("No bueno")
 				end
@@ -95,7 +103,7 @@ function StateMachine.new(stateNames: { string }, conditionNames: { string }, do
 				onUpdate = run
 
 				if initHandler then
-					initHandler()
+					initHandler(lastStateName)
 				end
 			end,
 			Stop = function()
@@ -112,7 +120,7 @@ function StateMachine.new(stateNames: { string }, conditionNames: { string }, do
 		}
 	end
 
-	function stateMachine:RegisterCondition(name: string, transitionState: string, evaluate: (number) -> boolean)
+	function stateMachine:RegisterCondition(name: C, transitionState: S, evaluate: (number) -> boolean)
 		verifyConditionValidity(name)
 		verifyStateValidity(transitionState)
 
@@ -124,7 +132,7 @@ function StateMachine.new(stateNames: { string }, conditionNames: { string }, do
 		}
 	end
 
-	function stateMachine:SwitchState(name: string)
+	function stateMachine:SwitchState(name)
 		local lastStateName
 		if activeState then
 			lastStateName = activeState.Name
@@ -138,17 +146,45 @@ function StateMachine.new(stateNames: { string }, conditionNames: { string }, do
 
 		-- Ordering matters here
 		stateMachine.Changed:Fire(name, lastStateName)
-		newState:Run()
+		newState:Run(lastStateName)
 	end
 
-	function stateMachine:Start(startState: string)
+	function stateMachine:Start(startState)
+		verifyStateValidity(startState)
+
 		if doDebug then
 			-- Prevent any loops
 			for state, linkedConditions in pairs(stateToConditions) do
 				for _, condition in pairs(linkedConditions) do
 					if conditionsToTransitionState[condition] == state then
-						warn(("Cyclic relationship between state %s and condition %s"):format(state, condition))
+						warn(("Cyclic relationship between state %s and condition %s"):format(tostring(state), tostring(condition)))
 					end
+				end
+			end
+
+			-- Ensure every state's linked conditions are registered
+			for state, linkedConditions in pairs(stateToConditions) do
+				for _, condition in pairs(linkedConditions) do
+					if not conditions[condition] then
+						error(
+							("Condition %s (used by state %s) is not registered; call RegisterCondition before Start"):format(
+								tostring(condition),
+								tostring(state)
+							)
+						)
+					end
+				end
+			end
+
+			-- Ensure every condition's transition target state is bound
+			for condition, transitionState in pairs(conditionsToTransitionState) do
+				if not states[transitionState] then
+					error(
+						("Condition %s transitions to state %s which is not bound; call BindState before Start"):format(
+							tostring(condition),
+							tostring(transitionState)
+						)
+					)
 				end
 			end
 		end
@@ -168,6 +204,8 @@ function StateMachine.new(stateNames: { string }, conditionNames: { string }, do
 		if onUpdate then
 			onUpdate(dt)
 		end
+
+		return if activeState then activeState.Name else nil
 	end
 
 	function stateMachine:GetState()
