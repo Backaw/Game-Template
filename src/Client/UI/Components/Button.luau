@@ -13,34 +13,50 @@ local InputUtil = require(ReplicatedStorage.Client.Utils.InputUtil)
 local UIUtil = require(ReplicatedStorage.Client.UI.Utils.UIUtil)
 local UIController = require(ReplicatedStorage.Client.UI.UIController)
 
+-------------------------------------------------------------------------------
+-- CONSTANTS
+-------------------------------------------------------------------------------
+
 local CLICK_COOLDOWN = 0.05
+
+-------------------------------------------------------------------------------
+-- TYPES
+-------------------------------------------------------------------------------
+
+export type Button<T> = Component.Component & {
+	Pressed: Signal.Signal<boolean>,
+	Released: Signal.Signal<>,
+	HoverStarted: Signal.Signal<boolean>,
+	HoverEnded: Signal.Signal<boolean?>,
+	Clicked: Signal.Signal<boolean>,
+	Mount: (Button<T>, parent: GuiObject?, hideBackground: boolean?) -> (),
+	RestrictToState: (Button<T>, state: string) -> (),
+	GetGuiObject: (Button<T>) -> T,
+	Toggle: (Button<T>, toggle: boolean) -> (),
+	IsHovering: (Button<T>) -> boolean,
+	EnableClickIndicator: (Button<T>) -> (),
+	Destroy: (Button<T>, keepButton: boolean?) -> (),
+}
+
+-------------------------------------------------------------------------------
+-- PRIVATE VARIABLES
+-------------------------------------------------------------------------------
 
 local playerGui = Players.LocalPlayer:FindFirstChild("PlayerGui")
 local uiStateMachine = UIController.getStateMachine()
 
-export type Button = Component.Component & {
-	Pressed: Signal.Signal<>,
-	Released: Signal.Signal<>,
-	HoverStarted: Signal.Signal<>,
-	HoverEnded: Signal.Signal<>,
-	Clicked: Signal.Signal<>,
-	Mount: (Button, parent: GuiObject?, hideBackground: boolean?) -> (),
-	RestrictToState: (Button, state: string) -> (),
-	GetGuiObject: (Button) -> GuiButton,
-	IsHovering: (Button) -> boolean,
-	EnableClickIndicator: (Button) -> (),
-	Destroy: (Button, keepButton: boolean?) -> (),
-}
-
 -------------------------------------------------------------------------------
 -- PUBLIC FUNCTIONS
 -------------------------------------------------------------------------------
-function Button.new(guiObject: GuiButton, mute: boolean?)
-	local button = Component.new() :: Button
+function Button.new<T>(buttonUI: T, mute: boolean?)
+	local button = Component.new() :: Button<T>
 
 	-------------------------------------------------------------------------------
 	-- PRIVATE VARIABLES
 	-------------------------------------------------------------------------------
+
+	local guiButton = buttonUI :: GuiButton
+
 	local clickIndicatorEnabled = true
 
 	local hovering: boolean = false
@@ -50,6 +66,7 @@ function Button.new(guiObject: GuiButton, mute: boolean?)
 	local stateRestriction: string?
 
 	local maid = button:GetMaid()
+	local isEnabled = true
 
 	-------------------------------------------------------------------------------
 	-- PUBLIC VARIABLES
@@ -57,21 +74,34 @@ function Button.new(guiObject: GuiButton, mute: boolean?)
 	button.Pressed = Signal.new()
 	button.Released = Signal.new()
 	button.HoverStarted = Signal.new()
-	button.HoverEnded = Signal.new()
+	button.HoverEnded = Signal.new() :: Signal.Signal<boolean?>
 	button.Clicked = Signal.new()
+
+	-------------------------------------------------------------------------------
+	-- PRIVATE FUNCTIONS
+	-------------------------------------------------------------------------------
+
+	local function closeHover(disabling: boolean?)
+		if hovering then
+			hovering = false
+
+			button.HoverEnded:Fire(disabling)
+		end
+	end
 
 	-------------------------------------------------------------------------------
 	-- PUBLIC FUNCTIONS
 	-------------------------------------------------------------------------------
+
 	function button:Mount(parent, hideBackground)
 		if hideBackground and parent then
 			parent.BackgroundTransparency = 1
 		end
 
-		guiObject.Parent = parent
+		guiButton.Parent = parent
 
 		-- TODO: This should disconnect previous connections if you're mounting else where
-		local ancestor = guiObject
+		local ancestor = guiButton
 		while ancestor :: Instance ~= playerGui :: Instance do
 			if ancestor:IsA("GuiObject") then
 				local instance = ancestor
@@ -92,7 +122,7 @@ function Button.new(guiObject: GuiButton, mute: boolean?)
 	end
 
 	function button:GetGuiObject()
-		return guiObject
+		return guiButton
 	end
 
 	function button:IsHovering()
@@ -103,26 +133,38 @@ function Button.new(guiObject: GuiButton, mute: boolean?)
 		clickIndicatorEnabled = true
 	end
 
+	function button:Toggle(toggle: boolean)
+		if isEnabled == toggle then
+			return
+		end
+
+		isEnabled = toggle
+		if not toggle then
+			closeHover(true)
+		end
+	end
+
 	function button:Destroy(keepButton: boolean?)
 		if keepButton then
-			guiObject.Active = false
-			guiObject.Selectable = false
-			guiObject.Selected = false
+			guiButton.Active = false
+			guiButton.Selectable = false
+			guiButton.Selected = false
 		else
-			guiObject:Destroy()
+			guiButton:Destroy()
 		end
 
 		maid:Destroy()
 		button = nil
 	end
+
 	-------------------------------------------------------------------------------
 	-- Event handlers
 	-------------------------------------------------------------------------------
-	maid:Add(guiObject.MouseButton1Down:Connect(function()
+	maid:Add(guiButton.MouseButton1Down:Connect(function()
 		if not clickDebounce then
 			clickDebounce = true
 
-			buttonSizeAtClick = guiObject.AbsoluteSize
+			buttonSizeAtClick = guiButton.AbsoluteSize
 
 			local pressed
 			if not stateRestriction or (uiStateMachine:GetState() == stateRestriction) then
@@ -131,7 +173,7 @@ function Button.new(guiObject: GuiButton, mute: boolean?)
 				end
 
 				pressed = true
-				button.Pressed:Fire()
+				button.Pressed:Fire(not isEnabled)
 
 				if not mute then
 					Sounds.play("ButtonClick")
@@ -160,26 +202,23 @@ function Button.new(guiObject: GuiButton, mute: boolean?)
 		end
 	end))
 
-	maid:Add(guiObject.MouseEnter:Connect(function()
+	maid:Add(guiButton.MouseEnter:Connect(function()
 		if not hovering then
 			hovering = true
-			button.HoverStarted:Fire()
+			button.HoverStarted:Fire(not isEnabled)
 		end
 	end))
 
-	maid:Add(guiObject.MouseLeave:Connect(function()
-		if hovering then
-			hovering = false
-			button.HoverEnded:Fire()
-		end
+	maid:Add(guiButton.MouseLeave:Connect(function()
+		closeHover()
 	end))
 
 	maid:Add(button.Released:Connect(function()
-		if InputUtil.isPrimaryClickInput() and not UIUtil.isMouseWithinObjectBounds(guiObject, buttonSizeAtClick) then
+		if InputUtil.isPrimaryClickInput() and not UIUtil.isMouseWithinObjectBounds(guiButton, buttonSizeAtClick) then
 			return
 		end
 
-		button.Clicked:Fire()
+		button.Clicked:Fire(not isEnabled)
 	end))
 
 	maid:Add(GuiService.Changed:Connect(function(changed)
@@ -187,10 +226,10 @@ function Button.new(guiObject: GuiButton, mute: boolean?)
 			return
 		end
 
-		local selected = GuiService.SelectedObject == guiObject
+		local selected = GuiService.SelectedObject == guiButton
 		if selected and not hovering then
 			hovering = true
-			button.HoverStarted:Fire()
+			button.HoverStarted:Fire(not isEnabled)
 		elseif not selected and hovering then
 			hovering = false
 			button.HoverEnded:Fire()
@@ -200,9 +239,9 @@ function Button.new(guiObject: GuiButton, mute: boolean?)
 	-------------------------------------------------------------------------------
 	-- Initialization
 	-------------------------------------------------------------------------------
-	guiObject.Active = true
-	guiObject.Selectable = true
-	guiObject.AutoButtonColor = false
+	guiButton.Active = true
+	guiButton.Selectable = true
+	guiButton.AutoButtonColor = false
 
 	return button
 end

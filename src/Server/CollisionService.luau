@@ -4,10 +4,13 @@ local CollisionService = {}
 local PhysicsService = game:GetService("PhysicsService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CollisionConstants = require(ReplicatedStorage.Shared.Constants.CollisionConstants)
+local DebugUtil = require(ReplicatedStorage.Shared.Utils.DebugUtil)
 
 -------------------------------------------------------------------------------
 -- CONSTANTS
 -------------------------------------------------------------------------------
+
+local DEBUG = DebugUtil.isDebugging(false)
 
 local GROUPS = CollisionConstants.Groups
 
@@ -21,9 +24,9 @@ local WHITELISTS: typeof(BLACKLISTS) = {}
 -- PRIVATE METHODS
 -------------------------------------------------------------------------------
 
-local function setGroupCollideableBlacklist(group: CollisionConstants.Group, blacklist: CollisionConstants.Groups)
+local function setGroupCollideableWhitelist(group: CollisionConstants.Group, whitelist: CollisionConstants.Groups)
 	for _, otherGroup in pairs(GROUPS) do
-		PhysicsService:CollisionGroupSetCollidable(group, otherGroup, not table.find(blacklist, otherGroup))
+		PhysicsService:CollisionGroupSetCollidable(group, otherGroup, table.find(whitelist, otherGroup) ~= nil)
 	end
 end
 
@@ -88,25 +91,18 @@ do
 		local collidableGroups: { CollisionConstants.Group } = {}
 
 		-- If this group has a whitelist, it can ONLY collide with groups in the whitelist
-		local hasWhitelist = next(groupWhitelist) ~= nil
+		local hasWhitelist = WHITELISTS[group] ~= nil
 
 		-- Determine which groups this group can collide with
 		for _, otherGroup in pairs(GROUPS) do
-			if otherGroup == group then
-				-- Groups can't collide with themselves
-				continue
-			end
-
 			-- This group's blacklist takes precedence
 			if table.find(groupBlacklist, otherGroup) then
 				continue
 			end
 
 			-- If this group has a whitelist, check if otherGroup is in it
-			if hasWhitelist then
-				if not table.find(groupWhitelist, otherGroup) then
-					continue
-				end
+			if hasWhitelist and not table.find(groupWhitelist, otherGroup) then
+				continue
 			end
 
 			-- Now check if otherGroup allows collision with this group:
@@ -114,7 +110,7 @@ do
 			-- If otherGroup has no whitelist, it can collide with groups not in its blacklist
 			local otherGroupBlacklist = BLACKLISTS[otherGroup] or {}
 			local otherGroupWhitelist = WHITELISTS[otherGroup] or {}
-			local otherHasWhitelist = next(otherGroupWhitelist) ~= nil
+			local otherHasWhitelist = WHITELISTS[otherGroup] ~= nil
 
 			local otherAllowsCollision: boolean
 			if otherHasWhitelist then
@@ -130,24 +126,10 @@ do
 			end
 		end
 
-		-- Set collision using blacklist approach
-		-- Create a blacklist of groups this group CAN'T collide with
-		local effectiveBlacklist: { CollisionConstants.Group } = {}
-		for _, otherGroup in pairs(GROUPS) do
-			if otherGroup == group then
-				-- Only prevent self-collision if group has whitelist and doesn't include itself
-				if hasWhitelist and not table.find(groupWhitelist, group) then
-					table.insert(effectiveBlacklist, otherGroup)
-				end
-				continue
-			end
-
-			if not table.find(collidableGroups, otherGroup) then
-				table.insert(effectiveBlacklist, otherGroup)
-			end
+		if DEBUG then
+			print(`Group {group} can collide with:`, collidableGroups)
 		end
-
-		setGroupCollideableBlacklist(group, effectiveBlacklist)
+		setGroupCollideableWhitelist(group, collidableGroups)
 	end
 end
 

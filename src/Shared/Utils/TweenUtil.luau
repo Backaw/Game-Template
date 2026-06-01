@@ -11,14 +11,20 @@ local Promise = require(ReplicatedStorage.Shared.Promise)
 -------------------------------------------------------------------------------
 
 local function promise(tween: Tween): Promise.Promise
-	return Promise.new(function(resolve)
-		--[[ if onCancel(function()
+	return Promise.new(function(resolve, reject, onCancel)
+		if onCancel(function()
 			tween:Cancel()
 		end) then
 			return
-		end ]]
+		end
 
-		tween.Completed:Connect(resolve)
+		tween.Completed:Connect(function(playbackState)
+			if playbackState == Enum.PlaybackState.Cancelled then
+				reject(playbackState)
+			else
+				resolve(playbackState)
+			end
+		end)
 		tween:Play()
 	end)
 end

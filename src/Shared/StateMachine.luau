@@ -21,6 +21,7 @@ export type StateMachine<T> = {
 	GetStack: (StateMachine<T>) -> { T },
 	Clear: (StateMachine<T>) -> (),
 	Destroy: (StateMachine<T>) -> (),
+	ToggleLock: (StateMachine<T>, toggle: boolean) -> (),
 }
 
 function StateMachine.new<T>(states: { T }, initialState: T)
@@ -34,19 +35,30 @@ function StateMachine.new<T>(states: { T }, initialState: T)
 	}
 
 	local changed = Signal.new() :: Signal.Signal<T, T>
+	local locked = false
 
 	-------------------------------------------------------------------------------
 	-- PRIVATE METHODS
 	-------------------------------------------------------------------------------
+
 	local function doesStateExist(state: string)
 		if not table.find(states, state) then
 			error(("State (%s) does not exist in the state machine"):format(state))
 		end
 	end
 
+	local function canChangeState()
+		if locked then
+			warn("State machine is locked")
+			return false
+		end
+		return true
+	end
+
 	-------------------------------------------------------------------------------
 	-- PRIVATE METHODS
 	-------------------------------------------------------------------------------
+
 	function stateMachine:RegisterGlobalCallback(callback)
 		return changed:Connect(callback)
 	end
@@ -70,11 +82,18 @@ function StateMachine.new<T>(states: { T }, initialState: T)
 		return stack[#stack]
 	end
 
+	function stateMachine:ToggleLock(toggle: boolean)
+		locked = toggle
+	end
+
 	--[[
 		Puts a state at the top of a stack
 	]]
 	function stateMachine:Push(state)
 		doesStateExist(state)
+		if not canChangeState() then
+			return
+		end
 
 		-- ERROR: State already in stack
 		if stateMachine:HasState(state) then
@@ -95,6 +114,9 @@ function StateMachine.new<T>(states: { T }, initialState: T)
 	]]
 	function stateMachine:ReplaceUpTill(replacee, to)
 		doesStateExist(replacee)
+		if not canChangeState() then
+			return
+		end
 
 		-- ERROR: State already in stack
 		if stateMachine:HasState(replacee) then
@@ -128,6 +150,10 @@ function StateMachine.new<T>(states: { T }, initialState: T)
         Removes whatever state at the top of the stack
     ]]
 	function stateMachine:Pop()
+		if not canChangeState() then
+			return
+		end
+
 		-- ERROR: Can't pop the nothing state
 		if #stack == 1 then
 			error("Stack is empty, can't pop the nothing state")
@@ -161,6 +187,10 @@ function StateMachine.new<T>(states: { T }, initialState: T)
 		state itself is also popped
 	]]
 	function stateMachine:PopUpToInclusive(state, exceptions)
+		if not canChangeState() then
+			return
+		end
+
 		-- ERROR: State isn't in the stack
 		if not stateMachine:HasState(state) then
 			error(("Can't pop to (%s) because it isn't in the stack"):format(state))
@@ -184,6 +214,10 @@ function StateMachine.new<T>(states: { T }, initialState: T)
 		state itself is not popped
 	]]
 	function stateMachine:PopUpToExclusive(state, exceptions)
+		if not canChangeState() then
+			return
+		end
+
 		-- ERROR: State isn't in the stack
 		if not stateMachine:HasState(state) then
 			error(("Can't pop to (%s) because it isn't in the stack"):format(state))
@@ -208,6 +242,10 @@ function StateMachine.new<T>(states: { T }, initialState: T)
 	end
 
 	function stateMachine:Remove(state)
+		if not canChangeState() then
+			return
+		end
+
 		doesStateExist(state)
 
 		-- RETURN: State isn't in stack
@@ -228,6 +266,10 @@ function StateMachine.new<T>(states: { T }, initialState: T)
 	end
 
 	function stateMachine:Clear()
+		if not canChangeState() then
+			return
+		end
+
 		stateMachine:PopUpToInclusive(initialState)
 	end
 

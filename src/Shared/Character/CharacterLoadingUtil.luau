@@ -4,19 +4,28 @@ local CharacterLoadingUtil = {}
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local DebugUtil = require(ReplicatedStorage.Shared.Utils.DebugUtil)
-
-type Handler<T...> = (newCharacter: Model, T...) -> ()
-type Callback<T...> = { Handler: Handler<T...>, Priority: number, Traceback: string? }
-export type Registration<T...> = (Handler<T...>, number?) -> () -> ()
+local CharacterConstants = require(ReplicatedStorage.Shared.Character.CharacterConstants)
 
 -------------------------------------------------------------------------------
--- PRIVATE VARIABLES
+-- CONSTANTS
 -------------------------------------------------------------------------------
 
 local DEBUG = DebugUtil.isDebugging(false)
 local IS_STUDIO = RunService:IsStudio()
 
 local DEFAULT_PRIORITY = 0
+
+-------------------------------------------------------------------------------
+-- TYPES
+-------------------------------------------------------------------------------
+
+type Handler<T...> = (newCharacter: CharacterConstants.Character, T...) -> ()
+type Callback<T...> = { Handler: Handler<T...>, Priority: number, Traceback: string? }
+export type Registration<T...> = (Handler<T...>, number?) -> () -> ()
+
+-------------------------------------------------------------------------------
+-- PRIVATE VARIABLES
+-------------------------------------------------------------------------------
 
 local loadCallbacks: { Callback<> } = {}
 local unloadCallbacks: { Callback<> } = {}
@@ -80,7 +89,7 @@ function CharacterLoadingUtil.getRegistration<T..., U...>(): (Registration<T...>
 	end
 end
 
-function CharacterLoadingUtil.invokeLoadCallbacks(character: Model, ...)
+function CharacterLoadingUtil.invokeLoadCallbacks(character: CharacterConstants.Character, ...)
 	for _, callback in loadCallbacks do
 		if DEBUG then
 			print("Running character load callback:", callback)

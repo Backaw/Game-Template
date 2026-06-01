@@ -3,58 +3,82 @@ local RarityUtil = {}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RarityConstants = require(ReplicatedStorage.Shared.Rarity.RarityConstants)
-local TableUtil = require(ReplicatedStorage.Shared.Utils.TableUtil)
+
+-------------------------------------------------------------------------------
+-- TYPES
+-------------------------------------------------------------------------------
 
 export type Rarity = RarityConstants.Rarity
+
+-------------------------------------------------------------------------------
+-- CONSTANTS
+-------------------------------------------------------------------------------
+
+local RANKED_RARITIES: { RarityConstants.Rarity } = {
+	RarityConstants.Rarities.Common,
+	RarityConstants.Rarities.Rare,
+	RarityConstants.Rarities.Epic,
+	RarityConstants.Rarities.Legendary,
+}
 
 -------------------------------------------------------------------------------
 -- PRIVATE VARIABLES
 -------------------------------------------------------------------------------
 
 local sharedRandom = Random.new()
-local rankedRarities: { RarityConstants.Rarity } = {}
 
 -------------------------------------------------------------------------------
--- PUBLIC VARIABLES
+-- PRIVATE FUNCTIONS
 -------------------------------------------------------------------------------
 
 local function getProbability(choice: { [any]: any } | number)
 	if typeof(choice) == "table" then
-		local rarity = choice.Rarity
-		if choice.Rarity then
-			return RarityConstants.Probabilities[choice.Rarity]
+		if choice.Probability then
+			return choice.Probability
 		end
-		return assert(rarity, `{choice} is not a valid rarity`)
+		-- return assert(rarity, `{choice} is not a valid rarity`)
+		error(`{choice} is not a valid choice`)
 	else
 		return choice
 	end
 end
 
+-------------------------------------------------------------------------------
+-- PUBLIC FUNCTIONS
+-------------------------------------------------------------------------------
+
 -- Greatest to least
 function RarityUtil.getRarityRank(rarity: RarityConstants.Rarity, reverse: boolean?)
-	local index = assert(table.find(rankedRarities, rarity), `{rarity} is not a valid rarity`)
+	local index = assert(table.find(RANKED_RARITIES, rarity), `{rarity} is not a valid rarity`)
 
 	if reverse then
-		return #rankedRarities - index + 1
+		return #RANKED_RARITIES - index + 1
 	else
 		return index
 	end
 end
 
-function RarityUtil.draw(pool: { [any]: any }, luck: number?, random: Random?)
+function RarityUtil.draw<T>(pool: { [T]: any }, random: Random?, ignore: { T }?, luck: number?): T
+	ignore = ignore or {}
 	random = random or sharedRandom
 	luck = luck or 0
 
 	local perfectSplit = 100
 	local sum = 0
 
-	for _, choice in pool do
-		local probability = getProbability(choice)
-		sum += probability + (perfectSplit - probability) * luck
+	for option, choice in pool do
+		if not table.find(ignore, option) then
+			local probability = getProbability(choice)
+			sum += probability + (perfectSplit - probability) * luck
+		end
 	end
 
 	local chosen = random:NextNumber(0, sum)
 	for k, choice in pool do
+		if table.find(ignore, k) then
+			continue
+		end
+
 		local probability = getProbability(choice)
 		probability += (perfectSplit - probability) * luck
 
@@ -65,7 +89,7 @@ function RarityUtil.draw(pool: { [any]: any }, luck: number?, random: Random?)
 		end
 	end
 
-	return nil
+	error("No choice was drawn from the pool")
 end
 
 function RarityUtil.isRarity(value: any): RarityConstants.Rarity?
@@ -74,21 +98,6 @@ function RarityUtil.isRarity(value: any): RarityConstants.Rarity?
 		return rarity
 	else
 		return nil
-	end
-end
-
--------------------------------------------------------------------------------
--- LOGIC
--------------------------------------------------------------------------------
-
-do
-	local rankedProbabilities = TableUtil.toArray(RarityConstants.Probabilities)
-	table.sort(rankedRarities, function(a, b)
-		return a < b
-	end)
-
-	for _, value in rankedProbabilities do
-		table.insert(rankedRarities, TableUtil.find(RarityConstants.Probabilities, value) :: RarityConstants.Rarity)
 	end
 end
 

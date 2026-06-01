@@ -3,6 +3,10 @@ local InstanceUtil = {}
 
 local CollectionService = game:GetService("CollectionService")
 
+-------------------------------------------------------------------------------
+-- CONSTRUCTORS
+-------------------------------------------------------------------------------
+
 function InstanceUtil.newNameParent<T>(instance: T, name: string, parent: Instance?)
 	local x = instance :: Instance
 	x.Name = name
@@ -25,6 +29,114 @@ function InstanceUtil.newProperties(class: string, props: { [string]: any }, chi
 
 	return instance
 end
+
+function InstanceUtil.newAnimation(animationId: string)
+	local animation = Instance.new("Animation")
+	animation.AnimationId = animationId
+	return animation
+end
+
+function InstanceUtil.newRaycastParams(
+	collisionGroup: string?,
+	respectCanCollide: boolean?,
+	filterType: Enum.RaycastFilterType?,
+	filterDescendantsInstances: { Instance }?,
+	ignoreWater: boolean?
+)
+	local raycastParams = RaycastParams.new()
+	if collisionGroup then
+		raycastParams.CollisionGroup = collisionGroup
+		raycastParams.RespectCanCollide = respectCanCollide or false
+	end
+
+	if filterType then
+		raycastParams.FilterType = filterType
+
+		if filterDescendantsInstances then
+			raycastParams.FilterDescendantsInstances = filterDescendantsInstances
+		end
+	end
+
+	raycastParams.IgnoreWater = ignoreWater or false
+
+	return raycastParams
+end
+
+function InstanceUtil.newWorldForce(attachment: Attachment, startingForce: Vector3, applyAtCenterOfMass: boolean?)
+	local force = Instance.new("VectorForce")
+	force.Attachment0 = attachment
+	force.RelativeTo = Enum.ActuatorRelativeTo.World
+	force.Force = startingForce
+	force.ApplyAtCenterOfMass = if applyAtCenterOfMass ~= nil then applyAtCenterOfMass else true
+	force.Parent = attachment.Parent
+
+	return force
+end
+
+function InstanceUtil.newWorldTorque(attachment: Attachment, startingTorque: Vector3)
+	local torque = Instance.new("Torque")
+	torque.Attachment0 = attachment
+	torque.RelativeTo = Enum.ActuatorRelativeTo.World
+	torque.Torque = startingTorque
+	torque.Parent = attachment.Parent
+
+	return torque
+end
+
+function InstanceUtil.newAttachment(parent: Instance, name: string, localCFrame: CFrame?, worldCFrame: CFrame?)
+	local attachment = Instance.new("Attachment")
+	attachment.Name = name
+	attachment.Parent = parent
+	if localCFrame then
+		attachment.CFrame = localCFrame
+	end
+	if worldCFrame then
+		attachment.WorldCFrame = worldCFrame
+	end
+	return attachment
+end
+-------------------------------------------------------------------------------
+-- GETTERS
+-------------------------------------------------------------------------------
+
+function InstanceUtil.findFirstDescendant(instance: Instance, selector: string): Instance?
+	for _, descendant in (instance:QueryDescendants(selector)) do
+		return descendant
+	end
+	return nil :: Instance?
+end
+
+function InstanceUtil.waitForDescendant(instance, selector: string, timeout: number?): Instance?
+	local et = 0
+	timeout = timeout or 10
+
+	local descendant
+	repeat
+		et += task.wait(0.1)
+		descendant = InstanceUtil.findFirstDescendant(instance, selector)
+	until descendant or et > timeout
+
+	return descendant
+end
+
+function InstanceUtil.findLastAncestorOfClass(instance: Instance, className: string): Instance?
+	local lastAncestor = nil
+	local parent = instance.Parent
+
+	while parent and parent ~= game do
+		if not parent:IsA(className) then
+			break
+		end
+		lastAncestor = parent
+		parent = parent.Parent
+	end
+
+	return lastAncestor
+end
+
+-------------------------------------------------------------------------------
+-- EVENT HANDLERS
+-------------------------------------------------------------------------------
 
 function InstanceUtil.onDestroyed(instance: Instance, callback: () -> ())
 	local connection1: RBXScriptConnection?
@@ -53,54 +165,6 @@ function InstanceUtil.onDestroyed(instance: Instance, callback: () -> ())
 	end)
 
 	return disconnect
-end
-
-function InstanceUtil.findFirstDescendant(instance: Instance, selector: string): Instance?
-	for _, descendant in (instance:QueryDescendants(selector)) do
-		return descendant
-	end
-	return nil :: Instance?
-end
-
-function InstanceUtil.waitForDescendant(instance, selector: string, timeout: number?): Instance?
-	local et = 0
-	timeout = timeout or 10
-
-	local descendant
-	repeat
-		et += task.wait(0.1)
-		descendant = InstanceUtil.findFirstDescendant(instance, selector)
-	until descendant or et > timeout
-
-	return descendant
-end
-
-function InstanceUtil.getChildrenOfClass(parent: Instance, class: string, filterMethod: ((child: Instance) -> boolean)?)
-	local children = {}
-	for _, v in parent:GetChildren() do
-		if v:IsA(class) then
-			if filterMethod ~= nil and not filterMethod(v) then
-				continue
-			end
-			table.insert(children, v)
-		end
-	end
-	return children
-end
-
-function InstanceUtil.findLastAncestorOfClass(instance: Instance, className: string): Instance?
-	local lastAncestor = nil
-	local parent = instance.Parent
-
-	while parent and parent ~= game do
-		if not parent:IsA(className) then
-			break
-		end
-		lastAncestor = parent
-		parent = parent.Parent
-	end
-
-	return lastAncestor
 end
 
 function InstanceUtil.connectAttributeChangedSignal(instance: Instance, attribute: string, handler: (value: any, instance: Instance) -> ())
@@ -145,6 +209,16 @@ end
 
 function InstanceUtil.getAttributeWithPrefix(instance: Instance, attribute: string, prefix: string)
 	return instance:GetAttribute(`{prefix}_{attribute}`)
+end
+
+function InstanceUtil.getAttributeFirst<T>(instance: Instance, attribute: string, value: T)
+	local initialValue = instance:GetAttribute(attribute)
+	if initialValue then
+		return initialValue :: T
+	end
+
+	instance:SetAttribute(attribute, value)
+	return value
 end
 
 return InstanceUtil

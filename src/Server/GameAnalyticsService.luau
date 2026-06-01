@@ -27,6 +27,7 @@ local RESOURCE_TYPES = {
 }
 
 local mergedResources = TableUtil.shallowUnion(RESOURCE_TYPES, ProductConstants.Types)
+
 -------------------------------------------------------------------------------
 -- TYPES
 -------------------------------------------------------------------------------
@@ -41,7 +42,7 @@ export type EventType =
 	| "ErrorEvent"
 	| "BusinessEvent"
 
-export type ResourceType = keyof<typeof(RESOURCE_TYPES)> | string
+export type ResourceType = keyof<typeof(RESOURCE_TYPES)> | ProductConstants.ProductType
 
 -------------------------------------------------------------------------------
 -- PRIVATE VARIABLES
@@ -53,7 +54,7 @@ local onPlayerReady: BindableEvent = game:GetService("ReplicatedStorage"):WaitFo
 -- PUBLIC MEMBERS
 -------------------------------------------------------------------------------
 
-GameAnalyticsService.ResourceType = RESOURCE_TYPES
+GameAnalyticsService.ResourceType = RESOURCE_TYPES :: { [ResourceType]: ResourceType }
 
 -------------------------------------------------------------------------------
 -- PUBLIC FUNCTIONS

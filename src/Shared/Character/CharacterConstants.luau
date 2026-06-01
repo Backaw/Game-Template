@@ -1,17 +1,18 @@
 local CharacterConstants = {}
 
-CharacterConstants.Moving = {
-	Max = 60,
-	Acceleration = 5,
-}
-CharacterConstants.Turning = {
-	Max = 100,
-	Acceleration = 30, --60,
-}
-CharacterConstants.SpeedBoost = {
-	Multiplier = 1,
-	Length = 1,
-	MaxMultiples = 3,
-}
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-------------------------------------------------------------------------------
+-- PUBLIC VARIABLES
+-------------------------------------------------------------------------------
+
+CharacterConstants.RespawnTime = 6
+CharacterConstants.WalkSpeed = 30
+
+-------------------------------------------------------------------------------
+-- TYPES
+-------------------------------------------------------------------------------
+
+export type Character = typeof(require(ReplicatedStorage.Shared.Constants.StorageConstants).ReplicatedAssets.Character)
 
 return CharacterConstants

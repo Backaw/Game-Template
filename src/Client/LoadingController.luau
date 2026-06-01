@@ -1,3 +1,4 @@
+--!strict
 local LoadingController = {}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -9,6 +10,10 @@ local DeferredPromise = require(ReplicatedStorage.Shared.DeferredPromise)
 local MathUtil = require(ReplicatedStorage.Shared.Utils.MathUtil)
 local TweenUtil = require(ReplicatedStorage.Shared.Utils.TweenUtil)
 local DebugUtil = require(ReplicatedStorage.Shared.Utils.DebugUtil)
+
+-------------------------------------------------------------------------------
+-- CONSTANTS
+-------------------------------------------------------------------------------
 
 local EASE = 0.1
 local FULL = 1 + EASE
@@ -33,7 +38,7 @@ local taskIds: { string } = {}
 local player = Players.LocalPlayer
 
 local playerGui = player.PlayerGui
-local screen = playerGui:WaitForChild("LoadingScreen")
+local screen = playerGui:WaitForChild("LoadingScreen") :: typeof(game:GetService("ReplicatedFirst").LoadingScreen)
 local container = screen.Container
 local logo = container.Logo
 local logoGradient = container.Logo.Colored.UIGradient
@@ -44,7 +49,7 @@ local tween: Tween
 -- PUBLIC MEMEBERS
 -------------------------------------------------------------------------------
 
-LoadingController.Loaded = DeferredPromise.new()
+LoadingController.Loaded = DeferredPromise.new(nil, "Parallel")
 
 -------------------------------------------------------------------------------
 -- PUBLIC METHODS

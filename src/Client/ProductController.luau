@@ -37,15 +37,7 @@ type PriceTracker = { Price: CurrencyConstants.Price, Handler: (boolean) -> () }
 local debounces: { [ProductConstants.Product]: boolean? } = {}
 local marketplacePromptOpen = false
 
-local orderedCashTiers = TableUtil.getKeys(ProductConstants.Products.Cash)
-table.sort(orderedCashTiers, function(yield1, yield2)
-	local n1 = tonumber(yield1)
-	local n2 = tonumber(yield2)
-	if n1 and n2 then
-		return n1 < n2
-	end
-	return true
-end)
+local orderedCurrencyTiers: { [CurrencyConstants.Currency]: { string } } = {}
 
 -------------------------------------------------------------------------------
 -- PUBLIC MEMBERS
@@ -71,29 +63,37 @@ end
 -- PUBLIC  METHODS
 -------------------------------------------------------------------------------
 
-function ProductController.promptNeededCashTier(product: ProductConstants.Product)
+function ProductController.promptNeededCurrencyTier(product: ProductConstants.Product)
 	local price = product.Price
+	local currency = price.Currency
 
-	if price.Currency == "Cash" then
-		local cheapestTier = orderedCashTiers[1]
-		for i = 2, #orderedCashTiers do
-			local yield = orderedCashTiers[i]
-			local yieldNumber = tonumber(yield)
-			if yieldNumber and yieldNumber >= price.Amount - CurrencyController.Currencies["Cash"]:Get() then
-				cheapestTier = yield
-				break
-			end
-		end
+	ProductController.cannotAfford(price)
+	assert(CurrencyConstants.Currencies[currency], "Can't prompt needed currency tier for premium currency: " .. price.Currency)
 
-		ProductController.cannotAfford(price)
-		ProductController.promptPurchase(
-			ProductConstants.Products.Cash[cheapestTier] or ProductConstants.Products.Cash[orderedCashTiers[#orderedCashTiers]],
-			{ Source = "UnaffordableItem", Item = {
-				Type = product.Type,
-				Name = product.Name,
-			} }
-		)
+	local orderedTiers = orderedCurrencyTiers[price.Currency]
+	local cheapestTier = orderedTiers[1]
+
+	if not cheapestTier then
+		warn(`No products found for currency {currency}, cannot prompt purchase from additional currency`)
+		return
 	end
+
+	for i = 2, #orderedTiers do
+		local yield = orderedTiers[i]
+		local yieldNumber = tonumber(yield)
+		if yieldNumber and yieldNumber >= (price :: any).Amount - CurrencyController.Currencies[currency]:Get() then
+			cheapestTier = yield
+			break
+		end
+	end
+
+	ProductController.promptPurchase(
+		ProductConstants.Products[currency :: any][cheapestTier] or ProductConstants.Products[currency :: any][orderedTiers[#orderedTiers]],
+		{ Source = "UnaffordableProduct", Item = {
+			Type = product.Type,
+			Name = product.Name,
+		} }
+	)
 end
 
 function ProductController.cannotAfford(price: CurrencyConstants.Price)
@@ -108,10 +108,59 @@ function ProductController.hasGamePass(product: ProductConstants.Product)
 	return ProductUtil.hasGamePass(product)
 end
 
-function ProductController.trackAffordability(price: CurrencyConstants.Price, handler: (boolean) -> ())
-	return CurrencyController.Currencies[price.Currency]:Subscribe(function(amount)
-		handler(amount >= (price :: any).Amount)
-	end)
+do
+	local function sign(x: number)
+		return if x >= 0 then 1 else -1
+	end
+
+	function ProductController.trackAffordability(price: CurrencyConstants.Price, handler: (boolean) -> ())
+		if not CurrencyConstants.IngameCurrencies[price.Currency] then
+			return nil :: any
+		end
+
+		local priceAmount = (price :: any).Amount
+
+		local lastValue: number?
+		return CurrencyController.Currencies[price.Currency]:Subscribe(function(amount)
+			if lastValue and (sign(lastValue - priceAmount) == sign(amount - priceAmount)) then
+				return
+			end
+
+			handler(amount >= priceAmount)
+			lastValue = amount
+		end)
+	end
+end
+
+-- Returns: Purchase valid, purchase validated
+function ProductController.purchaseClientValidation(product: ProductConstants.Product)
+	local price = product.Price
+
+	if price.Currency == CurrencyConstants.Currencies.Free then
+		return true, true
+	elseif CurrencyUtil.isInGameCurrency(price.Currency) then
+		if CurrencyController.transact(price.Currency, -((price :: any).Amount :: number)) then
+			-- Sounds.play("Purchase")
+			return true, true
+		else
+			ProductController.promptNeededCurrencyTier(product)
+			return false, true
+		end
+	elseif ProductUtil.isPremium(product) then
+		if marketplacePromptOpen then
+			return false, true
+		end
+
+		marketplacePromptOpen = true
+		if price.Currency == CurrencyConstants.Currencies.GamePass then
+			local hasGamePass = ProductController.hasGamePass(product)
+			return hasGamePass == true, hasGamePass
+		else
+			return false, false
+		end
+	end
+
+	return false, true
 end
 
 function ProductController.promptPurchase(
@@ -123,30 +172,14 @@ function ProductController.promptPurchase(
 		return false
 	end
 
-	local price = product.Price
-
-	local success
-	if CurrencyUtil.isInGameCurrency(price.Currency) then
-		if CurrencyController.transact(price.Currency, -((price :: any).Amount :: number)) then
-			success = true
-			Sounds.play("Purchase")
-		else
-			ProductController.promptNeededCashTier(product)
-			return false
-		end
-	elseif ProductUtil.isPremium(product) then
-		if marketplacePromptOpen then
-			return false
-		end
-
-		marketplacePromptOpen = true
-		if price.Currency == CurrencyConstants.Currencies.GamePass then
-			success = if ProductController.hasGamePass(product) then true else nil
-		end
+	local purchaseValid, purchaseValidated = ProductController.purchaseClientValidation(product)
+	if not purchaseValid and purchaseValidated then
+		return false
 	end
 
 	debounces[product] = true
 
+	local success
 	local serverValidation = Promise.new(function(resolve)
 		success = REMOTES.PromptProductPurchase:InvokeServer(product.Type, product.Name, source)
 
@@ -178,16 +211,35 @@ end
 -------------------------------------------------------------------------------
 -- EVENT HANDLERS
 -------------------------------------------------------------------------------
+do
+	for currency in CurrencyConstants.IngameCurrencies do
+		local products = ProductConstants.Products[currency :: any]
 
-ProductConstants.Products = REMOTES.GetProducts:InvokeServer()
+		local orderedTiers = TableUtil.getKeys(products)
+		table.sort(orderedTiers, function(yield1, yield2)
+			local n1 = tonumber(yield1)
+			local n2 = tonumber(yield2)
+			if n1 and n2 then
+				return n1 < n2
+			end
+			return true
+		end)
 
-REMOTES.ProductsUpdated:OnClientEvent(function(registering, unregistering)
-	ProductUtil.updateProducts(registering, unregistering)
-	ProductController.ProductsUpdated:Fire()
-end)
+		orderedCurrencyTiers[currency] = orderedTiers
+	end
+end
 
-REMOTES.ProductGiven:OnClientEvent(function(productType: string, productName: string)
-	onProductPurchased(ProductUtil.getProduct(productType, productName))
-end)
+do
+	ProductConstants.Products = REMOTES.GetProducts:InvokeServer()
+
+	REMOTES.ProductsUpdated:OnClientEvent(function(registering, unregistering)
+		ProductUtil.updateProducts(registering, unregistering)
+		ProductController.ProductsUpdated:Fire()
+	end)
+
+	REMOTES.ProductGiven:OnClientEvent(function(productType, productName)
+		onProductPurchased(ProductUtil.getProduct(productType, productName))
+	end)
+end
 
 return ProductController

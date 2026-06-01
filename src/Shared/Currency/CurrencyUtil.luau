@@ -13,8 +13,8 @@ function CurrencyUtil.getAddress(currency: CurrencyConstants.Currency)
 	return "Currencies." .. currency
 end
 
-function CurrencyUtil.isInGameCurrency(currency: string)
-	return table.find(CurrencyConstants.IngameCurrencies, currency) ~= nil
+function CurrencyUtil.isInGameCurrency(currency: CurrencyConstants.Currency)
+	return CurrencyConstants.IngameCurrencies[currency]
 end
 
 function CurrencyUtil.getMultiplierAddress(currency: CurrencyConstants.Currency)
@@ -41,18 +41,18 @@ function CurrencyUtil.cashPrice(amount: number): CurrencyConstants.Price
 	}
 end
 
-function CurrencyUtil.gamepassPrice(priceInRobux: number, id: number)
+function CurrencyUtil.gamepassPrice(id: number): CurrencyConstants.Price
 	return {
 		Currency = "GamePass",
-		PriceInRobux = priceInRobux,
+		PriceInRobux = -1,
 		Id = id,
 	}
 end
 
-function CurrencyUtil.devProductPrice(priceInRobux: number, id: number): CurrencyConstants.Price
+function CurrencyUtil.devProductPrice(id: number): CurrencyConstants.Price
 	return {
 		Currency = "DevProduct",
-		PriceInRobux = priceInRobux,
+		PriceInRobux = -1,
 		Id = id,
 	}
 end

@@ -11,13 +11,13 @@ type State<S> = {
 }
 type Condition<S> = {
 	TransitionState: S,
-	Evaluate: (number) -> boolean,
+	Evaluate: (number, number) -> boolean,
 }
 
 export type StateMachine<S, C> = {
 	Changed: Signal.Signal<S?, S?>,
 	BindState: (StateMachine<S, C>, S, { C }, (S?) -> ()?, (number) -> ()?, Handler) -> (),
-	RegisterCondition: (StateMachine<S, C>, C, S, (number) -> boolean) -> (),
+	RegisterCondition: (StateMachine<S, C>, C, S, (number, number) -> boolean) -> (),
 	SwitchState: (StateMachine<S, C>, S) -> (),
 	Start: (StateMachine<S, C>, S) -> (),
 	Stop: (StateMachine<S, C>) -> (),
@@ -40,6 +40,8 @@ function StateMachine.new<S, C>(stateNames: { S }, conditionNames: { C }, doDebu
 	local conditionsToTransitionState: { [C]: S } = {}
 
 	local activeState: State<S>?, onUpdate: ((number) -> ()) | nil
+
+	local lastStateChange = 0
 
 	-------------------------------------------------------------------------------
 	-- PUBLIC VARIABLES
@@ -77,7 +79,7 @@ function StateMachine.new<S, C>(stateNames: { S }, conditionNames: { C }, doDebu
 				local condition = conditions[conditionName]
 				-- ("Checking " .. tostring(conditionName))
 
-				if condition.Evaluate(dt) then
+				if condition.Evaluate(dt, lastStateChange) then
 					if doDebug then
 						warn(("%s is true. Switching state to %s "):format(tostring(conditionName), tostring(condition.TransitionState)))
 					end
@@ -120,7 +122,7 @@ function StateMachine.new<S, C>(stateNames: { S }, conditionNames: { C }, doDebu
 		}
 	end
 
-	function stateMachine:RegisterCondition(name: C, transitionState: S, evaluate: (number) -> boolean)
+	function stateMachine:RegisterCondition(name: C, transitionState: S, evaluate: (number, number) -> boolean)
 		verifyConditionValidity(name)
 		verifyStateValidity(transitionState)
 
@@ -140,6 +142,8 @@ function StateMachine.new<S, C>(stateNames: { S }, conditionNames: { C }, doDebu
 		end
 
 		verifyStateValidity(name)
+
+		lastStateChange = os.clock()
 
 		local newState = states[name]
 		activeState = newState

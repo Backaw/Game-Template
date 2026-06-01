@@ -108,8 +108,8 @@ function Maid.new()
 	function maid:Destroy()
 		maid:Cleanup()
 
-		tasks = {}
-		maid = {} :: Maid
+		table.clear(tasks)
+		table.clear(maid)
 	end
 
 	function maid:Reset()

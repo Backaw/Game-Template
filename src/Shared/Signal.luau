@@ -58,17 +58,20 @@ function Signal.new<T...>(behaviourType: BehaviourType?): Signal<T...>
 	local fireEvents = (
 		behaviourType == BEHAVIOUR_TYPES.Immediate
 			and function(...: T...)
-				for _, v in connections do
+				local snapshot = table.clone(connections)
+				for _, v in snapshot do
 					task.spawn(v.Callback, ...)
 				end
 			end
 		or behaviourType == BEHAVIOUR_TYPES.Deferred and function(...: T...)
-			for _, v in connections do
+			local snapshot = table.clone(connections)
+			for _, v in snapshot do
 				task.defer(v.Callback, ...)
 			end
 		end
 		or function(...: T...)
-			for _, v in connections do
+			local snapshot = table.clone(connections)
+			for _, v in snapshot do
 				v.Callback(...)
 			end
 		end
