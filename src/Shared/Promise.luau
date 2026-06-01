@@ -156,7 +156,10 @@ The executor runs inside a protected call. Calling `resolve(...)` marks the
 promise as resolved; `reject(...)` marks it rejected. Handler queues flush using
 `"Serial"`, `"Parallel"`, or `"Deferred"`, matching the execution type.
 ]=]
-function Promise.new(executor: (resolve: (...any) -> (), reject: (...any) -> ()) -> (), executionType: ExecutionType?): Promise
+function Promise.new(
+	executor: (resolve: (...any) -> (), reject: (...any) -> (), onCancel: (callback: () -> ()) -> boolean) -> (),
+	executionType: ExecutionType?
+): Promise
 	assert(type(executor) == "function", "Promise.new expects a function executor")
 
 	local promise = {
@@ -176,10 +179,19 @@ function Promise.new(executor: (resolve: (...any) -> (), reject: (...any) -> ())
 	local queuedReject: { Handler } = {}
 	local queuedFinally: { Handler } = {}
 	local awaitingThreads: { thread } = {}
+	local cancelCallbacks: { () -> () } = {}
 
 	-------------------------------------------------------------------------------
 	-- PRIVATE FUNCTIONS
 	-------------------------------------------------------------------------------
+
+	local function onCancel(callback: () -> ()): boolean
+		if state == "Cancelled" then
+			return true
+		end
+		table.insert(cancelCallbacks, callback)
+		return false
+	end
 
 	local function flushAwaiters()
 		for index = 1, #awaitingThreads do
@@ -376,6 +388,9 @@ function Promise.new(executor: (resolve: (...any) -> (), reject: (...any) -> ())
 	function promise:cancel()
 		if state == "Pending" then
 			state = "Cancelled"
+			for _, callback in cancelCallbacks do
+				task.spawn(callback)
+			end
 			clearHandlers(queuedResolve)
 			clearHandlers(queuedReject)
 			clearHandlers(queuedFinally)
@@ -388,7 +403,7 @@ function Promise.new(executor: (resolve: (...any) -> (), reject: (...any) -> ())
 	-------------------------------------------------------------------------------
 
 	task.spawn(function()
-		local ok, err = pcall(executor, resolve, reject)
+		local ok, err = pcall(executor, resolve, reject, onCancel)
 		if not ok then
 			reject(err)
 		end
@@ -408,7 +423,13 @@ Returns an array where each entry stores the packed results for the
 corresponding promise. Rejects immediately if any promise rejects.
 ]=]
 function Promise.all(promises: { Promise }): Promise
-	return Promise.new(function(resolve, reject)
+	return Promise.new(function(resolve, reject, onCancel)
+		onCancel(function()
+			for _, p in promises do
+				p:cancel()
+			end
+		end)
+
 		local count = #promises
 		if count == 0 then
 			resolve({})

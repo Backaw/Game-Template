@@ -1,21 +1,21 @@
 --!strict
 local CurrencyConstants = {}
 
-local currencies = {
+local CURRENCIES = {
 	Cash = "Cash",
 	GamePass = "GamePass",
 	DevProduct = "DevProduct",
 	Free = "Free",
 }
 
-local ingameCurrencies: { [Currency]: true } = { [currencies.Cash] = true }
+local IN_GAME_CURRENCIES: { [Currency]: true } = { ["Cash"] = true }
 
 -------------------------------------------------------------------------------
 -- PRIVATE VARIABLES
 -------------------------------------------------------------------------------
 
-CurrencyConstants.Currencies = currencies :: { [Currency]: Currency }
-CurrencyConstants.IngameCurrencies = ingameCurrencies
+CurrencyConstants.Currencies = CURRENCIES :: { [Currency]: Currency }
+CurrencyConstants.IngameCurrencies = IN_GAME_CURRENCIES
 
 CurrencyConstants.InfoType = {
 	[CurrencyConstants.Currencies.GamePass] = Enum.InfoType.GamePass,
@@ -26,7 +26,7 @@ CurrencyConstants.InfoType = {
 -- TYPE EXPORTS
 -------------------------------------------------------------------------------
 
-export type Currency = keyof<typeof(currencies)>
+export type Currency = keyof<typeof(CURRENCIES)>
 export type Price =
 	{ Currency: "Free" }
 	| { Currency: "Cash", Amount: number }

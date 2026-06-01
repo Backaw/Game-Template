@@ -1,18 +1,13 @@
 --!strict
 local CameraUtil = {}
 
-local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Workspace = game:GetService("Workspace")
-
 local Shaker = require(ReplicatedStorage.Shared.Shaker)
 local StateMachine = require(ReplicatedStorage.Shared.StateMachine)
 
 -------------------------------------------------------------------------------
 -- PRIVATE MEMBERS
 -------------------------------------------------------------------------------
-
-local playerCamera = Workspace.CurrentCamera
 
 -------------------------------------------------------------------------------
 -- PUBLIC FUNCTIONS
@@ -35,58 +30,70 @@ function CameraUtil.getFitDepth(viewportSize: Vector2, fov: number, subjectSize:
 	return math.max(CameraUtil.getFitDepthY(fov, subjectSize), CameraUtil.getFitDepthX(viewportSize, fov, subjectSize))
 end
 
-function CameraUtil.getShakerRegistration<T>(stateMachine: StateMachine.StateMachine<T>, permittedStates: { T })
-	local toggle = table.find(permittedStates, stateMachine:GetState()) ~= nil
+do
+	local registeredStates: { any } = {}
+	function CameraUtil.getShakerRegistration<T>(stateMachine: StateMachine.StateMachine<T>, permittedStates: { T })
+		local toggle = table.find(permittedStates, stateMachine:GetState()) ~= nil
 
-	local shakers: { Shaker.Shaker } = {}
-	local lastShakeOffset: CFrame = CFrame.identity
+		local shakers: { Shaker.Shaker } = {}
+		local lastShakeOffset: CFrame = CFrame.identity
 
-	-------------------------------------------------------------------------------
-	-- LOGIC
-	-------------------------------------------------------------------------------
+		-------------------------------------------------------------------------------
+		-- LOGIC
+		-------------------------------------------------------------------------------
 
-	stateMachine:RegisterGlobalCallback(function(_, new)
-		toggle = true
-		local nextToggle = table.find(permittedStates, new) ~= nil
-		if nextToggle ~= toggle and nextToggle then
-			for _, shaker in shakers do
-				shaker:Reset()
-			end
-		end
-
-		toggle = nextToggle
-	end)
-
-	do
-		local jobAppendix = ""
+		-- Check for reused states
 		for _, state in permittedStates do
-			jobAppendix ..= state :: string
+			if registeredStates[state] then
+				warn("Duplicate camera states in shaker bindings", state)
+				continue
+			else
+				registeredStates[state] = true
+			end
 		end
 
-		RunService:BindToRenderStep("CameraControllerBefore" .. jobAppendix, Enum.RenderPriority.Camera.Value - 1, function()
-			if lastShakeOffset then
-				playerCamera.CFrame *= lastShakeOffset:Inverse()
+		stateMachine:RegisterGlobalCallback(function(_, new)
+			toggle = true
+			local nextToggle = table.find(permittedStates, new) ~= nil
+			if nextToggle ~= toggle and nextToggle then
+				for _, shaker in shakers do
+					shaker:Reset()
+				end
 			end
+
+			toggle = nextToggle
 		end)
 
-		RunService:BindToRenderStep("CameraControllerAfter" .. jobAppendix, Enum.RenderPriority.Camera.Value + 1, function()
-			if toggle then
-				local dt = 0.015
+		return {
+			RegisterShaker = function(shaker: Shaker.Shaker)
+				table.insert(shakers, shaker)
+			end,
 
-				lastShakeOffset = CFrame.new()
-				for _, shaker in shakers do
-					lastShakeOffset *= shaker:Update(dt)
+			GetShakeOffset = function()
+				return lastShakeOffset
+			end,
+
+			PreUpdate = function()
+				if lastShakeOffset then
+					return lastShakeOffset:Inverse()
+				end
+				return CFrame.identity
+			end,
+
+			PostUpdate = function(dt: number, cappedDt: number?)
+				if toggle then
+					-- Cap dt so focus loss / pause doesn't make shakers accumulate or decay incorrectly
+					lastShakeOffset = CFrame.new()
+					for _, shaker in shakers do
+						lastShakeOffset *= shaker:Update(cappedDt or dt)
+					end
+
+					return lastShakeOffset
 				end
 
-				playerCamera.CFrame *= lastShakeOffset
-			end
-		end)
-	end
-
-	return function(shaker: Shaker.Shaker)
-		table.insert(shakers, shaker)
-	end, function()
-		return lastShakeOffset
+				return CFrame.identity
+			end,
+		}
 	end
 end
 

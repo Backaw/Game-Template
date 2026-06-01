@@ -4,14 +4,14 @@ local BasePartUtil = {}
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local SignedDistanceUtil = require(ReplicatedStorage.Shared.Utils.SignedDistanceUtil)
 
-local AXES = { X = true, Y = true, Z = true }
-
 export type PsuedoBasePart = {
 	Size: Vector3,
 	CFrame: CFrame,
 } | BasePart
 
-BasePartUtil.CORNERS = {
+local AXES = { X = true, Y = true, Z = true }
+
+BasePartUtil.Corners = table.freeze({
 	Vector3.new(0.5, 0.5, 0.5),
 	Vector3.new(0.5, -0.5, 0.5),
 	Vector3.new(-0.5, 0.5, 0.5),
@@ -20,7 +20,11 @@ BasePartUtil.CORNERS = {
 	Vector3.new(0.5, -0.5, -0.5),
 	Vector3.new(-0.5, 0.5, -0.5),
 	Vector3.new(-0.5, -0.5, -0.5),
-}
+})
+
+-------------------------------------------------------------------------------
+-- GETTERS
+-------------------------------------------------------------------------------
 
 -- Returns the size of a part's selection box
 function BasePartUtil.getGlobalExtentsSize(part: PsuedoBasePart, offset: CFrame?): (Vector3, CFrame)
@@ -34,7 +38,7 @@ function BasePartUtil.getGlobalExtentsSize(part: PsuedoBasePart, offset: CFrame?
 		local min = math.huge
 		local max = -math.huge
 
-		for _, corner in BasePartUtil.CORNERS do
+		for _, corner in BasePartUtil.Corners do
 			local position = (offset:PointToObjectSpace(cframe:PointToWorldSpace(size * corner)) :: any)[axis] :: number
 			if position < min then
 				min = position
@@ -65,15 +69,9 @@ function BasePartUtil.getGlobalSurfaceExtentSize(part: PsuedoBasePart, surfaceDi
 	}, offset)
 end
 
--- Welds two baseparts together
-function BasePartUtil.weldTo(part0: BasePart, part1: BasePart, weldParent: BasePart?)
-	local weldConstraint = Instance.new("WeldConstraint")
-	weldConstraint.Name = ("%s>%s"):format(part0.Name, part1.Name)
-	weldConstraint.Part0 = part0
-	weldConstraint.Part1 = part1
-	weldConstraint.Parent = weldParent or part0
-
-	return weldConstraint
+function BasePartUtil.getVolume(part: BasePart)
+	local size = part.Size
+	return size.X * size.Y * size.Z
 end
 
 --[[
@@ -88,7 +86,7 @@ function BasePartUtil.closestPoint(part0: PsuedoBasePart, part1: PsuedoBasePart)
 
 	local part1Size: Vector3 = part1.Size
 	local part1CFrame: CFrame = part1.CFrame
-	for _, corner in BasePartUtil.CORNERS do
+	for _, corner in BasePartUtil.Corners do
 		local closestPointToCorner =
 			SignedDistanceUtil.getClosestPointOnBox(part0 :: BasePart, part1CFrame:PointToWorldSpace(part1Size * corner))
 
@@ -100,6 +98,32 @@ function BasePartUtil.closestPoint(part0: PsuedoBasePart, part1: PsuedoBasePart)
 	end
 
 	return closestPoint
+end
+
+-------------------------------------------------------------------------------
+-- UTIL
+-------------------------------------------------------------------------------
+
+-- Welds two baseparts together
+function BasePartUtil.weldTo(part0: BasePart, part1: BasePart, weldParent: BasePart?)
+	local weldConstraint = Instance.new("WeldConstraint")
+	weldConstraint.Name = ("%s>%s"):format(part0.Name, part1.Name)
+	weldConstraint.Part0 = part0
+	weldConstraint.Part1 = part1
+	weldConstraint.Parent = weldParent or part0
+
+	return weldConstraint
+end
+
+function BasePartUtil.weldToAutoC0(part0: BasePart, part1: BasePart, parent: Instance?)
+	local weld = Instance.new("Weld")
+	weld.Name = ("%s>%s"):format(part0.Name, part1.Name)
+	weld.Part0 = part0
+	weld.Part1 = part1
+	weld.C0 = part0.CFrame:ToObjectSpace(part1.CFrame)
+	weld.Parent = parent or part0
+
+	return weld
 end
 
 return BasePartUtil

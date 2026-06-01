@@ -3,7 +3,7 @@ local Limiter = {}
 
 local debounces: { [string]: { [any]: true? } } = {}
 local indecisives: { [string]: { [any]: number? } } = {}
-local confirmations: { [string]: { Value: any, SetTime: number } } = {}
+local confirmations: { [string]: { Value: any, AllowTime: number } } = {}
 
 function Limiter.debounce(scope: string, key: any, cooldown: number)
 	local scopeList = debounces[scope]
@@ -36,20 +36,27 @@ function Limiter.indecisive(scope: string, key: any, cooldown: number, callback:
 	task.delay(cooldown, function()
 		if scopeList[key] == hash then
 			callback()
+
 			scopeList[key] = nil
 		end
 	end)
+end
+
+function Limiter.clearIndecisive(scope: string, key: any)
+	if indecisives[scope] then
+		indecisives[scope][key] = nil
+	end
 end
 
 -- Prevents code from changing mind too frequently. It'll help verify that a change is still valid rather than flipping to frequently
 function Limiter.confirm(scope: string, value: any, cooldown: number)
 	local confirmation = confirmations[scope]
 	if confirmation and confirmation.Value == value then
-		if os.clock() - confirmation.SetTime >= cooldown then
+		if confirmation.AllowTime <= os.clock() then
 			return true
 		end
 	else
-		confirmations[scope] = { Value = value, SetTime = os.clock() }
+		confirmations[scope] = { Value = value, AllowTime = if confirmation then confirmation.AllowTime else os.clock() + cooldown }
 	end
 
 	return false
@@ -60,7 +67,7 @@ function Limiter.confirmToggle(scope: string, confirmationValue: any, value: any
 	if value == confirmationValue then
 		return Limiter.confirm(scope, value, cooldown)
 	else
-		confirmations[scope] = { Value = value, SetTime = os.clock() }
+		confirmations[scope] = { Value = value, AllowTime = os.clock() + cooldown }
 	end
 
 	return false

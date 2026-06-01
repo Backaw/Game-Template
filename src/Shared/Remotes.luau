@@ -234,6 +234,12 @@ end
 
 -- Initialize folder structure
 if IS_SERVER then
+	-- Destroy stale Network folder from previous sessions (prevents duplicate causing client WaitForChild to hang)
+	local existing = ReplicatedStorage:FindFirstChild("Network")
+	if existing then
+		existing:Destroy()
+	end
+
 	networkFolder = InstanceUtil.newNameParent(Instance.new("Folder"), "Network", ReplicatedStorage)
 	eventFolder = InstanceUtil.newNameParent(Instance.new("Folder"), "Remotes", networkFolder)
 	functionFolder = InstanceUtil.newNameParent(Instance.new("Folder"), "RemoteFunction", networkFolder)

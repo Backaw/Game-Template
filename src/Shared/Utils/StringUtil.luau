@@ -49,9 +49,7 @@ end
 function StringUtil.seperateSnakeCase(str: string)
 	local result = ""
 	for word in string.gmatch(str, "[%u%d]+[%l%d]*") do
-		local capitalMatch = word:find("[%u%d]+")
-		local capital = capitalMatch and word:sub(capitalMatch):upper() or ""
-		result = result .. (if #result == 0 then "" else " ") .. capital .. (word:sub(#capital + 1, #word):lower() or "")
+		result = result .. (if #result == 0 then "" else " ") .. word:sub(1, 1):upper() .. word:sub(2):lower()
 	end
 
 	return result

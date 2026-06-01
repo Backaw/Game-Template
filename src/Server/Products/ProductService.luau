@@ -5,18 +5,21 @@ local Players = game:GetService("Players")
 local MarketplaceService = game:GetService("MarketplaceService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
-local Promise = require(ReplicatedStorage.Shared.Promise)
-local Signal = require(ReplicatedStorage.Shared.Signal)
-local Remotes = require(ReplicatedStorage.Shared.Remotes)
-local CurrencyUtil = require(ReplicatedStorage.Shared.Currency.CurrencyUtil)
-local ProductConstants = require(ReplicatedStorage.Shared.Products.ProductConstants)
-local ProductUtil = require(ReplicatedStorage.Shared.Products.ProductUtil)
-local GameAnalytics = require(ReplicatedStorage.Shared.Packages.GameAnalytics)
-local DeferredPromise = require(ReplicatedStorage.Shared.DeferredPromise)
-local PlayerDataService = require(ServerStorage.Server.Data.PlayerDataService)
-local PlayersService = require(ServerStorage.Server.PlayersService)
-local GameAnalyticsService = require(ServerStorage.Server.GameAnalyticsService)
-local CurrencyService = require(ServerStorage.Server.CurrencyService)
+
+local Shared = ReplicatedStorage.Shared
+local Server = ServerStorage.Server
+local ProductConstants = require(Shared.Products.ProductConstants)
+local GameAnalytics = require(Shared.Packages.GameAnalytics)
+local CurrencyUtil = require(Shared.Currency.CurrencyUtil)
+local ProductUtil = require(Shared.Products.ProductUtil)
+local DeferredPromise = require(Shared.DeferredPromise)
+local Promise = require(Shared.Promise)
+local Remotes = require(Shared.Remotes)
+local Signal = require(Shared.Signal)
+local GameAnalyticsService = require(Server.GameAnalyticsService)
+local PlayerDataService = require(Server.Data.PlayerDataService)
+local CurrencyService = require(Server.CurrencyService)
+local PlayersService = require(Server.PlayersService)
 local RewardService
 
 -------------------------------------------------------------------------------
@@ -46,7 +49,7 @@ local robuxPrices: { [number]: number } = {}
 -- PUBLIC MEMEBRS
 -------------------------------------------------------------------------------
 
-ProductService.ProductPurchased = Signal.new() :: Signal.Signal<Player, ProductConstants.Product>
+ProductService.ProductPurchased = Signal.new() :: Signal.Signal<Player, ProductConstants.ProductType, string>
 
 -------------------------------------------------------------------------------
 -- PRIVATE METHODS
@@ -65,7 +68,7 @@ local function updateRobuxPrices(updating: ProductConstants.ProductCategories)
 			local promise = Promise.retry(function()
 				return Promise.new(function(resolve, reject)
 					local success, info = pcall(function()
-						return MarketplaceService:GetProductInfo(id, infoType)
+						return MarketplaceService:GetProductInfoAsync(id, infoType)
 					end)
 					if success then
 						resolve(info)
@@ -129,13 +132,13 @@ function ProductService.giveGamepass(player: Player, id: number, verified: boole
 end
 
 function ProductService.giveProduct(player: Player, product: ProductConstants.Product)
-	ProductService.ProductPurchased:Fire(player, product)
+	ProductService.ProductPurchased:Fire(player, product.Type, product.Name)
 	REMOTES.ProductGiven:FireClient(player, product.Type, product.Name)
 end
 
 function ProductService.purchaseProduct(
 	player: Player,
-	productType: string,
+	productType: ProductConstants.ProductType,
 	productName: string,
 	attribution: ProductConstants.PurchaseAttribution
 )
@@ -213,7 +216,7 @@ function ProductService.purchaseProduct(
 	end
 
 	if success then
-		ProductService.ProductPurchased:Fire(player, product)
+		ProductService.ProductPurchased:Fire(player, productType, productName)
 	end
 
 	return success
@@ -259,8 +262,8 @@ function ProductService.init()
 			return not ProductUtil.hasBundle(name, player)
 		end)
 
-		ProductService.ProductPurchased:Connect(function(player, purchasedProduct)
-			if purchasedProduct == product then
+		ProductService.ProductPurchased:Connect(function(player, productType, productName)
+			if productType == product.Type and productName == product.Name then
 				for _, reward in bundle.Rewards do
 					(RewardService :: any).award(player, reward, "Bundle" .. name, false)
 				end

@@ -2,7 +2,8 @@
 local UnitTestingService = {}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local ServerScriptService = game:GetService("ServerScriptService")
+local ServerStorage = game:GetService("ServerStorage")
+
 local UnitTester = require(ReplicatedStorage.Shared.UnitTester)
 
 -------------------------------------------------------------------------------
@@ -10,6 +11,6 @@ local UnitTester = require(ReplicatedStorage.Shared.UnitTester)
 -------------------------------------------------------------------------------
 
 UnitTester.run(ReplicatedStorage.Shared)
-UnitTester.run(ServerScriptService.Server)
+UnitTester.run(ServerStorage.Server)
 
 return UnitTestingService

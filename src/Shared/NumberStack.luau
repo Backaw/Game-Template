@@ -4,20 +4,41 @@ local NumberStack = {}
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Signal = require(ReplicatedStorage.Shared.Signal)
 
+-------------------------------------------------------------------------------
+-- CONSTANTS
+-------------------------------------------------------------------------------
+
+local OPERANDS = {
+	Add = "Add",
+	Max = "Max",
+}
+
+-------------------------------------------------------------------------------
+-- TYPES
+-------------------------------------------------------------------------------
+
 export type NumberStack = {
 	Changed: Signal.Signal<number>,
 	Push: (NumberStack, string, number, boolean?) -> boolean,
 	Pop: (NumberStack, string, boolean?) -> boolean,
 	Get: (NumberStack) -> number,
+	HasJob: (NumberStack, string) -> boolean,
 	Clear: (NumberStack, boolean?) -> (),
 }
 
-NumberStack.Operand = {
-	Add = "Add",
-	Max = "Max",
-}
+export type Operand = keyof<typeof(OPERANDS)>
 
-function NumberStack.new(operand: keyof<typeof(NumberStack.Operand)>, min: number)
+-------------------------------------------------------------------------------
+-- PUBLIC VARIABLES
+-------------------------------------------------------------------------------
+
+NumberStack.Operand = OPERANDS :: { [Operand]: Operand }
+
+-------------------------------------------------------------------------------
+-- CONSTRUCTOR
+-------------------------------------------------------------------------------
+
+function NumberStack.new(operand: Operand, min: number)
 	local stack = {} :: NumberStack
 
 	local jobs: { [string]: number }
@@ -25,11 +46,10 @@ function NumberStack.new(operand: keyof<typeof(NumberStack.Operand)>, min: numbe
 
 	function stack:Push(job, entry, quietDebugging)
 		if jobs[job] then
-			if quietDebugging then
-				return false
-			else
-				error(("Job %s already exists"):format(job))
+			if not quietDebugging then
+				warn(("Job %s already exists"):format(job), debug.traceback())
 			end
+			return false
 		end
 
 		jobs[job] = entry
@@ -40,17 +60,20 @@ function NumberStack.new(operand: keyof<typeof(NumberStack.Operand)>, min: numbe
 
 	function stack:Pop(job, quietDebugging)
 		if not jobs[job] then
-			if quietDebugging then
-				return false
-			else
-				error(("Job %s does not exist"):format(job))
+			if not quietDebugging then
+				warn("Job %s does not exist", job, debug.traceback())
 			end
+			return false
 		end
 
 		jobs[job] = nil
 
 		stack.Changed:Fire(stack:Get())
 		return true
+	end
+
+	function stack:HasJob(job)
+		return jobs[job] ~= nil
 	end
 
 	function stack:Get()

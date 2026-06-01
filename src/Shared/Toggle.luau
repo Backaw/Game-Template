@@ -24,6 +24,7 @@ local Signal = require(ReplicatedStorage.Shared.Signal)
 
 export type Toggle = {
 	Changed: Signal.Signal<boolean>,
+	JobsChanged: Signal.Signal<{ any }>,
 	Set: (Toggle, any, boolean) -> boolean,
 	RemoveJob: (Toggle, any) -> boolean,
 	ForceSet: (Toggle, boolean) -> (),
@@ -45,7 +46,9 @@ function Toggle.new(initialValue: boolean)
 	-------------------------------------------------------------------------------
 	-- PUBLIC MEMBERS
 	-------------------------------------------------------------------------------
+
 	toggle.Changed = Signal.new()
+	toggle.JobsChanged = Signal.new()
 
 	-------------------------------------------------------------------------------
 	-- PUBLIC METHODS
@@ -71,6 +74,7 @@ function Toggle.new(initialValue: boolean)
 			end
 
 			table.insert(jobs, job)
+			toggle.JobsChanged:Fire(jobs)
 		else
 			local jobIndex = table.find(jobs, job)
 			-- RETURN: Job doesn't exist
@@ -79,6 +83,7 @@ function Toggle.new(initialValue: boolean)
 			end
 
 			table.remove(jobs, jobIndex)
+			toggle.JobsChanged:Fire(jobs)
 
 			if #jobs == 0 then
 				value = initialValue
@@ -94,6 +99,8 @@ function Toggle.new(initialValue: boolean)
 	function toggle:RemoveJob(job)
 		if toggle:HasJob(job) then
 			toggle:Set(job, not value)
+			toggle.JobsChanged:Fire(jobs)
+
 			return true
 		end
 
@@ -107,8 +114,10 @@ function Toggle.new(initialValue: boolean)
 			return
 		end
 
-		toggle.Changed:Fire(newValue)
 		value = newValue
+
+		toggle.Changed:Fire(newValue)
+		toggle.JobsChanged:Fire(jobs)
 	end
 
 	function toggle:ForceSetQuiet(newValue)

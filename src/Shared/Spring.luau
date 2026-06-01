@@ -22,7 +22,8 @@ type NumVect = number | Vector3
 -- PRIVATE MEMBERS
 -------------------------------------------------------------------------------
 
-local MIN_DELTA_TIME = 1 / 50
+local MAX_DT = 1 / 10
+local MAX_SCALED_STEP = 0.45
 
 -------------------------------------------------------------------------------
 -- CONSTRUCTOR
@@ -50,21 +51,33 @@ function Spring.new(position: NumVect, mass: NumVect, stiffness: NumVect, dampin
 		position = newPosition
 	end
 
-	function spring:Update(target, dt)
-		dt = math.min(dt, MIN_DELTA_TIME)
+	function spring:Update(target, dt, cappedDt)
+		dt = cappedDt or math.min(dt, MAX_DT)
 		local scaledDeltaTime = dt * (speed :: any)
 
-		local dx = target - position :: any
-		local acceleration = (dx * stiffness) / mass - velocity * damping :: any
+		-- Sub-step when the scaled step exceeds the stability limit for the integration
+		if typeof(scaledDeltaTime) == "number" and scaledDeltaTime > MAX_SCALED_STEP then
+			local steps = math.ceil(scaledDeltaTime / MAX_SCALED_STEP)
+			local stepDt = scaledDeltaTime / steps
 
-		velocity += acceleration * scaledDeltaTime
-		position += velocity * scaledDeltaTime
+			for _ = 1, steps do
+				local dx = target - position :: any
+				local acceleration = (dx * stiffness) / mass - velocity * damping :: any
+				velocity += acceleration * stepDt
+				position += velocity * stepDt
+			end
+		else
+			local dx = target - position :: any
+			local acceleration = (dx * stiffness) / mass - velocity * damping :: any
+			velocity += acceleration * scaledDeltaTime
+			position += velocity * scaledDeltaTime
+		end
 
 		return position
 	end
 
 	function spring:Impulse(impulse)
-		velocity += impulse :: any / mass * IDENTITY
+		velocity += impulse :: any / mass * (if typeof(velocity) == "Vector3" then IDENTITY else 1)
 	end
 
 	function spring:GetVelocity()

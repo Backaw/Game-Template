@@ -2,22 +2,16 @@
 local ColorUtil = {}
 
 function ColorUtil.addValue(color: Color3, addend: number)
-	addend = addend / 255
-
 	local h, s, v = color:ToHSV()
 	return Color3.fromHSV(h, s, math.clamp(v + addend, 0, 1))
 end
 
 function ColorUtil.addHue(color: Color3, addend: number)
-	addend = addend / 255
-
 	local h, s, v = color:ToHSV()
 	return Color3.fromHSV(math.clamp(h + addend, 0, 1), s, v)
 end
 
 function ColorUtil.addSaturation(color: Color3, addend: number)
-	addend = addend / 255
-
 	local h, s, v = color:ToHSV()
 	return Color3.fromHSV(h, math.clamp(s + addend, 0, 1), v)
 end

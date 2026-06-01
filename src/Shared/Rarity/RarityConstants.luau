@@ -5,31 +5,23 @@ local RarityConstants = {}
 -- PRIVATE VARIABLES
 -------------------------------------------------------------------------------
 
-local rarities = {
+local RARITIES = {
 	Common = "Common",
 	Rare = "Rare",
 	Epic = "Epic",
 	Legendary = "Legendary",
 }
 
-local probabilities: { [Rarity]: number } = {
-	[rarities.Common] = 42,
-	[rarities.Rare] = 38,
-	[rarities.Epic] = 17,
-	[rarities.Legendary] = 13,
-}
-
 -------------------------------------------------------------------------------
 -- PUBLIC VARIABLES
 -------------------------------------------------------------------------------
 
-RarityConstants.Rarities = rarities :: { [string]: Rarity }
-RarityConstants.Probabilities = probabilities
+RarityConstants.Rarities = RARITIES :: { [Rarity]: Rarity }
 
 -------------------------------------------------------------------------------
 -- LOGIC
 -------------------------------------------------------------------------------
 
-export type Rarity = keyof<typeof(rarities)>
+export type Rarity = keyof<typeof(RARITIES)>
 
 return RarityConstants

@@ -79,6 +79,7 @@ task.delay(0, function()
 		loadModule(SERVICES.Cmdr.CmdrService),
 		loadModule(SERVICES.PromoCodeService),
 		loadModule(SERVICES.ItemService),
+		loadModule(SERVICES.CharactersService),
 	}
 
 	for _, module in initializing do
@@ -89,17 +90,15 @@ task.delay(0, function()
 	end
 
 	for _, module in initializing do
-		task.spawn(function()
-			local method = module.start
-			if method then
-				(method :: any)()
-			end
-		end)
+		local method = module.start
+		if method then
+			task.spawn(method)
+		end
 	end
 
 	Server.Initialized:invokeResolve()
 
-	print("Welcome to Crash")
+	print("Welcome to NEW GAME")
 	print(string.format("✅ Server loaded in %.6f seconds", os.clock() - ping))
 
 	if DEBUG then
