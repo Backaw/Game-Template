@@ -9,6 +9,7 @@ export type StateMachine<T> = {
 	RegisterGlobalCallback: (StateMachine<T>, callback: (fromState: T, toState: T) -> ()) -> Signal.Connection<T, T>,
 	RegisterStateCallbacks: (StateMachine<T>, state: T, onOpen: (() -> ())?, onClose: (() -> ())?) -> Signal.Connection<T, T>,
 	GetState: (StateMachine<T>) -> T,
+	GetStates: (StateMachine<T>) -> { T },
 	Push: (StateMachine<T>, state: T) -> (),
 	ReplaceUpTill: (StateMachine<T>, replacee: T, to: T) -> (),
 	Pop: (StateMachine<T>) -> (),
@@ -80,6 +81,10 @@ function StateMachine.new<T>(states: { T }, initialState: T)
     ]]
 	function stateMachine:GetState()
 		return stack[#stack]
+	end
+
+	function stateMachine:GetStates()
+		return TableUtil.shallowClone(states)
 	end
 
 	function stateMachine:ToggleLock(toggle: boolean)

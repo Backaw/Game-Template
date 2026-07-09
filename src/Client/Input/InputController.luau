@@ -2,14 +2,16 @@
 local InputController = {}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Toggle = require(ReplicatedStorage.Shared.Toggle)
-local Maid = require(ReplicatedStorage.Shared.Maid)
-local Signal = require(ReplicatedStorage.Shared.Signal)
-local UIController = require(ReplicatedStorage.Client.UI.UIController)
-local UIConstants = require(ReplicatedStorage.Client.UI.UIConstants)
-local InputUtil = require(ReplicatedStorage.Client.Utils.InputUtil)
-local LoadingController = require(ReplicatedStorage.Client.LoadingController)
-local InputConstants = require(ReplicatedStorage.Client.Input.InputConstants)
+
+local Shared = ReplicatedStorage.Shared
+local Client = ReplicatedStorage.Client
+local Toggle = require(Shared.Toggle)
+local Signal = require(Shared.Signal)
+local Maid = require(Shared.Maid)
+local LoadingController = require(Client.LoadingController)
+local InputConstants = require(Client.Input.InputConstants)
+local UIController = require(Client.UI.UIController)
+local InputUtil = require(Client.Utils.InputUtil)
 
 -------------------------------------------------------------------------------
 -- TYPES
@@ -23,11 +25,15 @@ type Handler = (Enum.UserInputState) -> ()
 export type UIParams = InputConstants.UIParams
 
 -------------------------------------------------------------------------------
--- PRIVATE MEMBERS
+-- CONSTANTS
 -------------------------------------------------------------------------------
 
-local UI_STATE = UIConstants.States.HUD :: UIConstants.State
+local UI_STATE = UIController.States.HUD
 local OVERRIDE_JOB = "Override"
+
+-------------------------------------------------------------------------------
+-- PRIVATE VARIABLES
+-------------------------------------------------------------------------------
 
 local inputMaid = Maid.new()
 
@@ -62,17 +68,20 @@ function InputController.registerInput(
 	gamepad: Input,
 	handler: Handler,
 	uiParams: InputConstants.UIParams?,
-	uiState: UIConstants.State?,
+	uiState: UIController.State?,
 	overrideGameInput: boolean?
 )
 	LoadingController.Loaded:andThen(function()
 		local function _handler(inputState: Enum.UserInputState)
-			if uiStateMachine:GetState() ~= (uiState or UI_STATE) then
-				return
-			end
+			local isEnd = inputState == Enum.UserInputState.End
+			if not isEnd then
+				if uiStateMachine:GetState() ~= (uiState or UI_STATE) then
+					return
+				end
 
-			if not enabledInputs[id]:Get() then
-				return
+				if not enabledInputs[id]:Get() then
+					return
+				end
 			end
 
 			InputController.InputSunk:Fire(id, inputState)

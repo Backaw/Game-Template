@@ -54,6 +54,19 @@ function ItemUtil.getItemStores(itemType: ItemConstants.ItemType, player: Player
 	return DataUtil.get(player :: Player, ItemUtil.getOwnedItemsAddress(itemType))
 end
 
+function ItemUtil.getStoreTemplate(itemType: ItemConstants.ItemType): { [string]: any } | number | boolean
+	local template = (ItemConstants.StoreTemplates :: { [ItemConstants.ItemType]: { [string]: any } | number })[itemType]
+	if template then
+		if typeof(template) == "table" then
+			return TableUtil.deepClone(template)
+		else
+			return template
+		end
+	else
+		return true
+	end
+end
+
 function ItemUtil.hasItem(itemType: ItemConstants.ItemType, itemName: string, player: Player?)
 	return ItemUtil.getItemStore(itemType, itemName, player) ~= nil
 end

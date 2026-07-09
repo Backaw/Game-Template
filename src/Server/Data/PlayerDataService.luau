@@ -10,16 +10,16 @@ local PlayerDataService = {}
 local ServerStorage = game:GetService("ServerStorage")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
+
+local ProfileTemplate = require(ReplicatedStorage.Shared.Data.ProfileTemplate)
 local DataFormatUtil = require(ReplicatedStorage.Shared.Data.DataFormatUtil)
-local Signal = require(ReplicatedStorage.Shared.Signal)
+local DataConstants = require(ReplicatedStorage.Shared.Data.DataConstants)
 local TableUtil = require(ReplicatedStorage.Shared.Utils.TableUtil)
 local Promise = require(ReplicatedStorage.Shared.Promise)
-local GameUtil = require(ReplicatedStorage.Shared.Game.GameUtil)
-local ProfileStore = require(ServerStorage.Packages.ProfileStore)
+local Signal = require(ReplicatedStorage.Shared.Signal)
 local PlayersService = require(ServerStorage.Server.PlayersService)
-local DataConstants = require(ReplicatedStorage.Shared.Data.DataConstants)
-local ProfileTemplate = require(ReplicatedStorage.Shared.Data.ProfileTemplate)
 local DataTypes = require(ReplicatedStorage.Shared.Data.DataTypes)
+local ProfileStore = require(ServerStorage.Packages.ProfileStore)
 
 -------------------------------------------------------------------------------
 -- PRIVATE MEMBERS
@@ -191,7 +191,7 @@ PlayersService.registerLoader(PlayersService.LoadJobs.PlayerData, function(playe
 			} :: { Steal: boolean? }
 
 		local profile
-		if (not DataConstants.SaveData) and (not GameUtil.isLive()) then
+		if DataConstants.DoNotSaveData then
 			profile = playerStore.Mock:StartSessionAsync(profileKey, profileParams)
 		else
 			profile = playerStore:StartSessionAsync(`{player.UserId}`, profileParams)
@@ -249,7 +249,7 @@ PlayersService.registerLoader(PlayersService.LoadJobs.PlayerData, function(playe
 				player:Kick(`Profile session end - Please rejoin`)
 			end)
 		else
-			reject("Data profile does not exist - Please rejoin")
+			reject("Data profile does not exist - dsdsdsdsdslox rejoin")
 		end
 	end)
 end)

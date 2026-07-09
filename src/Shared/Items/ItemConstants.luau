@@ -44,6 +44,8 @@ ItemConstants.DataEvents = {
 	EquippedChanged = "EquippedItemChanged",
 }
 
+ItemConstants.StoreTemplates = {}
+
 -------------------------------------------------------------------------------
 -- TYPE EXPORTS
 -------------------------------------------------------------------------------

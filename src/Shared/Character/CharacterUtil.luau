@@ -4,17 +4,23 @@ local CharacterUtil = {}
 -------------------------------------------------------------------------------
 -- PUBLIC METHODS
 -------------------------------------------------------------------------------
-function CharacterUtil.kill(player: Player)
-	local character = player.Character
 
+function CharacterUtil.kill(character: CharacterConstants.Character)
+	if not character then
+		return
+	end
+
+	local humanoid = character:WaitForChild("Humanoid", 3) :: Humanoid?
+	if humanoid and humanoid.Health > 0 then
+		humanoid:TakeDamage(humanoid.Health)
+	end
+end
+
+function CharacterUtil.killPlayer(player: Player?)
+	player = player or Players.LocalPlayer
+	local character = player.Character
 	if character then
-		local humanoid = character:WaitForChild("Humanoid", 3) :: Humanoid?
-		if humanoid then
-			humanoid:TakeDamage(humanoid.MaxHealth - 1)
-			task.defer(function()
-				humanoid:TakeDamage(1)
-			end)
-		end
+		CharacterUtil.kill(character :: CharacterConstants.Character)
 	end
 end
 

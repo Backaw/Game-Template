@@ -24,6 +24,14 @@ function MathUtil.round(x: number): number
 	return if math.abs(floor - x) < math.abs(ceil - x) then floor else ceil
 end
 
+function MathUtil.summation(...: number)
+	local sum = 0
+	for _, value in table.pack(...) do
+		sum += value
+	end
+	return sum
+end
+
 function MathUtil.minimizeAngle(x: number): number
 	x = x % (2 * math.pi)
 	local x2 = x - (2 * math.pi)
@@ -32,6 +40,10 @@ end
 
 function MathUtil.nextSign()
 	return if random:NextInteger(1, 2) == 1 then 1 else -1
+end
+
+function MathUtil.nextBool()
+	return random:NextInteger(1, 2) == 1
 end
 
 function MathUtil.lerpNumber(a: number, b: number, alpha: number)

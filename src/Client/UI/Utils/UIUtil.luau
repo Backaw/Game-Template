@@ -13,6 +13,7 @@ export type Input = Enum.UserInputType | Enum.KeyCode | nil
 -------------------------------------------------------------------------------
 -- PUBLIC METHODS
 -------------------------------------------------------------------------------
+
 function UIUtil.isStateInteractionPermissive(state: UIConstants.State)
 	return table.find(UIConstants.InteractionPermissiveStates, state) ~= nil
 end

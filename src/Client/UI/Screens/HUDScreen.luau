@@ -10,7 +10,6 @@ local Shared = ReplicatedStorage.Shared
 local Toggle = require(Shared.Toggle)
 local SquishyButton = require(Client.UI.Components.SquishyButton)
 local UIController = require(Client.UI.UIController)
-local UIConstants = require(Client.UI.UIConstants)
 local Badge = require(Client.UI.Components.Badge)
 local UIUtil = require(Client.UI.Utils.UIUtil)
 
@@ -18,7 +17,7 @@ local UIUtil = require(Client.UI.Utils.UIUtil)
 -- CONSTANTS
 -------------------------------------------------------------------------------
 
-local UI_STATE = UIConstants.States.HUD
+local UI_STATE = UIController.States.HUD
 
 -------------------------------------------------------------------------------
 -- PRIVATE MEMBERS
@@ -36,7 +35,7 @@ local badges: { [string]: { Toggle: Toggle.Toggle, SetText: (string) -> () } } =
 -- PRIVATE FUNCTIONS
 -------------------------------------------------------------------------------
 
-local function initStateButton(guiObject: ImageButton, state: UIConstants.State, validator: (() -> boolean)?)
+local function initStateButton(guiObject: ImageButton, state: UIController.State, validator: (() -> boolean)?)
 	local icon = (guiObject :: any).Icon
 
 	local button = SquishyButton.new(guiObject, icon)

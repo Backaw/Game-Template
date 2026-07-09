@@ -47,6 +47,10 @@ function DebugUtil.isDebuggingFlags<T>(flags: T, secondaryFactor: boolean?): { [
 	return flags
 end
 
+function DebugUtil.isDebuggingValue<T>(value: T, secondaryFactor: boolean?): T?
+	return if DebugUtil.isDebugging(true, secondaryFactor) then value else nil
+end
+
 function DebugUtil.canThrowDebugErrors()
 	return not GameUtil.isLive()
 end
@@ -207,7 +211,6 @@ if DebugUtil.canDebug() and IS_CLIENT and DEBUG_LOW_FPS then
 		end
 	end)
 end
-
 -------------------------------------------------------------------------------
 -- EXPORT TYPES
 -------------------------------------------------------------------------------

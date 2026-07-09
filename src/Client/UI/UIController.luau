@@ -26,6 +26,8 @@ type ScreenStateCallbacks = {
 	Maximize: ScreenStateCallback,
 }
 
+export type State = UIConstants.State
+
 -------------------------------------------------------------------------------
 -- PRIVATE MEMBERS
 -------------------------------------------------------------------------------
@@ -41,6 +43,7 @@ local screenStateCallbacks: { [UIConstants.State]: ScreenStateCallbacks } = {}
 -------------------------------------------------------------------------------
 
 UIController.ScreenStateTransition = Promise.resolved() :: DeferredPromise.DeferredPromise
+UIController.States = UIConstants.States
 
 -------------------------------------------------------------------------------
 -- PUBLIC FUNCTIONS
