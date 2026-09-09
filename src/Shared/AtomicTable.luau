@@ -10,51 +10,55 @@ local TableUtil = require(ReplicatedStorage.Shared.Utils.TableUtil)
 
 type TableConnection<T> = Signal.Connection<{ [keyof<T>]: true? }, T, T>
 type TableChangeHandler<T> = (changed: { [keyof<T>]: true? }, new: T, old: T) -> ()
-
-type SubscribeMethod<T> = (self: any, handler: TableChangeHandler<T>) -> TableConnection<T>
-type ConnectMethod<T> = (self: any, handler: TableChangeHandler<T>) -> TableConnection<T>
-type CompareMethod<T> = (self: any, index: keyof<T>, compareValue: any) -> boolean
-type GetMethod<T> = (self: any) -> T
-type GetIndexMethod<T> = (self: any, index: keyof<T>) -> any
-
 type GenericTable = { [any]: any }
+
+type AtomicMember = {
+	_atomicState: true,
+	Get: (self: AtomicMember) -> any,
+	Connect: (self: AtomicMember, handler: (...any) -> ()) -> Signal.Connection<any>,
+}
 
 export type AtomicTable<T> = {
 	_atomicState: true,
-	_staticMembers: T,
-	_atomicMembers: GenericTable,
-	_atomicConnections: { any },
-	_event: Signal.Signal<{ [keyof<T>]: true? }, T, T>,
 	Set: (self: AtomicTable<T>, new: T) -> (),
 	SetIndex: (self: AtomicTable<T>, index: keyof<T>, value: any?) -> (),
 	Update: (self: AtomicTable<T>, updater: (current: T) -> T) -> (),
-	Subscribe: SubscribeMethod<T>,
-	Connect: ConnectMethod<T>,
-	Compare: CompareMethod<T>,
-	Get: GetMethod<T>,
-	GetIndex: GetIndexMethod<T>,
+	Subscribe: (self: AtomicTable<T>, handler: TableChangeHandler<T>) -> TableConnection<T>,
+	Connect: (self: AtomicTable<T>, handler: TableChangeHandler<T>) -> TableConnection<T>,
+	Compare: (self: AtomicTable<T>, index: keyof<T>, compareValue: any) -> boolean,
+	Get: (self: AtomicTable<T>) -> T,
+	GetIndex: (self: AtomicTable<T>, index: keyof<T>) -> any,
 	RestrictedAccess: (self: AtomicTable<T>) -> RestrictedAtomicTable<T>,
 	Destroy: (self: AtomicTable<T>) -> (),
 }
 
 export type RestrictedAtomicTable<T> = {
 	_atomicState: true,
-	_staticMembers: T,
-	_atomicMembers: GenericTable,
-	_event: Signal.Signal<{ [keyof<T>]: true? }, T, T>,
-	Subscribe: SubscribeMethod<T>,
-	Connect: ConnectMethod<T>,
-	Compare: CompareMethod<T>,
-	Get: GetMethod<T>,
-	GetIndex: GetIndexMethod<T>,
+	Subscribe: (self: RestrictedAtomicTable<T>, handler: TableChangeHandler<T>) -> TableConnection<T>,
+	Connect: (self: RestrictedAtomicTable<T>, handler: TableChangeHandler<T>) -> TableConnection<T>,
+	Compare: (self: RestrictedAtomicTable<T>, index: keyof<T>, compareValue: any) -> boolean,
+	Get: (self: RestrictedAtomicTable<T>) -> T,
+	GetIndex: (self: RestrictedAtomicTable<T>, index: keyof<T>) -> any,
 }
+
+type SharedAtomicTableStorage<T> = {
+	_staticMembers: T,
+	_atomicMembers: { [any]: AtomicMember },
+	_event: Signal.Signal<{ [keyof<T>]: true? }, T, T>,
+}
+
+type InternalAtomicTable<T> = AtomicTable<T> & SharedAtomicTableStorage<T> & {
+	_atomicConnections: { Signal.Connection<any> },
+}
+
+type InternalRestrictedAtomicTable<T> = RestrictedAtomicTable<T> & SharedAtomicTableStorage<T>
 
 -------------------------------------------------------------------------------
 -- PRIVATE FUNCTIONS
 -------------------------------------------------------------------------------
 
-local function isAtomic(value: any): boolean
-	return type(value) == "table" and value._atomicState == true
+local function isAtomic(value: unknown): boolean
+	return type(value) == "table" and (value :: GenericTable)._atomicState == true
 end
 
 local function keysOf<T>(t: T): { [keyof<T>]: true? }
@@ -65,8 +69,7 @@ local function keysOf<T>(t: T): { [keyof<T>]: true? }
 	return keys
 end
 
--- Deep-cloned snapshot for external consumers (Get, Subscribe, old state)
-local function buildSnapshot<T>(self: AtomicTable<T>): T
+local function buildSnapshot<T>(self: SharedAtomicTableStorage<T>): T
 	local snapshot = TableUtil.deepClone(self._staticMembers) :: GenericTable
 	for k, member in self._atomicMembers do
 		snapshot[k] = member:Get()
@@ -74,8 +77,7 @@ local function buildSnapshot<T>(self: AtomicTable<T>): T
 	return snapshot :: T
 end
 
--- Shallow merge for event firing (no deep clone)
-local function buildCurrentView<T>(self: AtomicTable<T>): T
+local function buildCurrentView<T>(self: SharedAtomicTableStorage<T>): T
 	local view: GenericTable = table.clone(self._staticMembers)
 	for k, member in self._atomicMembers do
 		view[k] = member:Get()
@@ -83,9 +85,11 @@ local function buildCurrentView<T>(self: AtomicTable<T>): T
 	return view :: T
 end
 
-local function handleChange<T>(self: AtomicTable<T>, old: T, new: T)
+local function handleChange<T>(self: SharedAtomicTableStorage<T>, old: T, new: T)
 	local difference = TableUtil.difference(old, new)
-	if next(difference) == nil then return end
+	if next(difference :: any) == nil then
+		return
+	end
 	self._event:Fire(keysOf(difference), new, old)
 end
 
@@ -96,7 +100,7 @@ end
 local AtomicTable = {}
 AtomicTable._atomicState = true
 
-function AtomicTable.Set<T>(self: AtomicTable<T>, new: T)
+function AtomicTable.Set<T>(self: InternalAtomicTable<T>, new: T)
 	assert(type(new) == "table", "Set only accepts a table for new")
 
 	local old = buildSnapshot(self)
@@ -109,7 +113,7 @@ function AtomicTable.Set<T>(self: AtomicTable<T>, new: T)
 	handleChange(self, old, buildCurrentView(self))
 end
 
-function AtomicTable.SetIndex<T>(self: AtomicTable<T>, index: keyof<T>, value: any?)
+function AtomicTable.SetIndex<T>(self: InternalAtomicTable<T>, index: keyof<T>, value: any?)
 	assert(not self._atomicMembers[index], "Cannot use SetIndex on an atomic member")
 
 	local old = buildSnapshot(self);
@@ -117,7 +121,7 @@ function AtomicTable.SetIndex<T>(self: AtomicTable<T>, index: keyof<T>, value: a
 	handleChange(self, old, buildCurrentView(self))
 end
 
-function AtomicTable.Update<T>(self: AtomicTable<T>, updater: (current: T) -> T)
+function AtomicTable.Update<T>(self: InternalAtomicTable<T>, updater: (current: T) -> T)
 	local old = buildSnapshot(self)
 	for k, v in updater(self._staticMembers) :: GenericTable do
 		if not self._atomicMembers[k] then
@@ -127,23 +131,23 @@ function AtomicTable.Update<T>(self: AtomicTable<T>, updater: (current: T) -> T)
 	handleChange(self, old, buildCurrentView(self))
 end
 
-function AtomicTable.Subscribe<T>(self: AtomicTable<T>, handler: TableChangeHandler<T>)
+function AtomicTable.Subscribe<T>(self: SharedAtomicTableStorage<T>, handler: TableChangeHandler<T>)
 	local snapshot = buildSnapshot(self)
 	return self._event:Subscribe(handler, keysOf(snapshot), snapshot, {})
 end
 
-function AtomicTable.Connect<T>(self: AtomicTable<T>, handler: TableChangeHandler<T>)
+function AtomicTable.Connect<T>(self: SharedAtomicTableStorage<T>, handler: TableChangeHandler<T>)
 	return self._event:Connect(handler)
 end
 
-function AtomicTable.Compare<T>(self: AtomicTable<T>, index: keyof<T>, compareValue: any)
+function AtomicTable.Compare<T>(self: SharedAtomicTableStorage<T>, index: keyof<T>, compareValue: any)
 	if self._atomicMembers[index] then
 		return self._atomicMembers[index]:Get() == compareValue
 	end
 	return (self._staticMembers :: GenericTable)[index] == compareValue
 end
 
-function AtomicTable.GetIndex<T>(self: AtomicTable<T>, index: keyof<T>)
+function AtomicTable.GetIndex<T>(self: SharedAtomicTableStorage<T>, index: keyof<T>)
 	if self._atomicMembers[index] then
 		return self._atomicMembers[index]:Get()
 	end
@@ -154,11 +158,11 @@ function AtomicTable.GetIndex<T>(self: AtomicTable<T>, index: keyof<T>)
 	return value
 end
 
-function AtomicTable.Get<T>(self: AtomicTable<T>)
+function AtomicTable.Get<T>(self: SharedAtomicTableStorage<T>)
 	return buildSnapshot(self)
 end
 
-function AtomicTable.Destroy<T>(self: AtomicTable<T>)
+function AtomicTable.Destroy<T>(self: InternalAtomicTable<T>)
 	for _, conn in self._atomicConnections do
 		conn:Disconnect()
 	end
@@ -172,14 +176,14 @@ end
 
 local RestrictedAtomicTable = {}
 RestrictedAtomicTable._atomicState = true
-RestrictedAtomicTable.Subscribe = AtomicTable.Subscribe :: any
-RestrictedAtomicTable.Connect = AtomicTable.Connect :: any
-RestrictedAtomicTable.Compare = AtomicTable.Compare :: any
-RestrictedAtomicTable.Get = AtomicTable.Get :: any
-RestrictedAtomicTable.GetIndex = AtomicTable.GetIndex :: any
+RestrictedAtomicTable.Subscribe = AtomicTable.Subscribe
+RestrictedAtomicTable.Connect = AtomicTable.Connect
+RestrictedAtomicTable.Compare = AtomicTable.Compare
+RestrictedAtomicTable.Get = AtomicTable.Get
+RestrictedAtomicTable.GetIndex = AtomicTable.GetIndex
 
-function AtomicTable.RestrictedAccess<T>(self: AtomicTable<T>): RestrictedAtomicTable<T>
-	local restricted = table.clone(RestrictedAtomicTable) :: RestrictedAtomicTable<T>
+function AtomicTable.RestrictedAccess<T>(self: InternalAtomicTable<T>): RestrictedAtomicTable<T>
+	local restricted = table.clone(RestrictedAtomicTable) :: InternalRestrictedAtomicTable<T>
 	restricted._staticMembers = self._staticMembers
 	restricted._atomicMembers = self._atomicMembers
 	restricted._event = self._event
@@ -191,19 +195,18 @@ end
 -------------------------------------------------------------------------------
 
 return {
-	new = function<T>(initial: T)
+	new = function<T>(initial: T): AtomicTable<T>
 		assert(type(initial) == "table", "Initial can only be a table.")
 
-		local atom = table.clone(AtomicTable) :: AtomicTable<T>
+		local atom = table.clone(AtomicTable) :: InternalAtomicTable<T>
 
-		-- Separate atomic members from plain values
 		atom._atomicMembers = {}
 		atom._atomicConnections = {}
 
 		local plainInitial: GenericTable = {}
 		for k, v in initial :: GenericTable do
 			if isAtomic(v) then
-				atom._atomicMembers[k] = v
+				atom._atomicMembers[k] = v :: AtomicMember
 			else
 				plainInitial[k] = v
 			end
@@ -212,10 +215,7 @@ return {
 		atom._staticMembers = TableUtil.deepClone(plainInitial) :: T
 		atom._event = Signal.new() :: Signal.Signal<{ [keyof<T>]: true? }, T, T>
 
-		-- Track changes from each atomic member and propagate them
 		for k, member in atom._atomicMembers do
-			-- AtomicValue fires (new, old); AtomicTable/Array fire (changed, new, old)
-			-- In all cases the last two args are the new and old member values
 			local conn = member:Connect(function(...)
 				local args = { ... }
 				local oldMemberVal = args[#args]

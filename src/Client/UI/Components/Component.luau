@@ -26,6 +26,7 @@ function Component.new()
 
 	function component:Destroy()
 		maid:Destroy()
+		table.clear(component)
 	end
 
 	return component

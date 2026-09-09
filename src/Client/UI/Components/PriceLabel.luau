@@ -1,33 +1,37 @@
 --!strict
 local PriceLabel = {}
 
-local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Component = require(ReplicatedStorage.Client.UI.Components.Component)
-local CurrencyConstants = require(ReplicatedStorage.Shared.Currency.CurrencyConstants)
-local TemplateUtil = require(ReplicatedStorage.Shared.Utils.TemplateUtil)
-local UIScaleController = require(ReplicatedStorage.Client.UI.UIScaleController)
-local Images = require(ReplicatedStorage.Shared.Images)
-local StringUtil = require(ReplicatedStorage.Shared.Utils.StringUtil)
-local TextLabelUtil = require(ReplicatedStorage.Client.UI.Utils.TextLabelUtil)
+
+local Shared = ReplicatedStorage.Shared
+local Client = ReplicatedStorage.Client
+local CurrencyConstants = require(Shared.Currency.CurrencyConstants)
+local TextLabelUtil = require(Client.UI.Utils.TextLabelUtil)
+local TemplateUtil = require(Shared.Utils.TemplateUtil)
+local StringUtil = require(Shared.Utils.StringUtil)
+local Images = require(Shared.Images)
+local UIScaleController = require(Client.UI.UIScaleController)
+local ComponentUtil = require(Client.UI.Utils.ComponentUtil)
+local Component = require(Client.UI.Components.Component)
 
 export type PriceLabel = Component.Component & {
 	Mount: (PriceLabel, GuiObject, boolean?) -> (),
+	Remount: (PriceLabel, GuiObject, boolean?) -> (),
 	GetParent: (PriceLabel) -> GuiObject,
 	Align: (PriceLabel, Enum.HorizontalAlignment) -> (),
 	EnableOwned: (PriceLabel) -> (),
 	SetPrice: (PriceLabel, CurrencyConstants.Price, Color3?) -> (),
 }
 
-function PriceLabel.new()
+function PriceLabel.new(showDelta: boolean?)
 	local priceLabel = Component.new() :: PriceLabel
 
 	-------------------------------------------------------------------------------
 	-- PRIVATE MEMBERS
 	-------------------------------------------------------------------------------
-	local components = TemplateUtil.cloneChildren(Players.LocalPlayer.PlayerGui.Components.PriceLabel)
+	local components = TemplateUtil.cloneChildren(ComponentUtil.getPlayerGui().Components.PriceLabel)
 
-	local label: TextLabel = components.TextLabel
+	local label = components.TextLabel
 	local icon: ImageLabel = components.Icon
 	local uiListLayout: UIListLayout = components.UIListLayout
 
@@ -36,6 +40,7 @@ function PriceLabel.new()
 	-------------------------------------------------------------------------------
 	-- PRIVATE METHODS
 	-------------------------------------------------------------------------------
+
 	local function setText(text: string)
 		label.TextSize = textSize
 		TextLabelUtil.setScaleableText(label, text)
@@ -44,6 +49,7 @@ function PriceLabel.new()
 	-------------------------------------------------------------------------------
 	-- PUBLIC MEMBERS
 	-------------------------------------------------------------------------------
+
 	-- Set price before mounting
 	function priceLabel:Mount(parent, hideBackground)
 		label.Parent = parent
@@ -56,6 +62,10 @@ function PriceLabel.new()
 		end
 
 		parent.BackgroundTransparency = if hideBackground then 1 else parent.BackgroundTransparency
+	end
+
+	function priceLabel:Remount(parent, hideBackground)
+		priceLabel:Mount(parent, hideBackground)
 	end
 
 	function PriceLabel:GetParent()
@@ -74,8 +84,8 @@ function PriceLabel.new()
 	end
 
 	function priceLabel:SetPrice(price: CurrencyConstants.Price, color)
-		if price.Currency == "Cash" then
-			setText(StringUtil.getCompactNumber(price.Amount))
+		if price.Currency == "Coins" or price.Currency == "Hearts" then
+			setText(`{if showDelta then "-" else ""}{StringUtil.getCompactNumber(price.Amount)}`)
 			icon.Image = Images.Currencies[price.Currency]
 			icon.Visible = true
 		elseif price.Currency == "DevProduct" or price.Currency == "GamePass" then
@@ -94,7 +104,8 @@ function PriceLabel.new()
 	-------------------------------------------------------------------------------
 	-- LOGIC
 	-------------------------------------------------------------------------------
-	for _, component in pairs(components) do
+
+	for _, component in pairs(components :: any) do
 		priceLabel:GetMaid():Add(component)
 	end
 

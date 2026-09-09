@@ -4,8 +4,8 @@ local ProductConstants = {}
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local CurrencyConstants = require(ReplicatedStorage.Shared.Currency.CurrencyConstants)
-local ItemConstants = require(ReplicatedStorage.Shared.Items.ItemConstants)
 local RewardConstants = require(ReplicatedStorage.Shared.Rewards.RewardConstants)
+local ItemConstants = require(ReplicatedStorage.Shared.Items.ItemConstants)
 
 -------------------------------------------------------------------------------
 --  PRIVATE VARIABLES
@@ -15,15 +15,9 @@ local TYPES = {
 	Coins = "Coins",
 	Boost = "Boost",
 	Bundle = "Bundle",
-	Upgrade = "Upgrade",
-	ConsumeableAbility = "ConsumeableAbility",
 }
 
-local PRODUCTS: { [string]: { [string]: _Product } } = {
-	-- Item products are created below
-	Cash = {},
-	Multiplier = {},
-}
+local PRODUCTS: { [string]: { [string]: _Product } } = {}
 
 local BUNDLES: { [string]: _Bundle } = {}
 
@@ -64,25 +58,35 @@ end
 
 type _Product = {
 	Alias: string?,
+	Price: CurrencyConstants._Price,
+	Icon: string?,
+	LimitedTime: boolean?,
+}
+export type Product = {
+	Name: string,
+	Type: ProductType,
+	Alias: string?,
 	Price: CurrencyConstants.Price,
 	Icon: string?,
 	LimitedTime: boolean?,
 }
-export type Product = _Product & {
-	Name: string,
-	Type: ProductType,
-}
 
 type _Bundle = {
+	Alias: string?,
+	ExpiresAt: number?,
+	Icon: string,
+	Price: CurrencyConstants._Price,
+	Rewards: { RewardConstants.Reward },
+	Version: number?,
+}
+
+export type Bundle = {
+	Name: string,
 	ExpiresAt: number?,
 	Icon: string,
 	Price: CurrencyConstants.Price,
 	Rewards: { RewardConstants.Reward },
 	Version: number?,
-}
-
-export type Bundle = _Bundle & {
-	Name: string,
 }
 
 export type ProductList = { [string]: Product }

@@ -6,6 +6,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage.Shared
 local Client = ReplicatedStorage.Client
+local CharacterConstants = require(ReplicatedStorage.Shared.Character.CharacterConstants)
 local CharacterLoadingUtil = require(Shared.Character.CharacterLoadingUtil)
 local CharacterUtil = require(Shared.Character.CharacterUtil)
 local Maid = require(Shared.Maid)
@@ -43,7 +44,7 @@ CharacterController.LoadPriorities = {}
 -- PRIVATE METHODS
 -------------------------------------------------------------------------------
 
-local function loadCharacter(character: Model?)
+local function loadCharacter(character: CharacterConstants.Character?)
 	if character then
 		local humanoid = character:WaitForChild("Humanoid") :: Humanoid
 
@@ -86,19 +87,19 @@ function CharacterController.getMaid()
 end
 
 -- Not for spawning standing on something
-function CharacterController.teleportTo(spawnPoint: CFrame)
-	TransitionController.play("Teleporting", "Eye", function()
+function CharacterController.teleportTo(spawnPoint: CFrame, resetUi: boolean?)
+	TransitionController.play("Teleporting", "BlinkEye", function()
 		if CharacterUtil.isAlive(player) then
 			local character = player.Character
 			if character then
-				character:PivotTo(spawnPoint)
+				local humanoid = character:WaitForChild("Humanoid") :: Humanoid
+				local root = character:WaitForChild("HumanoidRootPart") :: BasePart
+
+				character:PivotTo(spawnPoint * CFrame.new(0, humanoid.HipHeight + root.Size.Y / 2, 0))
 
 				CameraController.lookForward()
-				UIController.resetToHUD()
-
-				local humanoid = character:WaitForChild("Humanoid") :: Humanoid
-				if humanoid:GetState() == Enum.HumanoidStateType.Seated then
-					humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+				if resetUi ~= false then
+					UIController.resetToHUD()
 				end
 			end
 		end
@@ -106,8 +107,8 @@ function CharacterController.teleportTo(spawnPoint: CFrame)
 end
 
 function CharacterController.start()
-	loadCharacter(player.Character)
-	player.CharacterAdded:Connect(loadCharacter)
+	loadCharacter(player.Character :: CharacterConstants.Character)
+	player.CharacterAdded:Connect(loadCharacter :: (Model) -> ())
 end
 
 return CharacterController

@@ -1,5 +1,5 @@
 --!strict
-local ItemProductsService = {}
+local ItemProductsGenerator = {}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
@@ -50,6 +50,14 @@ do
 	-- if products ~= {} then
 	ProductService.updateProducts(products)
 	-- end
+
+	for itemType in products do
+		ProductService.registerValidator(itemType, function(name)
+			return function(player: Player)
+				return not ItemUtil.hasItem(itemType, name, player)
+			end
+		end)
+	end
 end
 
 --[[
@@ -114,4 +122,4 @@ do
 end
  *]]
 
-return ItemProductsService
+return ItemProductsGenerator

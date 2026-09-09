@@ -68,6 +68,11 @@ function UIController.init()
 			end
 		end
 	end
+
+	local playerGui = Players.LocalPlayer.PlayerGui
+	playerGui.Components.Enabled = false
+	playerGui.ForegroundParticles.Enabled = true
+	playerGui.BackgroundParticles.Enabled = true
 end
 
 function UIController.toggleScreenState(state: UIConstants.State)
@@ -146,13 +151,5 @@ uiStateMachine:RegisterGlobalCallback(function(fromState, toState)
 	lastUiStateStack = stack
 	UIController.ScreenStateTransition.invokeResolve()
 end)
-
-do
-	-- 	require(ReplicatedStorage.Client.UI.Screens.DebugScreen).write("Version", game.PlaceVersion)
-	local playerGui = Players.LocalPlayer:FindFirstChild("PlayerGui")
-	if playerGui then
-		playerGui.Components.Enabled = false
-	end
-end
 
 return UIController

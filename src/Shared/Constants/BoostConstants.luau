@@ -1,17 +1,17 @@
 local BoostConstants = {}
 
-type _Boost = { Icon: string, Multiplicand: string, MultiplierAddend: number }
-export type Boost = _Boost & { Name: string }
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local CurrencyConstants = require(ReplicatedStorage.Shared.Currency.CurrencyConstants)
 
-local boosts: { [string]: _Boost } = {}
-BoostConstants.Boosts = boosts :: { [string]: Boost }
+export type Boost = { Multiplier: number, TimeLeft: number }
+export type Stack = { Boost }
+export type Stacks = { [CurrencyConstants.Currency]: Stack }
 
--------------------------------------------------------------------------------
--- LOGIC
--------------------------------------------------------------------------------
+BoostConstants.DataEvents = {
+	Created = "BoostCreated",
+	Expired = "BoostExpired",
+}
 
-for name, boost in boosts do
-	boost.Name = name
-end
+-- Can do products here
 
 return BoostConstants

@@ -40,7 +40,7 @@ function BadgeUnlockingService.awardBadge(player: Player, badge: BadgeConstants.
 			if badgeInfo.IsEnabled then
 				-- Award badge
 				success = pcall(function()
-					return BadgeService:AwardBadge(player.UserId, id)
+					return BadgeService:AwardBadgeAsync(player.UserId, id)
 				end)
 				if not success then
 					return

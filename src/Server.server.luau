@@ -69,7 +69,7 @@ task.delay(0, function()
 	local initializing = {
 		-- SERVICES
 		loadModule(SERVICES.UnitTestingService),
-		loadModule(SERVICES.Products.ItemProductsService),
+		loadModule(SERVICES.Products.ItemProductsGenerator),
 		loadModule(SERVICES.CollisionService),
 		loadModule(SERVICES.Data.PlayerDataService),
 		loadModule(SERVICES.PlayersService),
@@ -83,14 +83,14 @@ task.delay(0, function()
 	}
 
 	for _, module in initializing do
-		local method = module.init
+		local method = (module :: any).init
 		if method then
 			(method :: any)()
 		end
 	end
 
 	for _, module in initializing do
-		local method = module.start
+		local method = (module :: any).start
 		if method then
 			task.spawn(method)
 		end

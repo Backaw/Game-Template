@@ -3,6 +3,7 @@ local SquishyButton = {}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+local UIScaleController = require(ReplicatedStorage.Client.UI.UIScaleController)
 local InstanceUtil = require(ReplicatedStorage.Shared.Utils.InstanceUtil)
 local UDimUtil = require(ReplicatedStorage.Shared.Utils.UDimUtil)
 local Button = require(script.Parent.Button)
@@ -77,10 +78,11 @@ function SquishyButton.new<T>(buttonUI: T, scaleOnClick: GuiObject?, squishScale
 	end
 
 	function squishyButton:SetHoverScalable(hoverScaleable, hoverScale)
-		hoverScaleable = hoverScaleable or squishyButton:GetGuiObject()
+		hoverScaleable = hoverScaleable or squishyButton:GetGui()
 		hoverScale = hoverScale or DEFAULT_HOVER_SCALE
 
 		local uiScale = Instance.new("UIScale")
+		uiScale:AddTag(UIScaleController.IGNORE_TAG)
 		uiScale.Parent = hoverScaleable
 
 		local function tweenHoverScale(scale: number)

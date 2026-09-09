@@ -9,10 +9,10 @@ local states = {
 	HUD = "HUD",
 }
 
-local hudPermissiveStates: { State } = {}
+local hudPermissiveStates: { State } = { "HUD" }
 local psuedoStates: { [State]: { State } } = {}
 local interactionPermissiveStates: { State } = {
-	states.HUD,
+	"HUD",
 }
 
 -------------------------------------------------------------------------------

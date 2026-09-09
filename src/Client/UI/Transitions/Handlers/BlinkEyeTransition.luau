@@ -12,14 +12,18 @@ local CLOSING_LENGTH = OPENING_LENGTH * 0.75
 
 local CLOSE_SIZE = UDim2.fromScale(2, 2)
 
+-------------------------------------------------------------------------------
+-- PRIVATE VARIABLES
+-------------------------------------------------------------------------------
+
 local screen = Players.LocalPlayer.PlayerGui.Transitions
 local eye = screen.BlinkEye
-local allFrames: { GuiObject } = {}
 local tweens: { Tween } = {}
 
 -------------------------------------------------------------------------------
 -- PRIVATE FUNCTIONS
 -------------------------------------------------------------------------------
+
 local function cancelTweens()
 	for _, tween in tweens do
 		tween:Cancel()
@@ -32,27 +36,17 @@ local function eyeTweenInfo(length: number)
 end
 
 local function fadeFrames(length: number, start: number, finish: number)
-	for _, frame in allFrames do
-		local transparencyProp = if frame:IsA("ImageLabel") then "ImageTransparency" else "BackgroundTransparency"
-		(frame :: any)[transparencyProp] = start
+	local tweenInfo = TweenInfo.new(length, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
 
-		local tween = TweenService:Create(
-			frame,
-			TweenInfo.new(length, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
-			{ [transparencyProp] = finish }
-		)
+	eye.UIStroke.Transparency = start
+	eye.ImageTransparency = start
 
-		local i = #tweens + 1
-		table.insert(tweens, tween)
-
-		tween.Completed:Connect(function(playbackState)
-			if playbackState == Enum.PlaybackState.Completed then
-				tweens[i] = nil
-			end
-		end)
-
-		tween:Play()
-	end
+	local tween1 = TweenService:Create(eye, tweenInfo, { ImageTransparency = finish })
+	local tween2 = TweenService:Create(eye.UIStroke, tweenInfo, { Transparency = finish })
+	table.insert(tweens, tween1)
+	table.insert(tweens, tween2)
+	tween1:Play()
+	tween2:Play()
 end
 
 -------------------------------------------------------------------------------
@@ -90,18 +84,6 @@ function BlinkEyeTransition.close(speedUp: number?)
 	end)
 	sizeTween:Play()
 	sizeTween.Completed:Wait()
-end
-
--------------------------------------------------------------------------------
--- LOGIC
--------------------------------------------------------------------------------
-do
-	for _, frame in ipairs(eye:GetChildren()) do
-		if frame:IsA("GuiObject") then
-			table.insert(allFrames, frame)
-		end
-	end
-	table.insert(allFrames, eye)
 end
 
 return BlinkEyeTransition

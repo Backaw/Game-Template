@@ -8,7 +8,7 @@ export type RewardType = keyof<typeof(RewardConstants.Types)>
 export type Reward =
 	{ Type: "Currency", Currency: CurrencyConstants.Currency, Amount: number }
 	| { Type: "Item", ItemType: ItemConstants.ItemType, ItemName: string, Loan: boolean? }
-	| { Type: "Boost", Name: string, LengthInMinutes: number }
+	| { Type: "Boost", Currency: CurrencyConstants.Currency, Multiplier: number, LengthInMinutes: number }
 
 RewardConstants.Types = {
 	Item = "Item",

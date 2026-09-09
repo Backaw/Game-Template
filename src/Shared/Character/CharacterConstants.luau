@@ -7,7 +7,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 -------------------------------------------------------------------------------
 
 CharacterConstants.RespawnTime = 6
-CharacterConstants.WalkSpeed = 20
+CharacterConstants.WalkSpeed = 16
 
 -------------------------------------------------------------------------------
 -- TYPES

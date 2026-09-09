@@ -1,12 +1,13 @@
 --!strict
 local UIScaleController = {}
 
-local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 local DescendantLooper = require(ReplicatedStorage.Shared.DescendantLooper)
 local Limiter = require(ReplicatedStorage.Shared.Limiter)
 local Signal = require(ReplicatedStorage.Shared.Signal)
+local ComponentUtil = require(ReplicatedStorage.Client.UI.Utils.ComponentUtil)
+local InstanceUtil = require(ReplicatedStorage.Shared.Utils.InstanceUtil)
 
 -------------------------------------------------------------------------------
 -- CONSTANTS
@@ -17,13 +18,14 @@ local BASE_RESOLUTION = Vector2.new(1920, 1080)
 local LIMITER_SCOPE = script.Name
 local UPDATE_COOLDOWN = 0.3
 
-local SCALE_MULT = 0.9
+local SCALE_MULT = 1
+local SCALE_MAX = 1.1
 
 -------------------------------------------------------------------------------
 -- PRIVATE MEMBERS
 -------------------------------------------------------------------------------
 
-local playerGui = Players.LocalPlayer.PlayerGui
+local playerGui = ComponentUtil.getPlayerGui()
 
 local camera = Workspace.Camera
 local scale: number = 1
@@ -35,33 +37,45 @@ local registeredInitProps: { [Instance]: { [string]: any } } = {}
 -- PUBLIC MEMBERS
 -------------------------------------------------------------------------------
 
-UIScaleController.IGNORE_ATTRIBUTE = "DoNotScale"
+UIScaleController.IGNORE_TAG = "IgnoredUIScale"
+UIScaleController.MULTIPLIER_ATTRIBUTE = "Multiplier"
 UIScaleController.ScaleChanged = Signal.new() :: Signal.Signal<number>
 
 -------------------------------------------------------------------------------
 -- PRIVATE METHODS
 -------------------------------------------------------------------------------
 
+local function canScale(instance: Instance)
+	return not instance:HasTag(UIScaleController.IGNORE_TAG)
+end
+
 local function scaleInstance(instance: Instance)
 	local initProps = registeredInitProps[instance]
 
 	if instance:IsA("UIScale") then
 		local initParentSize = initProps.ParentSize
+		local multiplier = instance:GetAttribute(UIScaleController.MULTIPLIER_ATTRIBUTE)
+		if typeof(multiplier) ~= "number" then
+			multiplier = 1
+		end
 
 		local parent = instance.Parent :: GuiObject
 		if parent then
-			parent.Size =
+			local size =
 				UDim2.new(initParentSize.X.Scale / scale, initParentSize.X.Offset, initParentSize.Y.Scale / scale, initParentSize.Y.Offset)
+			parent.Size = size
+
+			parent:SetAttribute(InstanceUtil.CommonAttributes.InitSize, size)
 		end
 
-		instance.Scale = initProps.Scale * scale
+		instance.Scale = initProps.Scale * scale * multiplier
 	end
 end
 
 local function registerInstance(instance: Instance)
 	local initProps
 
-	if instance:GetAttribute(UIScaleController.IGNORE_ATTRIBUTE) then
+	if not canScale(instance) then
 		return
 	end
 
@@ -82,7 +96,7 @@ local function registerInstance(instance: Instance)
 	end
 
 	if initProps then
-		registeredInitProps[instance] = initProps
+		registeredInitProps[instance] = initProps :: any
 		scaleInstance(instance)
 	end
 end
@@ -90,7 +104,7 @@ end
 local function updateScale()
 	local ratio = camera.ViewportSize / BASE_RESOLUTION
 	local newScale = if math.abs(1 - ratio.X) > math.abs(1 - ratio.Y) then ratio.X else ratio.Y
-	newScale *= SCALE_MULT
+	newScale = math.min(newScale * SCALE_MULT, SCALE_MAX * SCALE_MULT)
 	if scale ~= newScale then
 		scale = newScale
 		for instance in registeredInitProps do
@@ -111,7 +125,7 @@ function UIScaleController.isObjectCustomScaled(object: GuiObject)
 	local parent = object.Parent
 	while parent and parent ~= playerGui do
 		local scaleChild = parent:FindFirstChildOfClass("UIScale")
-		if scaleChild and not scaleChild:GetAttribute(UIScaleController.IGNORE_ATTRIBUTE) then
+		if scaleChild and canScale(scaleChild) then
 			return true
 		elseif parent:IsA("GuiObject") then
 			local size = parent.Size
@@ -135,7 +149,7 @@ function UIScaleController.isObjectScaled(object: GuiObject)
 	local parent = object.Parent
 	while parent and parent ~= playerGui do
 		local scaleChild = parent:FindFirstChildOfClass("UIScale")
-		if scaleChild and not scaleChild:GetAttribute(UIScaleController.IGNORE_ATTRIBUTE) then
+		if scaleChild and canScale(scaleChild) then
 			return true
 		end
 
@@ -150,6 +164,13 @@ function UIScaleController.getScale()
 	return if initialized then scale else 1
 end
 
+function UIScaleController.setMultiplier(instance: UIScale, multiplier: number)
+	instance:SetAttribute(UIScaleController.MULTIPLIER_ATTRIBUTE, multiplier)
+	if registeredInitProps[instance] then
+		scaleInstance(instance)
+	end
+end
+
 function UIScaleController.onScaleChanged(callback: (number) -> ())
 	callback(UIScaleController.getScale())
 	return UIScaleController.ScaleChanged:Connect(callback)
@@ -158,6 +179,7 @@ end
 -------------------------------------------------------------------------------
 -- LOGIC
 -------------------------------------------------------------------------------
+
 function UIScaleController.init()
 	updateScale()
 	camera:GetPropertyChangedSignal("ViewportSize"):Connect(function()

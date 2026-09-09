@@ -3,10 +3,10 @@ local ProductUtil = {}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CurrencyConstants = require(ReplicatedStorage.Shared.Currency.CurrencyConstants)
-local DataUtil = require(ReplicatedStorage.Shared.Data.DataUtil)
 local ProductConstants = require(ReplicatedStorage.Shared.Products.ProductConstants)
 local StringUtil = require(ReplicatedStorage.Shared.Utils.StringUtil)
 local TableUtil = require(ReplicatedStorage.Shared.Utils.TableUtil)
+local DataUtil = require(ReplicatedStorage.Shared.Data.DataUtil)
 
 function ProductUtil.getGamepassProducts()
 	return ProductUtil.getRobuxProducts()[Enum.InfoType.GamePass]
@@ -62,7 +62,7 @@ function ProductUtil.hasBundle(name: string, player: Player?)
 	return false
 end
 
-function ProductUtil.getProduct(type: string, name: string)
+function ProductUtil.getProduct(type: ProductConstants.ProductType, name: string)
 	-- ERROR: Invalid product type
 	if not ProductConstants.Types[type] then
 		error(("%s is an invalid product type"):format(type))

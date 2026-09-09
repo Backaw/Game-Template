@@ -8,7 +8,6 @@ local RunService = game:GetService("RunService")
 
 local Shared = ReplicatedStorage.Shared
 local Client = ReplicatedStorage.Client
-local CFrameUtil = require(Shared.Utils.CFrameUtil)
 local StateMachine = require(Shared.StateMachine)
 local TableUtil = require(Shared.Utils.TableUtil)
 local CameraUtil = require(Client.Utils.CameraUtil)
@@ -29,15 +28,11 @@ local FOV_PRIORITIES = {
 local DEFAULT_CAMERA_TYPE = Enum.CameraType.Follow
 
 local FIRST_PERSON_THRESHOLD = 0.5
-local STARTING_ZOOM = 25
-local STARTING_PITCH = -math.rad(20)
+local STARTING_ZOOM = 20
+local STARTING_PITCH = -math.rad(15)
 
 local STATES = {
 	Default = "Default",
-	Driving = "Driving",
-	Unboxing = "Unboxing",
-	CarEditing = "CarEditing",
-	Death = "Death",
 }
 
 -------------------------------------------------------------------------------
@@ -126,20 +121,10 @@ function CameraController.resetCameraType()
 	camera.CameraType = DEFAULT_CAMERA_TYPE
 end
 
-function CameraController.lookForward()
-	CameraController.resetCameraType()
-
-	if player.Character then
-		local focus = camera.Focus
-		camera.CFrame = CFrame.new(focus.Position) * CFrame.fromEulerAnglesYXZ(STARTING_PITCH, CFrameUtil.getYComponent(focus), 0)
-	end
-end
-
--- Orients Follow camera behind a subject using a world-space travel direction (XZ yaw).
--- Uses Scriptable for one frame so placement does not depend on Focus, which may still
--- reference the previous CameraSubject right after it changes (e.g. car swap).
-function CameraController.snapBehindSubject(subject: BasePart, worldLookVector: Vector3, zoom: number?)
+function CameraController.getLookForwardCFrame(subject: BasePart, zoom: number?)
 	local distance = zoom or STARTING_ZOOM
+
+	local worldLookVector = subject.CFrame.LookVector
 	local flat = Vector3.new(worldLookVector.X, 0, worldLookVector.Z)
 	if flat.Magnitude < 1e-4 then
 		flat = Vector3.new(0, 0, -1)
@@ -148,15 +133,31 @@ function CameraController.snapBehindSubject(subject: BasePart, worldLookVector: 
 	end
 	local yaw = math.atan2(-flat.X, -flat.Z)
 
+	return CFrame.new(subject.Position) * CFrame.fromEulerAnglesYXZ(STARTING_PITCH, yaw, 0) * CFrame.new(0, 0, distance)
+end
+
+-- Orients Follow camera behind a subject using a world-space travel direction (XZ yaw).
+-- Uses Scriptable for one frame so placement does not depend on Focus, which may still
+-- reference the previous CameraSubject right after it changes (e.g. car swap).
+function CameraController.lookForward(zoom: number?)
+	local character = player.Character
+	if not character then
+		return
+	end
+	local subject = character:WaitForChild("Head") :: BasePart
+	if not subject then
+		return
+	end
+
+	local distance = zoom or STARTING_ZOOM
+	local cframe = CameraController.getLookForwardCFrame(subject, zoom)
+
 	CameraController.setZoom(distance)
 
 	camera.CameraType = Enum.CameraType.Scriptable
-	camera.CameraSubject = subject
-	camera.CFrame = CFrame.new(subject.Position) * CFrame.fromEulerAnglesYXZ(STARTING_PITCH, yaw, 0) * CFrame.new(0, 0, -distance)
+	camera.CFrame = cframe
 	task.defer(function()
-		if camera.CameraSubject == subject then
-			camera.CameraType = DEFAULT_CAMERA_TYPE
-		end
+		camera.CameraType = DEFAULT_CAMERA_TYPE
 	end)
 end
 

@@ -2,6 +2,7 @@
 
 --[[
     Wrapper for a boolean variable that manages potentially conflicting value changes.
+	 In order to change the value, if flipping back the value to the initial value, all jobs must agree
 
     Example:
         local toggle = Toggle.new(true)
@@ -24,15 +25,16 @@ local Signal = require(ReplicatedStorage.Shared.Signal)
 
 export type Toggle = {
 	Changed: Signal.Signal<boolean>,
-	JobsChanged: Signal.Signal<{ any }>,
-	Set: (Toggle, any, boolean) -> boolean,
-	RemoveJob: (Toggle, any) -> boolean,
+	JobsChanged: Signal.Signal<{ Job }>,
+	Set: (Toggle, Job, boolean) -> boolean,
+	RemoveJob: (Toggle, Job) -> boolean,
 	ForceSet: (Toggle, boolean) -> (),
 	ForceSetQuiet: (Toggle, boolean) -> (),
-	HasJob: (Toggle, any) -> boolean,
+	HasJob: (Toggle, Job) -> boolean,
 	Get: (Toggle) -> boolean,
-	GetJobs: (Toggle) -> { any },
+	GetJobs: (Toggle) -> { Job },
 }
+export type Job = string
 
 function Toggle.new(initialValue: boolean)
 	local toggle = {} :: Toggle
@@ -40,7 +42,7 @@ function Toggle.new(initialValue: boolean)
 	-------------------------------------------------------------------------------
 	-- PRIVATE MEMBERS
 	-------------------------------------------------------------------------------
-	local jobs: { any } = {}
+	local jobs: { Job } = {}
 	local value = initialValue
 
 	-------------------------------------------------------------------------------
@@ -99,8 +101,6 @@ function Toggle.new(initialValue: boolean)
 	function toggle:RemoveJob(job)
 		if toggle:HasJob(job) then
 			toggle:Set(job, not value)
-			toggle.JobsChanged:Fire(jobs)
-
 			return true
 		end
 

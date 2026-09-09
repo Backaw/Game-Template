@@ -2,8 +2,8 @@
 local CameraUtil = {}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Shaker = require(ReplicatedStorage.Shared.Shaker)
 local StateMachine = require(ReplicatedStorage.Shared.StateMachine)
+local Shaker = require(ReplicatedStorage.Shared.Shaker)
 
 -------------------------------------------------------------------------------
 -- PRIVATE MEMBERS
@@ -31,7 +31,7 @@ function CameraUtil.getFitDepth(viewportSize: Vector2, fov: number, subjectSize:
 end
 
 do
-	local registeredStates: { any } = {}
+	-- local registeredStates: { any } = {}
 	function CameraUtil.getShakerRegistration<T>(stateMachine: StateMachine.StateMachine<T>, permittedStates: { T })
 		local toggle = table.find(permittedStates, stateMachine:GetState()) ~= nil
 
@@ -42,6 +42,7 @@ do
 		-- LOGIC
 		-------------------------------------------------------------------------------
 
+		--[[
 		-- Check for reused states
 		for _, state in permittedStates do
 			if registeredStates[state] then
@@ -50,7 +51,8 @@ do
 			else
 				registeredStates[state] = true
 			end
-		end
+
+		end ]]
 
 		stateMachine:RegisterGlobalCallback(function(_, new)
 			toggle = true
@@ -67,6 +69,7 @@ do
 		return {
 			RegisterShaker = function(shaker: Shaker.Shaker)
 				table.insert(shakers, shaker)
+				return shaker
 			end,
 
 			GetShakeOffset = function()

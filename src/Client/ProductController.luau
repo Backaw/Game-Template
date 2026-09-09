@@ -2,18 +2,22 @@
 local ProductController = {}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local ProductUtil = require(ReplicatedStorage.Shared.Products.ProductUtil)
-local ProductConstants = require(ReplicatedStorage.Shared.Products.ProductConstants)
-local CurrencyConstants = require(ReplicatedStorage.Shared.Currency.CurrencyConstants)
-local CurrencyUtil = require(ReplicatedStorage.Shared.Currency.CurrencyUtil)
-local Promise = require(ReplicatedStorage.Shared.Promise)
-local Signal = require(ReplicatedStorage.Shared.Signal)
-local Sounds = require(ReplicatedStorage.Shared.Sounds)
-local DebugUtil = require(ReplicatedStorage.Shared.Utils.DebugUtil)
-local TableUtil = require(ReplicatedStorage.Shared.Utils.TableUtil)
-local Snackbar = require(ReplicatedStorage.Client.UI.Components.Snackbar)
-local CurrencyController = require(ReplicatedStorage.Client.CurrencyController)
--- local Confetti = require(ReplicatedStorage.Client.UI.Particles.Confetti)
+
+local Shared = ReplicatedStorage.Shared
+local Client = ReplicatedStorage.Client
+local CurrencyConstants = require(Shared.Currency.CurrencyConstants)
+local ProductConstants = require(Shared.Products.ProductConstants)
+local CurrencyUtil = require(Shared.Currency.CurrencyUtil)
+local ProductUtil = require(Shared.Products.ProductUtil)
+local DebugUtil = require(Shared.Utils.DebugUtil)
+local TableUtil = require(Shared.Utils.TableUtil)
+local Promise = require(Shared.Promise)
+local Signal = require(Shared.Signal)
+local Sounds = require(Shared.Sounds)
+local CurrencyController = require(Client.CurrencyController)
+local Snackbar = require(Client.UI.Components.Snackbar)
+local Fireworks = require(Client.Utils.Fireworks)
+-- local Confetti = require(Client.UI.Particles.Confetti)
 
 -------------------------------------------------------------------------------
 -- CONSTANTS
@@ -53,6 +57,7 @@ ProductController.ProductsUpdated = Signal.new() :: Signal.Signal<>
 local function onProductPurchased(product: ProductConstants.Product)
 	if ProductUtil.isPremium(product) then
 		-- Confetti.play(40, Confetti.Colors.Party, 2)
+		Fireworks.screenOffsetEmit(6)
 		Sounds.play("PremiumReward")
 	end
 
@@ -65,14 +70,14 @@ end
 
 function ProductController.promptNeededCurrencyTier(product: ProductConstants.Product)
 	local price = product.Price
-	local currency = price.Currency
+	local currency =
+		assert(CurrencyUtil.isInGameCurrency(price.Currency), "Can't prompt needed currency tier for premium currency: " .. price.Currency)
 
 	ProductController.cannotAfford(price)
-	assert(CurrencyConstants.Currencies[currency], "Can't prompt needed currency tier for premium currency: " .. price.Currency)
 
-	local orderedTiers = orderedCurrencyTiers[price.Currency]
+	local orderedTiers = assert(orderedCurrencyTiers[currency], "No ordered tiers found for currency: " .. currency)
+
 	local cheapestTier = orderedTiers[1]
-
 	if not cheapestTier then
 		warn(`No products found for currency {currency}, cannot prompt purchase from additional currency`)
 		return
@@ -97,7 +102,7 @@ function ProductController.promptNeededCurrencyTier(product: ProductConstants.Pr
 end
 
 function ProductController.cannotAfford(price: CurrencyConstants.Price)
-	Snackbar.error(("You don't have enough %s!"):format(string.lower(price.Currency)))
+	Snackbar.error(("You don't have enough %ss!"):format(string.lower(price.Currency)))
 end
 
 function ProductController.hasGamePass(product: ProductConstants.Product)
@@ -108,38 +113,15 @@ function ProductController.hasGamePass(product: ProductConstants.Product)
 	return ProductUtil.hasGamePass(product)
 end
 
-do
-	local function sign(x: number)
-		return if x >= 0 then 1 else -1
-	end
-
-	function ProductController.trackAffordability(price: CurrencyConstants.Price, handler: (boolean) -> ())
-		if not CurrencyConstants.IngameCurrencies[price.Currency] then
-			return nil :: any
-		end
-
-		local priceAmount = (price :: any).Amount
-
-		local lastValue: number?
-		return CurrencyController.Currencies[price.Currency]:Subscribe(function(amount)
-			if lastValue and (sign(lastValue - priceAmount) == sign(amount - priceAmount)) then
-				return
-			end
-
-			handler(amount >= priceAmount)
-			lastValue = amount
-		end)
-	end
-end
-
 -- Returns: Purchase valid, purchase validated
 function ProductController.purchaseClientValidation(product: ProductConstants.Product)
 	local price = product.Price
 
 	if price.Currency == CurrencyConstants.Currencies.Free then
+		warn("Purchase valid for free product")
 		return true, true
 	elseif CurrencyUtil.isInGameCurrency(price.Currency) then
-		if CurrencyController.transact(price.Currency, -((price :: any).Amount :: number)) then
+		if CurrencyController.transact(price.Currency :: any, -((price :: any).Amount :: number)) then
 			-- Sounds.play("Purchase")
 			return true, true
 		else
@@ -208,12 +190,34 @@ function ProductController.promptPurchase(
 	return success or false
 end
 
+function ProductController.trackAffordability(price: CurrencyConstants.Price, handler: (boolean) -> ())
+	local currency = CurrencyUtil.isInGameCurrency(price.Currency)
+	if not currency then
+		return nil :: any
+	end
+
+	local priceAmount = (price :: any).Amount
+
+	local lastValue: number?
+	return CurrencyController.Currencies[currency]:Subscribe(function(amount)
+		if lastValue and (math.sign(lastValue - priceAmount) == math.sign(amount - priceAmount)) then
+			return
+		end
+
+		handler(amount >= priceAmount)
+		lastValue = amount
+	end)
+end
+
 -------------------------------------------------------------------------------
 -- EVENT HANDLERS
 -------------------------------------------------------------------------------
 do
 	for currency in CurrencyConstants.IngameCurrencies do
 		local products = ProductConstants.Products[currency :: any]
+		if not products then
+			continue
+		end
 
 		local orderedTiers = TableUtil.getKeys(products)
 		table.sort(orderedTiers, function(yield1, yield2)

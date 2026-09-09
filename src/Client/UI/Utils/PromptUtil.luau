@@ -5,48 +5,56 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
-local Players = game:GetService("Players")
 
 local Client = ReplicatedStorage.Client
 local Shared = ReplicatedStorage.Shared
+local InstanceUtil = require(Shared.Utils.InstanceUtil)
 local UDimUtil = require(Shared.Utils.UDimUtil)
 local Toggle = require(Shared.Toggle)
-local Binder = require(Shared.Binder)
+local ComponentUtil = require(Client.UI.Utils.ComponentUtil)
 local CameraController = require(Client.CameraController)
 
 -------------------------------------------------------------------------------
 -- CONSTANTS
 -------------------------------------------------------------------------------
 
-local ANIMATION_LENGTH = 0.2
+local ANIMATION_LENGTH = 0.25
 local PROMPT_ANIMATION_LENGTH = ANIMATION_LENGTH / 2
 
 local OPEN_BLUR_SIZE = 0
-local OPEN_FOV_MULTI = 1 -- 0.9
-local DEFAULT_BACKGROUND_TRANSPARENCY = 0.95
+local DEFAULT_BACKGROUND_TRANSPARENCY = 0.35
+local OPEN_FOV_MULTI = 0.9
 
 -------------------------------------------------------------------------------
 -- PRIVATE VARIABLES
 -------------------------------------------------------------------------------
 
-local blurEffect = Instance.new("BlurEffect")
-blurEffect.Size = 0
-blurEffect.Enabled = true
-blurEffect.Parent = Lighting
+local blurEffect: BlurEffect? = nil
 
-local backgroundScreen = Players.LocalPlayer.PlayerGui.Background
+local backgroundScreen = ComponentUtil.getPlayerGui().Background
 local backgroundFrame = backgroundScreen.Frame
 
 local cosmeticsEnabled = Toggle.new(false)
 
 local camera = Workspace.CurrentCamera
 
+if not ComponentUtil.isMountedToStory() then
+	blurEffect = Instance.new("BlurEffect")
+	blurEffect.Size = 0
+	blurEffect.Enabled = true
+	blurEffect.Parent = Lighting
+end
+
 -------------------------------------------------------------------------------
 -- PRIVATE FUNCTIONS
 -------------------------------------------------------------------------------
 
 local getInitialSize = function(prompt: GuiObject)
-	return Binder.bindFirst(prompt, "InitialSize", prompt.Size)
+	return InstanceUtil.getAttributeFirst(prompt, InstanceUtil.CommonAttributes.InitSize, prompt.Size)
+end
+
+local getInitialPosition = function(prompt: GuiObject)
+	return InstanceUtil.getAttributeFirst(prompt, InstanceUtil.CommonAttributes.InitPosition, prompt.Position)
 end
 
 -------------------------------------------------------------------------------
@@ -67,7 +75,7 @@ PromptUtil.Direction = {
 function PromptUtil.openBackground(frame: Frame?)
 	frame = frame or backgroundFrame
 
-	local initialTransparency = Binder.bindFirst(frame, "InitialTransparency", frame.BackgroundTransparency)
+	local initialTransparency = InstanceUtil.getAttributeFirst(frame, "InitialTransparency", frame.BackgroundTransparency)
 	frame.BackgroundTransparency = 1
 	frame.Visible = true
 
@@ -97,7 +105,7 @@ function PromptUtil.open(prompt: GuiObject, cosmetics: boolean?)
 	prompt.Visible = true
 end
 
-function PromptUtil.scaleOpen(prompt: GuiObject, cosmetics: boolean?, direction: UDim2?)
+function PromptUtil.scaleOpen(prompt: GuiObject, cosmetics: boolean?, direction: UDim2?, timeScale: number?)
 	direction = direction or PromptUtil.Direction.Down
 
 	if cosmetics then
@@ -111,7 +119,7 @@ function PromptUtil.scaleOpen(prompt: GuiObject, cosmetics: boolean?, direction:
 
 	local tween = TweenService:Create(
 		prompt,
-		TweenInfo.new(PROMPT_ANIMATION_LENGTH, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+		TweenInfo.new(PROMPT_ANIMATION_LENGTH * (timeScale or 1), Enum.EasingStyle.Back, Enum.EasingDirection.Out),
 		{ Size = initialSize }
 	)
 	tween:Play()
@@ -119,14 +127,14 @@ function PromptUtil.scaleOpen(prompt: GuiObject, cosmetics: boolean?, direction:
 	return tween
 end
 
-function PromptUtil.slideOpen(prompt: GuiObject, cosmetics: boolean?, direction: UDim2?)
+function PromptUtil.slideOpen(prompt: GuiObject, cosmetics: boolean?, direction: UDim2?, timeScale: number?)
 	direction = direction or PromptUtil.Direction.Up
 
 	if cosmetics then
 		cosmeticsEnabled:Set(prompt, true)
 	end
 
-	local initialPosition = Binder.bindFirst(prompt, "InitialPosition", prompt.Position)
+	local initialPosition = getInitialPosition(prompt)
 	prompt.Position = initialPosition + direction
 
 	local initialSize = getInitialSize(prompt)
@@ -136,7 +144,7 @@ function PromptUtil.slideOpen(prompt: GuiObject, cosmetics: boolean?, direction:
 
 	local tween = TweenService:Create(
 		prompt,
-		TweenInfo.new(PROMPT_ANIMATION_LENGTH, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
+		TweenInfo.new(PROMPT_ANIMATION_LENGTH * (timeScale or 1), Enum.EasingStyle.Cubic, Enum.EasingDirection.Out),
 		{ Position = initialPosition, Size = initialSize }
 	)
 	tween:Play()
@@ -151,7 +159,7 @@ function PromptUtil.slideClose(prompt: GuiObject, cosmetics: boolean?, direction
 		cosmeticsEnabled:Set(prompt, false)
 	end
 
-	local initialPosition = Binder.bindFirst(prompt, "InitialPosition", prompt.Position)
+	local initialPosition = getInitialPosition(prompt)
 
 	prompt.Visible = true
 
@@ -186,6 +194,9 @@ backgroundScreen.Enabled = false
 backgroundScreen.Frame.BackgroundTransparency = DEFAULT_BACKGROUND_TRANSPARENCY
 
 cosmeticsEnabled.Changed:Connect(function(toggle)
+	if not blurEffect then
+		return
+	end
 	if toggle then
 		TweenService
 			:Create(

@@ -90,7 +90,7 @@ function InputUIUtil.bindInputToButton(
 )
 	local maid = Maid.new()
 
-	icon = icon or button:GetGuiObject():FindFirstChild("Input") :: ImageLabel?
+	icon = icon or button:GetGui():FindFirstChild("Input") :: ImageLabel?
 	if icon then
 		maid:Add(function()
 			if icon then

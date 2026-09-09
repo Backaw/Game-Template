@@ -19,13 +19,13 @@ function UIUtil.isStateInteractionPermissive(state: UIConstants.State)
 end
 
 function UIUtil.isStateHUDPermissive(state: UIConstants.State)
-	return (UIUtil.isState(state, UIConstants.States.HUD) or table.find(UIConstants.HUDPermissiveStates, state) ~= nil)
+	return UIUtil.isState(state, UIConstants.States.HUD) or (table.find(UIConstants.HUDPermissiveStates, state) ~= nil)
 end
 
 -- Checks if a state is the state itself or a psuedoState
 function UIUtil.isState(potentially: UIConstants.State, thisState: UIConstants.State)
 	return potentially == thisState
-		or (UIConstants.PsuedoStates[thisState] and table.find(UIConstants.PsuedoStates[thisState], potentially))
+		or (UIConstants.PsuedoStates[thisState] and table.find(UIConstants.PsuedoStates[thisState], potentially) ~= nil)
 end
 
 function UIUtil.isStackHUDPermissive(stack: { UIConstants.State })

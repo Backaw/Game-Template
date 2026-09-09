@@ -13,8 +13,12 @@ function CurrencyUtil.getAddress(currency: CurrencyConstants.Currency)
 	return "Currencies." .. currency
 end
 
-function CurrencyUtil.isInGameCurrency(currency: CurrencyConstants.Currency)
-	return CurrencyConstants.IngameCurrencies[currency]
+function CurrencyUtil.isInGameCurrency(currency: any): CurrencyConstants.Currency?
+	if CurrencyConstants.IngameCurrencies[currency] :: any then
+		return currency :: CurrencyConstants.Currency
+	else
+		return nil
+	end
 end
 
 function CurrencyUtil.getMultiplierAddress(currency: CurrencyConstants.Currency)
@@ -34,9 +38,9 @@ function CurrencyUtil.isPrice(price: any): CurrencyConstants.Price?
 	return nil
 end
 
-function CurrencyUtil.cashPrice(amount: number): CurrencyConstants.Price
+function CurrencyUtil.coinPrice(amount: number): CurrencyConstants.Price
 	return {
-		Currency = "Cash",
+		Currency = "Coins",
 		Amount = amount,
 	}
 end

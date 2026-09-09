@@ -65,21 +65,25 @@ task.defer(function()
 
 	require(ReplicatedStorage.Client.DataController)
 
-	local modules = {}
+	local modules: { { start: () -> (), init: () -> () } } = {}
+	local moduleNames = {}
 	for _, moduleScript in INITIALIZING do
-		modules[moduleScript.Name] = require(moduleScript) :: any
+		table.insert(moduleNames, moduleScript.Name)
+		table.insert(modules :: any, (require(moduleScript)) :: any)
 	end
 
-	for name, module in modules do
+	for i, module in ipairs(modules) do
 		if module.init then
+			local name = moduleNames[i]
 			LoadingController.addTask(name .. "_Init", function()
 				module.init()
 			end)
 		end
 	end
 
-	for name, module in modules do
+	for i, module in ipairs(modules) do
 		if module.start then
+			local name = moduleNames[i]
 			LoadingController.addTask(name .. "_Start", function()
 				task.spawn(function()
 					module.start()

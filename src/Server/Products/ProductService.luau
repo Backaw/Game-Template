@@ -35,6 +35,7 @@ local REMOTES = ProductConstants.Remotes
 -------------------------------------------------------------------------------
 
 type Validator = (Player) -> boolean
+type ValidatorFactory = (name: string) -> Validator
 
 -------------------------------------------------------------------------------
 --  PRIVATE MEMBERS
@@ -42,6 +43,7 @@ type Validator = (Player) -> boolean
 
 local productsInitialized = DeferredPromise.new()
 local validators: { [ProductConstants.Product]: Validator } = {}
+local typeValidatorFactories: { [ProductConstants.ProductType]: ValidatorFactory } = {}
 
 local robuxPrices: { [number]: number } = {}
 
@@ -55,7 +57,7 @@ ProductService.ProductPurchased = Signal.new() :: Signal.Signal<Player, ProductC
 -- PRIVATE METHODS
 -------------------------------------------------------------------------------
 
-local function updateRobuxPrices(updating: ProductConstants.ProductCategories)
+local function updateRobuxPrices(_updating: ProductConstants.ProductCategories)
 	local promises = {}
 
 	for infoType, idsToProducts in (ProductUtil.getRobuxProducts()) do
@@ -100,7 +102,7 @@ local function updateRobuxPrices(updating: ProductConstants.ProductCategories)
 
 	productsInitialized
 		:andThen(function()
-			for _, products in updating do
+			for _, products in ProductConstants.Products do
 				for _, product in products do
 					local id = (product.Price :: any).Id
 					if id then
@@ -116,6 +118,18 @@ local function updateRobuxPrices(updating: ProductConstants.ProductCategories)
 			end
 		end)
 		:await()
+end
+
+local function applyTypeValidators(productType: ProductConstants.ProductType)
+	local getValidator = typeValidatorFactories[productType]
+	local products = ProductConstants.Products[productType]
+	if not getValidator or not products then
+		return
+	end
+
+	for name, product in products do
+		validators[product] = getValidator(name)
+	end
 end
 
 -------------------------------------------------------------------------------
@@ -222,8 +236,9 @@ function ProductService.purchaseProduct(
 	return success
 end
 
-function ProductService.registerValidator(product: ProductConstants.Product, validator: Validator)
-	validators[product] = validator
+function ProductService.registerValidator(productType: ProductConstants.ProductType, getValidator: ValidatorFactory)
+	typeValidatorFactories[productType] = getValidator
+	applyTypeValidators(productType)
 end
 
 function ProductService.updateProducts(
@@ -239,6 +254,10 @@ function ProductService.updateProducts(
 		end
 	end
 
+	for productType in registering do
+		applyTypeValidators(productType)
+	end
+
 	updateRobuxPrices(registering)
 	Remotes.fireAllClients(REMOTES.ProductsUpdated, registering, unregistering)
 end
@@ -246,21 +265,9 @@ end
 function ProductService.init()
 	RewardService = require(ServerStorage.Server.RewardService) :: any
 
-	-- Create bundle products
 	for name, bundle in ProductConstants.Bundles do
-		local product: ProductConstants.Product = {
-			Name = name,
-			Type = ProductConstants.Types.Bundle,
-			Icon = bundle.Icon,
-			Price = bundle.Price,
-		}
-
-		ProductConstants.Products.Bundle[name] = product
-
+		local product = ProductConstants.Products.Bundle[name]
 		local version = bundle.Version or 1
-		ProductService.registerValidator(product, function(player)
-			return not ProductUtil.hasBundle(name, player)
-		end)
 
 		ProductService.ProductPurchased:Connect(function(player, productType, productName)
 			if productType == product.Type and productName == product.Name then
@@ -315,6 +322,24 @@ end)
 MarketplaceService.ProcessReceipt = function(info)
 	GameAnalytics:ProcessReceiptCallback(info)
 	return Enum.ProductPurchaseDecision.PurchaseGranted
+end
+
+do
+	for name, bundle in ProductConstants.Bundles do
+		ProductConstants.Products.Bundle[name] = {
+			Name = name,
+			Type = ProductConstants.Types.Bundle,
+			Alias = bundle.Alias,
+			Icon = bundle.Icon,
+			Price = bundle.Price,
+		}
+	end
+
+	ProductService.registerValidator(ProductConstants.Types.Bundle, function(name)
+		return function(player)
+			return not ProductUtil.hasBundle(name, player)
+		end
+	end)
 end
 
 REMOTES.PromptProductPurchase:OnServerInvoked(ProductService.purchaseProduct)

@@ -46,7 +46,10 @@ function TableUtil.difference<T>(old: T, new: T): { [keyof<T>]: { Old: any?, New
 
 	for k, oldValue in old do
 		local newValue = new[k]
-		if newValue ~= oldValue then
+		local changed = if typeof(oldValue) == "table" and typeof(newValue) == "table"
+			then not TableUtil.equals(oldValue, newValue)
+			else newValue ~= oldValue
+		if changed then
 			changedKeys[k] = { Old = oldValue, New = newValue }
 		end
 	end
@@ -344,11 +347,7 @@ function TableUtil.toArrayIndex<T>(tbl: { [T]: any }): { T }
 end
 
 function TableUtil.isEmpty(tbl: Dict)
-	for _ in tbl do
-		return false
-	end
-
-	return true
+	return next(tbl) == nil
 end
 
 -- Checks that two tables share the same values

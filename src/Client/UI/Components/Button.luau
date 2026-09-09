@@ -31,7 +31,7 @@ export type Button<T> = Component.Component & {
 	Clicked: Signal.Signal<boolean>,
 	Mount: (Button<T>, parent: GuiObject?, hideBackground: boolean?) -> (),
 	RestrictToState: (Button<T>, state: string) -> (),
-	GetGuiObject: (Button<T>) -> T,
+	GetGui: (Button<T>) -> T,
 	Toggle: (Button<T>, toggle: boolean) -> (),
 	IsHovering: (Button<T>) -> boolean,
 	EnableClickIndicator: (Button<T>) -> (),
@@ -121,7 +121,7 @@ function Button.new<T>(buttonUI: T, mute: boolean?)
 		stateRestriction = state
 	end
 
-	function button:GetGuiObject()
+	function button:GetGui()
 		return guiButton
 	end
 

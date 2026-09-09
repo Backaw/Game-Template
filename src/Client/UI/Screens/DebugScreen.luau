@@ -13,8 +13,8 @@ local TimeUtil = require(ReplicatedStorage.Shared.Utils.TimeUtil)
 -- CONSTANTS
 -------------------------------------------------------------------------------
 
-local ENABLED = DebugUtil.isDebugging(true)
-local DISPLAY_META = false
+local ENABLED = DebugUtil.isDebugging(false)
+local DISPLAY_META = true
 
 -------------------------------------------------------------------------------
 -- PRIVATE VARIABLES
@@ -44,12 +44,26 @@ do
 
 		local placeLog = DebugScreen.newLog(DISPLAY_META, "Meta")
 		local startTime = os.clock()
+		local fpsAccum = 0
+		local fpsSamples = 0
+		local displayEt = 0
+		local DISPLAY_INTERVAL = 0.25
 
 		placeLog.write("PlaceVersion", game.PlaceVersion)
 
 		RunService:BindToRenderStep("DebugFPS", Enum.RenderPriority.Camera.Value + 1, function(dt)
-			placeLog.writeNumber("FPS", 1 / dt, nil, 0)
+			fpsAccum += 1 / dt
+			fpsSamples += 1
+			displayEt += dt
+			if displayEt < DISPLAY_INTERVAL then
+				return
+			end
+
+			placeLog.writeNumber("FPS", fpsAccum / fpsSamples, nil, 0)
 			placeLog.write("Time Played", TimeUtil.toMS(os.clock() - startTime))
+			fpsAccum = 0
+			fpsSamples = 0
+			displayEt = 0
 		end)
 	end
 end
